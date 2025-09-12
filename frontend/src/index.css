@@ -1,0 +1,120 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Dark theme inspired by the screenshot */
+    --background: 210 11% 8%;
+    --foreground: 210 11% 96%;
+    --card: 210 11% 10%;
+    --card-foreground: 210 11% 96%;
+    --popover: 210 11% 10%;
+    --popover-foreground: 210 11% 96%;
+    --primary: 142 86% 28%;
+    --primary-foreground: 210 11% 96%;
+    --secondary: 210 11% 15%;
+    --secondary-foreground: 210 11% 96%;
+    --muted: 210 11% 15%;
+    --muted-foreground: 210 11% 60%;
+    --accent: 210 11% 15%;
+    --accent-foreground: 210 11% 96%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 11% 96%;
+    --border: 210 11% 20%;
+    --input: 210 11% 15%;
+    --ring: 142 86% 28%;
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+  
+  html {
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    color-scheme: dark;
+  }
+  
+  html.dark {
+    color-scheme: dark;
+  }
+  
+  .dark {
+    color-scheme: dark;
+  }
+  
+  body {
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+    direction: rtl; /* Hebrew RTL support */
+  }
+  
+  /* AI Voicei specific dark styles */
+  .ai-gradient {
+    background: linear-gradient(135deg, hsl(142 86% 28%) 0%, hsl(142 86% 35%) 100%);
+  }
+  
+  .ai-hero-bg {
+    background: hsl(var(--background));
+  }
+  
+  .ai-card {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: calc(var(--radius) + 2px);
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  }
+  
+  .ai-card-content {
+    background: hsl(var(--card));
+    color: hsl(var(--card-foreground));
+  }
+  
+  /* Status indicators */
+  .status-connected {
+    background: hsl(142 86% 28%);
+    color: white;
+  }
+  
+  .status-connecting {
+    background: hsl(45 93% 47%);
+    color: white;
+  }
+  
+  .status-error {
+    background: hsl(0 63% 31%);
+    color: white;
+  }
+  
+  .status-idle {
+    background: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
+    border: 1px solid hsl(var(--border));
+  }
+  
+  /* Voice indicator animations */
+  .voice-pulse {
+    animation: pulse-green 1.5s infinite;
+  }
+  
+  @keyframes pulse-green {
+    0%, 100% {
+      box-shadow: 0 0 0 0 hsl(142 86% 28% / 0.7);
+    }
+    50% {
+      box-shadow: 0 0 0 15px hsl(142 86% 28% / 0);
+    }
+  }
+  
+  /* Hebrew text optimization */
+  .hebrew {
+    font-family: 'Segoe UI', 'Arial Hebrew', 'Noto Sans Hebrew', sans-serif;
+    font-feature-settings: 'liga' off;
+  }
+}

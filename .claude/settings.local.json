@@ -3,7 +3,20 @@
     "allow": [
       "Read(//mnt/c/Users/harel/Desktop/Projects/**)",
       "Bash(python:*)",
-      "WebFetch(domain:docs.pipecat.ai)"
+      "WebFetch(domain:docs.pipecat.ai)",
+      "Bash(npm create:*)",
+      "Bash(npm install)",
+      "Bash(npm install:*)",
+      "Bash(npx tailwindcss init:*)",
+      "Bash(npx:*)",
+      "Bash(npm search:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(uv run:*)",
+      "Bash(curl:*)",
+      "Bash(chmod:*)",
+      "Bash(pkill:*)",
+      "Bash(netstat:*)"
     ],
     "deny": [],
     "ask": []
