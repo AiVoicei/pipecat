@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//mnt/c/Users/harel/Desktop/Projects/**)",
+      "Bash(python:*)",
+      "WebFetch(domain:docs.pipecat.ai)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
