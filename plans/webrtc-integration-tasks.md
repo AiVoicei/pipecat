@@ -300,46 +300,33 @@ useEffect(() => {
 
 ---
 
-## 🎯 **Task 7: Testing & Validation**
-**⏱️ Duration**: 30 minutes
+## 🎯 **Task 7: UI & UX Improvements**
+**⏱️ Duration**: 40 minutes
 **🔧 Complexity**: Medium
 **📋 Status**: Waiting for All Tasks
 
 ### **Goal**
-Comprehensive testing of the complete WebRTC integration.
+Stable cool and clean UI & UX animations using Shadcn & pipecat ui kit.
+https://github.com/pipecat-ai/voice-ui-kit/tree/main
+https://ui.shadcn.com/
 
 ### **Plan**
 
-#### **7.1 Connection Testing (10 min)**
-- Test WebRTC connection establishment
-- Verify signaling works correctly
-- Test connection recovery
-- Check error handling
+#### **7.1 use pipecat ui kit (10 min)**
+- use the visualizers, icons and other component if needed to replace our current ui.
 
-#### **7.2 Audio Flow Testing (10 min)**
-- Test microphone capture
-- Verify audio transmission to backend
-- Test Hebrew voice recognition
-- Verify audio playback from bot
+#### **7.2 use shadcn guidlines and clean designs (10 min)**
+- validate that the ui is looking good and aligned to the design of shadcn guidlines
 
-#### **7.3 UI Integration Testing (5 min)**
-- Test all UI states (connecting, connected, error)
-- Verify conversation history updates
-- Test voice activity visualization
-- Check mobile responsiveness
+#### **7.3 fix the extra scrollable area (10 min)**
+- validate that the web in a correct dimenstions now there is a lot of scrollable area
 
-#### **7.4 Hebrew Language Testing (5 min)**
-- Test Hebrew voice input recognition
-- Verify Hebrew text display (RTL)
-- Test Hebrew audio output quality
-- Validate accessibility features
+#### **7.4 fix the start calling behavior (10 min)**
+- currenctly when i press on start call its connecting and then the agent start talking with me but in the ui the button remain start call and i can click on it, the correct behavior should be that one i click on the start call the session should connect and when its connected the conversation start, i hear the agent i see the visualizers, animation, etc.. and have the option to end the call by press end call
 
 ### **Success Criteria**
-- ✅ Full end-to-end WebRTC communication
-- ✅ Hebrew voice interaction working
-- ✅ UI reflects real connection state
-- ✅ All error scenarios handled
-- ✅ Performance acceptable (<500ms latency)
+- ✅ UI & UX works and looks good
+
 
 ### **Files Modified**
 - None (testing only)
@@ -378,7 +365,7 @@ Task 1 → Task 2 → Task 3 → Task 4 → Task 6 → Task 7
 | 4. VoiceChat Component | ✅ **DONE** | 50 min | 100% |
 | 5. Backend Signaling | ✅ **DONE** | 35 min | 100% |
 | 6. Conversation History | ⏳ Ready to Start | 30 min | 0% |
-| 7. Testing | ⏳ Waiting | 30 min | 0% |
+| 7. UI & UX Improvements | ⏳ Waiting | 40 min | 0% |
 | **TOTAL** | | **3.5 hours** | **83%** |
 
 ---

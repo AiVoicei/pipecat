@@ -27,7 +27,8 @@
       "Bash(xargs kill:*)",
       "Bash(pgrep:*)",
       "Bash(fuser:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(kill:*)"
     ],
     "deny": [],
     "ask": []
