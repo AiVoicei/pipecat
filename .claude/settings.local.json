@@ -16,7 +16,18 @@
       "Bash(curl:*)",
       "Bash(chmod:*)",
       "Bash(pkill:*)",
-      "Bash(netstat:*)"
+      "Bash(netstat:*)",
+      "Bash(claude mcp add:*)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__get-library-docs",
+      "WebFetch(domain:github.com)",
+      "Bash(killall:*)",
+      "Bash(ss:*)",
+      "Bash(awk:*)",
+      "Bash(xargs kill:*)",
+      "Bash(pgrep:*)",
+      "Bash(fuser:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

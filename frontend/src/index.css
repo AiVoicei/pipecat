@@ -5,7 +5,7 @@
 
 @layer base {
   :root {
-    /* Dark theme inspired by the screenshot */
+    /* AI Voicei Professional Dark Theme */
     --background: 210 11% 8%;
     --foreground: 210 11% 96%;
     --card: 210 11% 10%;
@@ -14,6 +14,7 @@
     --popover-foreground: 210 11% 96%;
     --primary: 142 86% 28%;
     --primary-foreground: 210 11% 96%;
+    --primary-hover: 142 86% 32%;
     --secondary: 210 11% 15%;
     --secondary-foreground: 210 11% 96%;
     --muted: 210 11% 15%;
@@ -26,6 +27,26 @@
     --input: 210 11% 15%;
     --ring: 142 86% 28%;
     --radius: 0.75rem;
+
+    /* AI Voicei Brand Colors */
+    --ai-brand-primary: 142 86% 28%;
+    --ai-brand-secondary: 210 11% 15%;
+    --ai-brand-accent: 45 93% 47%;
+    --ai-success: 142 86% 28%;
+    --ai-warning: 45 93% 47%;
+    --ai-error: 0 63% 31%;
+    --ai-info: 217 91% 60%;
+
+    /* Gradients */
+    --ai-gradient-1: linear-gradient(135deg, hsl(142 86% 28%) 0%, hsl(142 86% 35%) 100%);
+    --ai-gradient-2: linear-gradient(135deg, hsl(210 11% 10%) 0%, hsl(210 11% 15%) 100%);
+    --ai-gradient-glass: linear-gradient(135deg, hsl(210 11% 10% / 0.8) 0%, hsl(210 11% 15% / 0.6) 100%);
+
+    /* Shadows */
+    --ai-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --ai-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --ai-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --ai-shadow-glow: 0 0 20px hsl(142 86% 28% / 0.3);
   }
 }
 
@@ -55,25 +76,75 @@
     direction: rtl; /* Hebrew RTL support */
   }
   
-  /* AI Voicei specific dark styles */
+  /* AI Voicei Professional Component Styles */
   .ai-gradient {
-    background: linear-gradient(135deg, hsl(142 86% 28%) 0%, hsl(142 86% 35%) 100%);
+    background: var(--ai-gradient-1);
   }
-  
+
+  .ai-gradient-secondary {
+    background: var(--ai-gradient-2);
+  }
+
+  .ai-gradient-glass {
+    background: var(--ai-gradient-glass);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
   .ai-hero-bg {
     background: hsl(var(--background));
   }
-  
+
   .ai-card {
     background: hsl(var(--card));
     border: 1px solid hsl(var(--border));
     border-radius: calc(var(--radius) + 2px);
-    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    box-shadow: var(--ai-shadow-md);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  
+
+  .ai-card:hover {
+    box-shadow: var(--ai-shadow-lg);
+    transform: translateY(-1px);
+    border-color: hsl(var(--primary) / 0.3);
+  }
+
+  .ai-card-premium {
+    background: var(--ai-gradient-glass);
+    border: 1px solid hsl(var(--primary) / 0.2);
+    box-shadow: var(--ai-shadow-lg), var(--ai-shadow-glow);
+  }
+
   .ai-card-content {
     background: hsl(var(--card));
     color: hsl(var(--card-foreground));
+  }
+
+  /* AI Voicei Button Styles */
+  .ai-button-primary {
+    background: var(--ai-gradient-1);
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--ai-shadow-md);
+  }
+
+  .ai-button-primary:hover {
+    background: hsl(var(--primary-hover));
+    box-shadow: var(--ai-shadow-lg), var(--ai-shadow-glow);
+    transform: translateY(-1px);
+  }
+
+  .ai-button-secondary {
+    background: hsl(var(--secondary));
+    border: 1px solid hsl(var(--border));
+    color: hsl(var(--secondary-foreground));
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .ai-button-secondary:hover {
+    background: hsl(var(--secondary) / 0.8);
+    border-color: hsl(var(--primary) / 0.5);
   }
   
   /* Status indicators */
@@ -112,9 +183,310 @@
     }
   }
   
-  /* Hebrew text optimization */
+  /* Advanced Hebrew Typography */
   .hebrew {
+    font-family: 'Segoe UI', 'Arial Hebrew', 'Noto Sans Hebrew', 'David CLM', sans-serif;
+    font-feature-settings: 'liga' off, 'kern' 1;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .hebrew-title {
     font-family: 'Segoe UI', 'Arial Hebrew', 'Noto Sans Hebrew', sans-serif;
-    font-feature-settings: 'liga' off;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .hebrew-body {
+    font-family: 'Segoe UI', 'Arial Hebrew', 'Noto Sans Hebrew', sans-serif;
+    line-height: 1.6;
+    font-weight: 400;
+  }
+
+  /* AI Voicei Animations */
+  .ai-fade-in {
+    animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .ai-slide-in-right {
+    animation: slideInRight 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .ai-bounce-subtle {
+    animation: bounceSubtle 2s ease-in-out infinite;
+  }
+
+  .ai-glow-pulse {
+    animation: glowPulse 2s ease-in-out infinite;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes slideInRight {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  @keyframes bounceSubtle {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+  }
+
+  @keyframes glowPulse {
+    0%, 100% {
+      box-shadow: 0 0 20px hsl(142 86% 28% / 0.3);
+    }
+    50% {
+      box-shadow: 0 0 30px hsl(142 86% 28% / 0.6);
+    }
+  }
+
+  /* Voice Activity Indicators */
+  .voice-activity-low {
+    animation: voiceActivityLow 1s ease-in-out infinite;
+  }
+
+  .voice-activity-medium {
+    animation: voiceActivityMedium 0.8s ease-in-out infinite;
+  }
+
+  .voice-activity-high {
+    animation: voiceActivityHigh 0.5s ease-in-out infinite;
+  }
+
+  @keyframes voiceActivityLow {
+    0%, 100% { transform: scaleY(0.3); }
+    50% { transform: scaleY(0.7); }
+  }
+
+  @keyframes voiceActivityMedium {
+    0%, 100% { transform: scaleY(0.5); }
+    50% { transform: scaleY(1); }
+  }
+
+  @keyframes voiceActivityHigh {
+    0%, 100% { transform: scaleY(0.7); }
+    50% { transform: scaleY(1.2); }
+  }
+
+  /* Loading States */
+  .ai-skeleton {
+    background: linear-gradient(90deg,
+      hsl(var(--muted)) 25%,
+      hsl(var(--muted) / 0.5) 50%,
+      hsl(var(--muted)) 75%
+    );
+    background-size: 200% 100%;
+    animation: skeletonLoading 1.5s ease-in-out infinite;
+  }
+
+  @keyframes skeletonLoading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Accessibility Features for Hebrew Users */
+
+  /* Focus Management */
+  .focus-visible:focus-visible {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 2px;
+    border-radius: calc(var(--radius) - 2px);
+  }
+
+  /* Skip to content link */
+  .skip-to-content {
+    position: absolute;
+    top: -40px;
+    left: 6px;
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    padding: 8px 16px;
+    border-radius: calc(var(--radius));
+    text-decoration: none;
+    font-weight: 600;
+    z-index: 1000;
+    transition: top 0.3s;
+  }
+
+  .skip-to-content:focus {
+    top: 6px;
+  }
+
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    :root {
+      --background: 0 0% 0%;
+      --foreground: 0 0% 100%;
+      --card: 0 0% 10%;
+      --border: 0 0% 50%;
+      --primary: 142 100% 40%;
+    }
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+
+    .voice-pulse,
+    .ai-bounce-subtle,
+    .ai-glow-pulse {
+      animation: none !important;
+    }
+  }
+
+  /* Screen reader only content */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* Screen reader accessible alternative for visual indicators */
+  .sr-status {
+    position: absolute;
+    left: -10000px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  /* Hebrew text accessibility improvements */
+  .hebrew-accessible {
+    font-family: 'Segoe UI', 'Arial Hebrew', 'Noto Sans Hebrew', 'David CLM', sans-serif;
+    font-feature-settings: 'liga' off, 'kern' 1;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.6;
+    word-spacing: 0.1em;
+  }
+
+  /* Large text support for readability */
+  @media (min-width: 1024px) {
+    .hebrew-large {
+      font-size: 1.125rem;
+      line-height: 1.7;
+    }
+  }
+
+  /* Color contrast improvements */
+  .ai-accessible-button {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    border: 2px solid transparent;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .ai-accessible-button:hover {
+    background: hsl(var(--primary-hover));
+    border-color: hsl(var(--primary));
+  }
+
+  .ai-accessible-button:focus {
+    outline: 3px solid hsl(var(--primary) / 0.5);
+    outline-offset: 2px;
+  }
+
+  /* ARIA live regions for screen readers */
+  .ai-status-region {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  /* Better touch targets for mobile */
+  @media (max-width: 768px) {
+    .ai-touch-target {
+      min-height: 44px;
+      min-width: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hebrew {
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+  }
+
+  /* Error message accessibility */
+  .ai-error-accessible {
+    background: hsl(var(--destructive) / 0.1);
+    border: 2px solid hsl(var(--destructive));
+    border-radius: calc(var(--radius));
+    padding: 1rem;
+    color: hsl(var(--destructive-foreground));
+    font-weight: 500;
+  }
+
+  .ai-error-accessible::before {
+    content: "שגיאה: ";
+    font-weight: 700;
+  }
+
+  /* Success message accessibility */
+  .ai-success-accessible {
+    background: hsl(var(--ai-success) / 0.1);
+    border: 2px solid hsl(var(--ai-success));
+    border-radius: calc(var(--radius));
+    padding: 1rem;
+    color: hsl(var(--foreground));
+    font-weight: 500;
+  }
+
+  .ai-success-accessible::before {
+    content: "הצלחה: ";
+    font-weight: 700;
+  }
+
+  /* Keyboard navigation improvements */
+  .ai-keyboard-navigation {
+    position: relative;
+  }
+
+  .ai-keyboard-navigation:focus-within::after {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border: 2px solid hsl(var(--primary));
+    border-radius: calc(var(--radius) + 2px);
+    pointer-events: none;
+  }
+
+  /* Voice activity indicators with accessibility */
+  .ai-voice-indicator-accessible {
+    position: relative;
+  }
+
+  .ai-voice-indicator-accessible::after {
+    content: attr(data-voice-status);
+    position: absolute;
+    left: -10000px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
   }
 }
