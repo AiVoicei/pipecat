@@ -19,22 +19,16 @@ export const useVoiceChat = (config: VoiceChatConfig) => {
   
   const [error, setError] = useState<string | null>(null);
   
-  // This will be implemented with actual Pipecat SDK integration
+  // Use real WebRTC connection
   const startCall = async () => {
     try {
       setError(null);
-      setConnectionState('connecting');
-      
-      // TODO: Implement Pipecat WebRTC connection
-      // For now, simulate connection
-      setTimeout(() => {
-        setConnectionState('connected');
-        setCallActive(true);
-      }, 1000);
-      
+
+      // Use the real connect method from voice store
+      await connect();
+
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Connection failed');
-      setConnectionState('error');
     }
   };
   

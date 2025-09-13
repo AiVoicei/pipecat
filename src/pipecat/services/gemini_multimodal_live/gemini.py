@@ -822,8 +822,10 @@ class GeminiMultimodalLiveLLMService(LLMService):
                         },
                         "media_resolution": self._settings["media_resolution"].value,
                     },
-                    "input_audio_transcription": {},
-                    "output_audio_transcription": {},
+                    "input_audio_transcription": {
+                    },
+                    "output_audio_transcription": {
+                    },
                 }
             }
 
@@ -1246,6 +1248,7 @@ class GeminiMultimodalLiveLLMService(LLMService):
         phrases. As a result, we have to aggregate the input transcription. This handler
         aggregates into sentences, splitting on the end of sentence markers.
         """
+        logger.debug("🔥 _handle_evt_input_transcription called!")
         if not evt.serverContent.inputTranscription:
             return
 
@@ -1273,7 +1276,47 @@ class GeminiMultimodalLiveLLMService(LLMService):
             self._user_transcription_buffer = self._user_transcription_buffer[eos_end_marker:]
 
             # Send a TranscriptionFrame with the complete sentence
+            logger.debug("🚨 BEFORE TRANSCRIPT LOG - TESTING")
             logger.debug(f"[Transcription:user] [{complete_sentence}]")
+            logger.debug("🚨 RIGHT AFTER TRANSCRIPT LOG - CHECKING IF THIS EXECUTES")
+
+            # Broadcast transcript to WebSockets
+            try:
+                import sys
+                logger.debug("🎯 Starting broadcast attempt for user transcript...")
+
+                # Import the broadcast function from the web server
+                if '__main__' in sys.modules:
+                    web_server = sys.modules['__main__']
+                    logger.debug("🎯 Found __main__ module")
+
+                    if hasattr(web_server, 'broadcast_transcript_to_websockets'):
+                        logger.debug("🎯 Found broadcast_transcript_to_websockets function")
+
+                        if hasattr(web_server, 'current_session_id'):
+                            logger.debug(f"🎯 Found current_session_id: {getattr(web_server, 'current_session_id', 'NOT_SET')}")
+
+                            if web_server.current_session_id:
+                                import asyncio
+                                asyncio.create_task(
+                                    web_server.broadcast_transcript_to_websockets(
+                                        complete_sentence, is_user=True, session_id=web_server.current_session_id
+                                    )
+                                )
+                                logger.debug(f"🎯 BROADCAST USER: {complete_sentence[:50]}...")
+                            else:
+                                logger.debug("🎯 current_session_id is None/empty")
+                        else:
+                            logger.debug("🎯 current_session_id attribute not found")
+                    else:
+                        logger.debug("🎯 broadcast_transcript_to_websockets function not found")
+                else:
+                    logger.debug("🎯 __main__ module not found in sys.modules")
+            except Exception as e:
+                logger.debug(f"Failed to broadcast user transcript: {e}")
+                import traceback
+                logger.debug(f"Traceback: {traceback.format_exc()}")
+
             await self._handle_user_transcription(
                 complete_sentence, True, self._settings["language"]
             )
@@ -1308,6 +1351,27 @@ class GeminiMultimodalLiveLLMService(LLMService):
             self._accumulated_grounding_metadata = evt.serverContent.groundingMetadata
         # Collect text for tracing
         self._llm_output_buffer += text
+
+        # Log AI response for transcript capture
+        logger.debug(f"[Transcription:assistant] [{text}]")
+
+        # Broadcast AI response to WebSockets
+        try:
+            import sys
+            # Import the broadcast function from the web server
+            if '__main__' in sys.modules:
+                web_server = sys.modules['__main__']
+                if hasattr(web_server, 'broadcast_transcript_to_websockets') and hasattr(web_server, 'current_session_id'):
+                    if web_server.current_session_id:
+                        import asyncio
+                        asyncio.create_task(
+                            web_server.broadcast_transcript_to_websockets(
+                                text, is_user=False, session_id=web_server.current_session_id
+                            )
+                        )
+                        logger.debug(f"🎯 BROADCAST AI: {text[:50]}...")
+        except Exception as e:
+            logger.debug(f"Failed to broadcast AI response: {e}")
 
         await self.push_frame(LLMTextFrame(text=text))
         await self.push_frame(TTSTextFrame(text=text))

@@ -7,6 +7,8 @@ import asyncio
 import os
 import uuid
 import time
+import re
+import logging
 from typing import Optional
 
 from dotenv import load_dotenv
@@ -21,11 +23,21 @@ from pipecat.audio.vad.vad_analyzer import VADParams
 from pipecat.frames.frames import (
     LLMMessagesAppendFrame,
     LLMRunFrame,
+    TextFrame,
+    UserImageRequestFrame,
+    TranscriptionFrame,
+    LLMTextFrame,
+    TTSTextFrame,
+    Frame,
+    StartFrame,
+    AudioRawFrame,
 )
+from pipecat.observers.base_observer import BaseObserver, FrameProcessed, FramePushed
 from pipecat.pipeline.pipeline import Pipeline
 from pipecat.pipeline.runner import PipelineRunner
 from pipecat.pipeline.task import PipelineParams, PipelineTask
 from pipecat.processors.aggregators.openai_llm_context import OpenAILLMContext
+from pipecat.processors.frame_processor import FrameDirection, FrameProcessor
 from pipecat.processors.frameworks.rtvi import (
     ActionResult,
     RTVIAction,
@@ -47,6 +59,39 @@ from pipecat.transports.smallwebrtc.transport import SmallWebRTCTransport
 
 load_dotenv(override=True)
 
+
+# Simple transcript capture approach - store session for direct broadcast
+current_session_id = None
+
+
+class TranscriptObserver(BaseObserver):
+    """Observer to capture and broadcast transcript events from pipeline flow"""
+
+    def __init__(self, session_id: str):
+        super().__init__()
+        self.session_id = session_id
+        logger.info(f"🎯 TranscriptObserver initialized for session {session_id}")
+
+    async def on_push_frame(self, data: FramePushed):
+        """Handle frame transfers between processors - capture transcripts"""
+        frame = data.frame
+
+        # Capture transcript frames and broadcast them
+        if isinstance(frame, TranscriptionFrame):
+            # User transcript (from speech-to-text)
+            logger.info(f"🎯 OBSERVER: User transcript captured: {frame.text}")
+            await broadcast_transcript_to_websockets(frame.text, is_user=True, session_id=self.session_id)
+
+        elif isinstance(frame, TTSTextFrame):
+            # AI response text (TTS text - this is what Gemini generates for speaking)
+            logger.info(f"🎯 OBSERVER: AI TTS text captured: {frame.text}")
+            await broadcast_transcript_to_websockets(frame.text, is_user=False, session_id=self.session_id)
+
+        elif isinstance(frame, LLMTextFrame):
+            # Alternative: LLM response text
+            logger.info(f"🎯 OBSERVER: AI LLM text captured: {frame.text}")
+            await broadcast_transcript_to_websockets(frame.text, is_user=False, session_id=self.session_id)
+
 # FastAPI app setup
 app = FastAPI(
     title="AI Voicei API",
@@ -58,7 +103,9 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173",  # Vite dev server
+        "http://localhost:5173",  # Vite dev server (default)
+        "http://localhost:5174",  # Vite dev server (alternate port)
+        "http://localhost:5175",  # Vite dev server (another port)
         "http://localhost:3000",  # React dev server
         "https://aivoicei.com",   # Production domain
         "https://*.aivoicei.com", # Subdomains
@@ -73,6 +120,43 @@ active_sessions = {}
 
 # WebRTC connections storage
 webrtc_connections = {}
+
+# WebSocket connections for transcript broadcasting
+websocket_connections = {}
+
+
+async def broadcast_transcript_to_websockets(text: str, is_user: bool, session_id: str):
+    """Broadcast transcript to WebSocket connections - event-based (non-blocking)"""
+    if not text or not text.strip():
+        return
+
+    message = {
+        "type": "transcript",
+        "text": text.strip(),
+        "speaker": "user" if is_user else "assistant",
+        "session_id": session_id,
+        "timestamp": time.time()
+    }
+
+    # Send to all connected WebSocket clients
+    if not websocket_connections:
+        logger.info(f"🎯 WebSocket broadcast ready but no clients connected. Message: {text[:50]}...")
+        return
+
+    disconnected_clients = []
+    for client_id, websocket in websocket_connections.items():
+        try:
+            await websocket.send_text(json.dumps(message))
+            logger.info(f"✅ Sent transcript to client {client_id}: {text[:50]}...")
+        except Exception as e:
+            logger.warning(f"Failed to send transcript to client {client_id}: {e}")
+            disconnected_clients.append(client_id)
+
+    # Clean up disconnected clients
+    for client_id in disconnected_clients:
+        del websocket_connections[client_id]
+
+# Direct event handler approach for transcript capture
 
 # ICE servers for WebRTC
 ice_servers = [
@@ -119,6 +203,10 @@ def create_action_llm_append_to_messages(context_aggregator):
 async def run_webrtc_bot_optimized(webrtc_connection: SmallWebRTCConnection, session_id: str):
     """Run Hebrew voice bot with PURE Gemini Multimodal Live - fastest approach"""
     logger.info(f"Starting PURE GEMINI WebRTC Hebrew voice bot session {session_id}")
+
+    # Store session for transcript capture
+    global current_session_id
+    current_session_id = session_id
 
     # Response time tracking
     response_times = []
@@ -198,12 +286,14 @@ async def run_webrtc_bot_optimized(webrtc_connection: SmallWebRTCConnection, ses
     ])
     context_aggregator = llm.create_context_aggregator(context)
 
+
     # RTVI setup for UI integration
     action_llm_append_to_messages = create_action_llm_append_to_messages(context_aggregator)
     rtvi = RTVIProcessor(config=RTVIConfig(config=[]))
     rtvi.register_action(action_llm_append_to_messages)
 
-    # PURE GEMINI PIPELINE - Audio → Gemini → Audio (no STT/TTS separation!)
+    # CLEAN PIPELINE WITHOUT TRANSCRIPT INTERCEPTION (handled directly in Gemini service)
+    # Audio → Gemini → Audio (working configuration)
     pipeline = Pipeline([
         transport.input(),
         rtvi,                       # RTVI for UI
@@ -220,7 +310,10 @@ async def run_webrtc_bot_optimized(webrtc_connection: SmallWebRTCConnection, ses
             enable_metrics=True,
             enable_usage_metrics=True,
         ),
-        observers=[RTVIObserver(rtvi)],
+        observers=[
+            RTVIObserver(rtvi),
+            TranscriptObserver(session_id)  # 🎯 Add transcript observer to capture frames
+        ],
     )
 
     # Store optimized session with metrics
@@ -250,6 +343,8 @@ async def run_webrtc_bot_optimized(webrtc_connection: SmallWebRTCConnection, ses
 
         rtvi_frame = RTVIServerMessageFrame(data=ui_config)
         await task.queue_frames([rtvi_frame])
+
+    # 🎯 TRANSCRIPT CAPTURE - Using TranscriptObserver for proper frame monitoring
 
     @transport.event_handler("on_client_connected")
     async def on_client_connected(transport, client):
@@ -286,6 +381,8 @@ async def run_webrtc_bot_optimized(webrtc_connection: SmallWebRTCConnection, ses
         if session_id in active_sessions:
             del active_sessions[session_id]
 
+    # Remove complex async setup for now
+
     # Add response time tracking for Gemini
     @llm.event_handler("on_audio_input_start")
     async def on_audio_input_start():
@@ -308,6 +405,12 @@ async def run_webrtc_bot_optimized(webrtc_connection: SmallWebRTCConnection, ses
             start_time = None
 
     runner = PipelineRunner(handle_sigint=False)
+
+    # TEST WEBSOCKET BROADCAST: Send test message after pipeline is ready
+    test_message = "🎯 TEST: WebSocket broadcast working!"
+    await broadcast_transcript_to_websockets(test_message, is_user=False, session_id=session_id)
+    logger.info(f"🎯 SENT TEST MESSAGE DIRECTLY: {test_message}")
+
     await runner.run(task)
 
 
@@ -378,11 +481,16 @@ async def webrtc_offer(request: dict, background_tasks: BackgroundTasks):
 # WebSocket signaling endpoint for WebRTC negotiation
 @app.websocket("/websocket")
 async def websocket_signaling_endpoint(websocket: WebSocket):
-    """WebSocket endpoint for WebRTC signaling"""
+    """WebSocket endpoint for WebRTC signaling and transcript streaming"""
     await websocket.accept()
-    logger.info("WebSocket signaling connection established")
+    logger.info("WebSocket connection established")
 
     session_id = None
+    client_id = str(uuid.uuid4())
+
+    # Register WebSocket connection for transcript broadcasting
+    websocket_connections[client_id] = websocket
+    logger.info(f"WebSocket client {client_id} registered for transcript broadcasting")
 
     try:
         while True:
@@ -398,11 +506,21 @@ async def websocket_signaling_endpoint(websocket: WebSocket):
                 if not session_id:
                     session_id = str(uuid.uuid4())
 
-                logger.info(f"Client joining session: {session_id}")
+                logger.info(f"Client {client_id} joining session: {session_id}")
+
+                # Send session start event for transcript initialization
+                session_start_message = {
+                    "type": "session_start",
+                    "session_id": session_id,
+                    "client_id": client_id,
+                    "timestamp": time.time()
+                }
+                await websocket.send_text(json.dumps(session_start_message))
 
                 response = {
                     "type": "joined",
                     "session_id": session_id,
+                    "client_id": client_id,
                     "message": "Successfully joined session"
                 }
                 await websocket.send_text(json.dumps(response))
@@ -469,7 +587,10 @@ async def websocket_signaling_endpoint(websocket: WebSocket):
                 await websocket.send_text(json.dumps(response))
 
     except WebSocketDisconnect:
-        logger.info(f"WebSocket signaling disconnected for session: {session_id}")
+        logger.info(f"WebSocket disconnected - client: {client_id}, session: {session_id}")
+        # Clean up WebSocket connection
+        if client_id in websocket_connections:
+            del websocket_connections[client_id]
         if session_id and session_id in active_sessions:
             try:
                 session = active_sessions[session_id]
@@ -478,7 +599,10 @@ async def websocket_signaling_endpoint(websocket: WebSocket):
             except Exception as e:
                 logger.error(f"Error cleaning up session {session_id}: {e}")
     except Exception as e:
-        logger.error(f"WebSocket signaling error: {e}")
+        logger.error(f"WebSocket error: {e}")
+        # Clean up WebSocket connection on error
+        if client_id in websocket_connections:
+            del websocket_connections[client_id]
 
 
 # Legacy WebSocket endpoint for backward compatibility
@@ -647,12 +771,13 @@ async def get_system_metrics():
 
 
 
+
 if __name__ == "__main__":
     # For development: run with uvicorn
     import uvicorn
-    
+
     port = int(os.getenv("PORT", "7860"))
     host = os.getenv("HOST", "localhost")
-    
+
     logger.info(f"Starting AI Voicei Web Server on {host}:{port}")
     uvicorn.run(app, host=host, port=port, log_level="info")

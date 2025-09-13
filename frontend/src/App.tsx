@@ -4,12 +4,14 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
 import { Menu, X, MessageSquare, Settings, BarChart3 } from 'lucide-react';
-import type { ConversationMessage } from '@/components/voice/ConversationHistory';
+import { useVoiceStore } from '@/stores/voiceStore';
 
 function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [conversationMessages, setConversationMessages] = useState<ConversationMessage[]>([]);
   const [activeTab, setActiveTab] = useState<'chat' | 'history' | 'settings'>('chat');
+
+  // Get real conversation messages from voice store
+  const { messages: conversationMessages } = useVoiceStore();
 
   // Enable dark mode and RTL support
   useEffect(() => {
@@ -18,33 +20,6 @@ function App() {
     document.documentElement.setAttribute('lang', 'he');
   }, []);
 
-  // Simulate some conversation messages for demonstration
-  useEffect(() => {
-    const sampleMessages: ConversationMessage[] = [
-      {
-        id: '1',
-        type: 'user',
-        content: 'שלום, איך אתה?',
-        timestamp: new Date(Date.now() - 300000),
-        language: 'he'
-      },
-      {
-        id: '2',
-        type: 'assistant',
-        content: 'שלום! אני בסדר גמור, תודה שאלת. איך אתה מרגיש היום?',
-        timestamp: new Date(Date.now() - 295000),
-        language: 'he'
-      },
-      {
-        id: '3',
-        type: 'user',
-        content: 'מעולה! אני רוצה לדעת מה המזג אויר היום',
-        timestamp: new Date(Date.now() - 200000),
-        language: 'he'
-      }
-    ];
-    setConversationMessages(sampleMessages);
-  }, []);
 
   const renderMobileContent = () => {
     switch (activeTab) {

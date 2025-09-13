@@ -18,11 +18,14 @@ export function VoiceChat({ botUrl }: VoiceChatProps) {
     remoteStream,
     isRecording,
     peerConnectionState,
+    messages,
+    isAssistantSpeaking,
     connect,
     disconnect,
     setCallActive,
     startRecording,
-    stopRecording
+    stopRecording,
+    clearMessages
   } = useVoiceStore();
 
   const statusAnnouncementRef = useRef<HTMLDivElement>(null);

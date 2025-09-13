@@ -34,6 +34,8 @@ export class DirectWebRTCService implements WebRTCService {
   private localStream: MediaStream | null = null
   private remoteStream: MediaStream | null = null
   private sessionId: string | null = null
+  private websocket: WebSocket | null = null
+  private isDisconnecting: boolean = false
 
   // Event callbacks
   private events: Partial<WebRTCEvents> = {}
@@ -77,12 +79,94 @@ export class DirectWebRTCService implements WebRTCService {
   }
 
   /**
-   * Initialize HTTP-based signaling with /api/offer endpoint
+   * Initialize HTTP-based signaling with WebSocket for transcript events
    */
   private async initializeSignaling(): Promise<void> {
-    console.log('[WebRTC] Using HTTP API signaling...')
-    // No WebSocket needed - we'll use HTTP API for signaling
+    console.log('[WebRTC] Initializing signaling with WebSocket for transcripts...')
+
+    // Connect to WebSocket for real-time transcript events
+    await this.connectWebSocket()
+
     return Promise.resolve()
+  }
+
+  /**
+   * Connect to WebSocket for real-time transcript events
+   */
+  private async connectWebSocket(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      try {
+        const wsUrl = this.BACKEND_URL.replace('http', 'ws') + '/websocket'
+        console.log('[WebRTC] Connecting to WebSocket:', wsUrl)
+
+        const ws = new WebSocket(wsUrl)
+
+        ws.onopen = () => {
+          console.log('[WebRTC] WebSocket connected for transcripts')
+          this.websocket = ws
+
+          // Send join message to establish session with backend
+          const joinMessage = {
+            type: "join",
+            session_id: this.sessionId // Will be null initially, backend will assign one
+          }
+
+          ws.send(JSON.stringify(joinMessage))
+          console.log('[WebRTC] Sent join message to establish session')
+
+          resolve()
+        }
+
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data)
+            console.log('[WebRTC] WebSocket message received:', data)
+
+            // Handle transcript events
+            if (data.type === 'transcript' && data.text) {
+              const isUser = data.speaker === 'user'
+              console.log(`[WebRTC] Transcript - ${isUser ? 'User' : 'AI'}: ${data.text}`)
+              this.events.onTranscript?.(data.text, isUser)
+            }
+
+            // Handle session events
+            if (data.type === 'session_start') {
+              this.sessionId = data.session_id
+              console.log('[WebRTC] Session started:', this.sessionId)
+            }
+
+            // Handle join confirmation
+            if (data.type === 'joined') {
+              this.sessionId = data.session_id
+              console.log('[WebRTC] Successfully joined session:', this.sessionId)
+            }
+
+          } catch (error) {
+            console.error('[WebRTC] Failed to parse WebSocket message:', error)
+          }
+        }
+
+        ws.onerror = (error) => {
+          console.error('[WebRTC] WebSocket error:', error)
+          this.handleError(new Error('WebSocket connection failed'))
+          reject(error)
+        }
+
+        ws.onclose = (event) => {
+          console.log('[WebRTC] WebSocket closed:', event.code, event.reason)
+          this.websocket = null
+
+          // Only treat as error if we didn't expect the closure
+          if (!this.isDisconnecting) {
+            this.handleError(new Error('WebSocket connection lost'))
+          }
+        }
+
+      } catch (error) {
+        console.error('[WebRTC] Failed to connect WebSocket:', error)
+        reject(error)
+      }
+    })
   }
 
   /**
@@ -316,6 +400,15 @@ export class DirectWebRTCService implements WebRTCService {
     console.log('[WebRTC] Disconnecting...')
 
     try {
+      // Set disconnecting flag
+      this.isDisconnecting = true
+
+      // Close WebSocket connection
+      if (this.websocket) {
+        this.websocket.close()
+        this.websocket = null
+      }
+
       // Stop local media streams
       if (this.localStream) {
         this.localStream.getTracks().forEach(track => track.stop())
@@ -339,6 +432,9 @@ export class DirectWebRTCService implements WebRTCService {
 
       // Clear event handlers
       this.events = {}
+
+      // Reset disconnecting flag
+      this.isDisconnecting = false
 
       console.log('[WebRTC] Disconnected successfully')
     } catch (error) {

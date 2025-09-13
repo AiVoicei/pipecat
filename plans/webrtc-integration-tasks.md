@@ -307,6 +307,7 @@ useEffect(() => {
 
 ### **Goal**
 Stable cool and clean UI & UX animations using Shadcn & pipecat ui kit.
+#6C2CCC - Thats the color that should be of buttons, loader etc..
 https://github.com/pipecat-ai/voice-ui-kit/tree/main
 https://ui.shadcn.com/
 
@@ -329,7 +330,8 @@ https://ui.shadcn.com/
 
 
 ### **Files Modified**
-- None (testing only)
+- `frontend/src/components/voice/ConversationHistory.tsx`
+- `frontend/src/components/voice/VoiceChat.tsx`
 
 ---
 

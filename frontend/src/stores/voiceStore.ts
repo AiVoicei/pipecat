@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { apiService } from '../services/api';
 import type { WebRTCService } from '../services/webrtc';
 import { getWebRTCService } from '../services/webrtc';
+import type { ConversationMessage } from '../components/voice/ConversationHistory';
 
 interface VoiceState {
   isConnected: boolean;
@@ -18,6 +19,10 @@ interface VoiceState {
   remoteStream: MediaStream | null;
   isRecording: boolean;
 
+  // Conversation state
+  messages: ConversationMessage[];
+  isAssistantSpeaking: boolean;
+
   // Actions
   setConnectionState: (state: 'idle' | 'connecting' | 'connected' | 'error') => void;
   setCallActive: (active: boolean) => void;
@@ -29,6 +34,11 @@ interface VoiceState {
   startRecording: () => Promise<void>;
   stopRecording: () => void;
   onTranscript: (callback: (text: string, isUser: boolean) => void) => void;
+
+  // Conversation actions
+  addMessage: (text: string, isUser: boolean) => void;
+  clearMessages: () => void;
+  setAssistantSpeaking: (speaking: boolean) => void;
 }
 
 export const useVoiceStore = create<VoiceState>((set, get) => ({
@@ -45,6 +55,10 @@ export const useVoiceStore = create<VoiceState>((set, get) => ({
   localStream: null,
   remoteStream: null,
   isRecording: false,
+
+  // Conversation initial state
+  messages: [],
+  isAssistantSpeaking: false,
   
   setConnectionState: (state) => set({ 
     connectionState: state,
@@ -61,6 +75,9 @@ export const useVoiceStore = create<VoiceState>((set, get) => ({
   connect: async () => {
     try {
       set({ connectionState: 'connecting', error: null });
+
+      // Initialize with empty conversation history - real messages will come from WebSocket transcripts
+      set({ messages: [] });
 
       // Test API connection first
       const isApiHealthy = await apiService.testConnection();
@@ -102,6 +119,24 @@ export const useVoiceStore = create<VoiceState>((set, get) => ({
 
       // Connect via WebRTC
       await webrtcService.connect();
+
+      // Set up transcript handling
+      webrtcService.onTranscript((text: string, isUser: boolean) => {
+        console.log(`[VoiceStore] Transcript received - ${isUser ? 'User' : 'AI'}: ${text}`);
+
+        // Add message to conversation history
+        get().addMessage(text, isUser);
+
+        // Track assistant speaking state
+        if (!isUser) {
+          get().setAssistantSpeaking(true);
+
+          // Set speaking to false after the message (simulate TTS completion)
+          setTimeout(() => {
+            get().setAssistantSpeaking(false);
+          }, text.length * 50); // Rough estimate of speech duration
+        }
+      });
 
       set({
         sessionId: sessionResponse.session_id,
@@ -250,5 +285,34 @@ export const useVoiceStore = create<VoiceState>((set, get) => ({
     } else {
       console.warn('[VoiceStore] Cannot set transcript callback - WebRTC service not initialized');
     }
+  },
+
+  // Conversation actions
+  addMessage: (text: string, isUser: boolean) => {
+    const message: ConversationMessage = {
+      id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      type: isUser ? 'user' : 'assistant',
+      content: text,
+      timestamp: new Date(),
+      metadata: {
+        processingTime: Date.now() % 1000 // Placeholder processing time
+      }
+    };
+
+    set((state) => ({
+      messages: [...state.messages, message]
+    }));
+
+    console.log(`[VoiceStore] Message added - ${isUser ? 'User' : 'Assistant'}: ${text}`);
+  },
+
+  clearMessages: () => {
+    set({ messages: [] });
+    console.log('[VoiceStore] Conversation history cleared');
+  },
+
+  setAssistantSpeaking: (speaking: boolean) => {
+    set({ isAssistantSpeaking: speaking });
+    console.log(`[VoiceStore] Assistant speaking: ${speaking}`);
   }
 }));
