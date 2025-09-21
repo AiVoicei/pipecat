@@ -12,9 +12,9 @@
     --card-foreground: 210 11% 96%;
     --popover: 210 11% 10%;
     --popover-foreground: 210 11% 96%;
-    --primary: 142 86% 28%;
+    --primary: 268 65% 50%; /* #6C2CCC */
     --primary-foreground: 210 11% 96%;
-    --primary-hover: 142 86% 32%;
+    --primary-hover: 268 65% 55%;
     --secondary: 210 11% 15%;
     --secondary-foreground: 210 11% 96%;
     --muted: 210 11% 15%;
@@ -25,20 +25,20 @@
     --destructive-foreground: 210 11% 96%;
     --border: 210 11% 20%;
     --input: 210 11% 15%;
-    --ring: 142 86% 28%;
+    --ring: 268 65% 50%;
     --radius: 0.75rem;
 
     /* AI Voicei Brand Colors */
-    --ai-brand-primary: 142 86% 28%;
+    --ai-brand-primary: 268 65% 50%; /* #6C2CCC */
     --ai-brand-secondary: 210 11% 15%;
     --ai-brand-accent: 45 93% 47%;
-    --ai-success: 142 86% 28%;
+    --ai-success: 268 65% 50%;
     --ai-warning: 45 93% 47%;
     --ai-error: 0 63% 31%;
     --ai-info: 217 91% 60%;
 
     /* Gradients */
-    --ai-gradient-1: linear-gradient(135deg, hsl(142 86% 28%) 0%, hsl(142 86% 35%) 100%);
+    --ai-gradient-1: linear-gradient(135deg, hsl(268 65% 50%) 0%, hsl(268 65% 55%) 100%);
     --ai-gradient-2: linear-gradient(135deg, hsl(210 11% 10%) 0%, hsl(210 11% 15%) 100%);
     --ai-gradient-glass: linear-gradient(135deg, hsl(210 11% 10% / 0.8) 0%, hsl(210 11% 15% / 0.6) 100%);
 
@@ -46,19 +46,23 @@
     --ai-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --ai-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     --ai-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    --ai-shadow-glow: 0 0 20px hsl(142 86% 28% / 0.3);
+    --ai-shadow-glow: 0 0 20px hsl(268 65% 50% / 0.3);
   }
 }
 
 @layer base {
   * {
     border-color: hsl(var(--border));
+    box-sizing: border-box; /* Include padding and border in element's total width */
   }
+
   
   html {
     background: hsl(var(--background));
     color: hsl(var(--foreground));
     color-scheme: dark;
+    overflow-x: hidden; /* Prevent horizontal scrolling */
+    max-width: 100vw; /* Ensure html doesn't exceed viewport width */
   }
   
   html.dark {
@@ -74,6 +78,8 @@
     color: hsl(var(--foreground));
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
     direction: rtl; /* Hebrew RTL support */
+    overflow-x: hidden; /* Prevent horizontal scrolling */
+    max-width: 100vw; /* Ensure body doesn't exceed viewport width */
   }
   
   /* AI Voicei Professional Component Styles */
@@ -149,7 +155,7 @@
   
   /* Status indicators */
   .status-connected {
-    background: hsl(142 86% 28%);
+    background: hsl(268 65% 50%);
     color: white;
   }
   
@@ -171,15 +177,15 @@
   
   /* Voice indicator animations */
   .voice-pulse {
-    animation: pulse-green 1.5s infinite;
+    animation: pulse-primary 1.5s infinite;
   }
-  
-  @keyframes pulse-green {
+
+  @keyframes pulse-primary {
     0%, 100% {
-      box-shadow: 0 0 0 0 hsl(142 86% 28% / 0.7);
+      box-shadow: 0 0 0 0 hsl(268 65% 50% / 0.7);
     }
     50% {
-      box-shadow: 0 0 0 15px hsl(142 86% 28% / 0);
+      box-shadow: 0 0 0 15px hsl(268 65% 50% / 0);
     }
   }
   
@@ -221,6 +227,35 @@
     animation: glowPulse 2s ease-in-out infinite;
   }
 
+  /* Enhanced Animation Classes */
+  .animate-fade-in {
+    animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .animate-slide-in-up {
+    animation: slideInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .animate-slide-in-down {
+    animation: slideInDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .animate-bounce-subtle {
+    animation: bounceSubtle 2s ease-in-out infinite;
+  }
+
+  .animate-scale-pulse {
+    animation: scalePulse 1.5s ease-in-out infinite;
+  }
+
+  .animate-breathing {
+    animation: breathing 3s ease-in-out infinite;
+  }
+
+  .animation-delay-75 {
+    animation-delay: 75ms;
+  }
+
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
@@ -238,10 +273,36 @@
 
   @keyframes glowPulse {
     0%, 100% {
-      box-shadow: 0 0 20px hsl(142 86% 28% / 0.3);
+      box-shadow: 0 0 20px hsl(268 65% 50% / 0.3);
     }
     50% {
-      box-shadow: 0 0 30px hsl(142 86% 28% / 0.6);
+      box-shadow: 0 0 30px hsl(268 65% 50% / 0.6);
+    }
+  }
+
+  @keyframes slideInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes slideInDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes scalePulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+
+  @keyframes breathing {
+    0%, 100% {
+      transform: scale(1);
+      box-shadow: 0 0 20px hsl(268 65% 50% / 0.2);
+    }
+    50% {
+      transform: scale(1.02);
+      box-shadow: 0 0 25px hsl(268 65% 50% / 0.4);
     }
   }
 
@@ -324,7 +385,7 @@
       --foreground: 0 0% 100%;
       --card: 0 0% 10%;
       --border: 0 0% 50%;
-      --primary: 142 100% 40%;
+      --primary: 268 100% 60%;
     }
   }
 

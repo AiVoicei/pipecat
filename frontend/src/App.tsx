@@ -73,7 +73,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-screen w-screen bg-background flex flex-col overflow-hidden">
       {/* Mobile Header */}
       <header className="md:hidden border-b border-border bg-card/50 backdrop-blur sticky top-0 z-50">
         <div className="flex items-center justify-between px-4 py-3">
@@ -156,25 +156,32 @@ function App() {
       </nav>
 
       {/* Mobile Content */}
-      <main className="md:hidden container mx-auto px-4 py-6">
-        <div className="ai-fade-in">
+      <main className="md:hidden flex-1 overflow-y-auto overflow-x-hidden">
+        <div className="container mx-auto px-4 py-6 ai-fade-in">
           {renderMobileContent()}
         </div>
       </main>
 
       {/* Desktop Content */}
-      <main className="hidden md:block container mx-auto px-6 py-8">
-        <div className="max-w-7xl mx-auto">
+      <main className="hidden md:block flex-1 overflow-y-auto overflow-x-hidden">
+        <div className="container max-w-7xl mx-auto px-6 py-8">
+          <div className="max-w-6xl mx-auto">
           {/* Desktop Dashboard Grid */}
-          <div className="grid gap-6 lg:grid-cols-4 mb-8">
+          <div className="grid gap-6 lg:grid-cols-2 mb-8">
 
             {/* Main Voice Chat Card */}
-            <div className="lg:col-span-2 order-2 lg:order-1">
+            <div className="order-2 lg:order-1">
               <Card className="ai-card p-6 h-full min-h-[500px]">
                 <div className="flex flex-col h-full">
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-lg font-semibold text-card-foreground hebrew">שיחה קולית</h2>
-                    <AudioVisualizer isActive={false} variant="bars" className="opacity-50" />
+                    <div className="w-8 h-6 flex items-center justify-center">
+                      <div className="flex gap-1">
+                        <div className="w-1 h-3 bg-[#6C2CCC]/30 rounded-full"></div>
+                        <div className="w-1 h-4 bg-[#6C2CCC]/50 rounded-full"></div>
+                        <div className="w-1 h-2 bg-[#6C2CCC]/30 rounded-full"></div>
+                      </div>
+                    </div>
                   </div>
                   <div className="flex-1">
                     <VoiceChat />
@@ -184,7 +191,7 @@ function App() {
             </div>
 
             {/* Conversation History */}
-            <div className="lg:col-span-2 order-1 lg:order-2">
+            <div className="order-1 lg:order-2">
               <ConversationHistory
                 messages={conversationMessages}
                 maxHeight="500px"
@@ -243,7 +250,11 @@ function App() {
               <h3 className="text-sm font-medium text-card-foreground mb-2 hebrew">זיהוי קול מתקדם</h3>
               <p className="text-xs text-muted-foreground hebrew">טכנולוגיה מתקדמת לזיהוי דיבור בעברית</p>
               <div className="mt-3 flex justify-center">
-                <AudioVisualizer isActive={true} variant="circle" className="scale-50" />
+                <div className="w-12 h-12 rounded-full border-2 border-[#6C2CCC]/20 flex items-center justify-center animate-pulse">
+                  <div className="w-6 h-6 rounded-full bg-[#6C2CCC]/10 flex items-center justify-center">
+                    <div className="w-3 h-3 rounded-full bg-[#6C2CCC]/30"></div>
+                  </div>
+                </div>
               </div>
             </Card>
 
@@ -251,19 +262,26 @@ function App() {
               <h3 className="text-sm font-medium text-card-foreground mb-2 hebrew">תשובות חכמות</h3>
               <p className="text-xs text-muted-foreground hebrew">מודל Gemini AI עם הבנה מעמיקה בעברית</p>
               <div className="mt-3">
-                <AudioVisualizer isActive={true} variant="waveform" className="scale-75 opacity-60" />
+                <div className="w-full h-6 flex items-center justify-center gap-1">
+                  {[1,2,3,4,5,6].map((i) => (
+                    <div key={i} className={`w-1 bg-[#6C2CCC]/40 rounded-full animate-pulse`}
+                         style={{height: `${Math.random() * 12 + 6}px`, animationDelay: `${i * 100}ms`}}></div>
+                  ))}
+                </div>
               </div>
             </Card>
           </div>
+
+        </div>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border bg-card/30 backdrop-blur mt-8 md:mt-16">
-        <div className="container mx-auto px-4 md:px-6 py-6">
+      <footer className="border-t border-border bg-card/30 backdrop-blur flex-shrink-0">
+        <div className="container mx-auto px-4 md:px-6 py-4">
           <div className="text-center text-muted-foreground text-sm">
             <p className="hebrew">© 2024 AI Voicei. כל הזכויות שמורות.</p>
-            <p className="mt-2 text-xs">מופעל על ידי Pipecat AI Framework</p>
+            <p className="mt-1 text-xs">מופעל על ידי Pipecat AI Framework</p>
           </div>
         </div>
       </footer>
