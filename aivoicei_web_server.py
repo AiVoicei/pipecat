@@ -60,37 +60,11 @@ from pipecat.transports.smallwebrtc.transport import SmallWebRTCTransport
 load_dotenv(override=True)
 
 
-# Simple transcript capture approach - store session for direct broadcast
-current_session_id = None
+# Import the proper transcript processor
+from pipecat.processors.transcript_processor import TranscriptProcessor
 
-
-class TranscriptObserver(BaseObserver):
-    """Observer to capture and broadcast transcript events from pipeline flow"""
-
-    def __init__(self, session_id: str):
-        super().__init__()
-        self.session_id = session_id
-        logger.info(f"🎯 TranscriptObserver initialized for session {session_id}")
-
-    async def on_push_frame(self, data: FramePushed):
-        """Handle frame transfers between processors - capture transcripts"""
-        frame = data.frame
-
-        # Capture transcript frames and broadcast them
-        if isinstance(frame, TranscriptionFrame):
-            # User transcript (from speech-to-text)
-            logger.info(f"🎯 OBSERVER: User transcript captured: {frame.text}")
-            await broadcast_transcript_to_websockets(frame.text, is_user=True, session_id=self.session_id)
-
-        elif isinstance(frame, TTSTextFrame):
-            # AI response text (TTS text - this is what Gemini generates for speaking)
-            logger.info(f"🎯 OBSERVER: AI TTS text captured: {frame.text}")
-            await broadcast_transcript_to_websockets(frame.text, is_user=False, session_id=self.session_id)
-
-        elif isinstance(frame, LLMTextFrame):
-            # Alternative: LLM response text
-            logger.info(f"🎯 OBSERVER: AI LLM text captured: {frame.text}")
-            await broadcast_transcript_to_websockets(frame.text, is_user=False, session_id=self.session_id)
+# Store active transcript processors for each session
+transcript_processors = {}
 
 # FastAPI app setup
 app = FastAPI(
@@ -287,18 +261,59 @@ async def run_webrtc_bot_optimized(webrtc_connection: SmallWebRTCConnection, ses
     context_aggregator = llm.create_context_aggregator(context)
 
 
-    # RTVI setup for UI integration
+    # RTVI setup for UI integration with transcription events enabled
     action_llm_append_to_messages = create_action_llm_append_to_messages(context_aggregator)
-    rtvi = RTVIProcessor(config=RTVIConfig(config=[]))
+    rtvi = RTVIProcessor(
+        config=RTVIConfig(config=[]),
+        transcription_events=True,  # Enable transcription events for proper user transcript capture
+        performance_metrics=True    # Optional: track performance
+    )
     rtvi.register_action(action_llm_append_to_messages)
 
-    # CLEAN PIPELINE WITHOUT TRANSCRIPT INTERCEPTION (handled directly in Gemini service)
-    # Audio → Gemini → Audio (working configuration)
+    # Create transcript processor for clean message handling
+    transcript = TranscriptProcessor()
+
+    # Store transcript processor for this session
+    transcript_processors[session_id] = transcript
+
+    # Setup transcript event handler for complete messages
+    @transcript.event_handler("on_transcript_update")
+    async def handle_transcript_update(processor, frame):
+        """Handle complete transcript messages from TranscriptProcessor"""
+        # Extract messages from the frame
+        messages = frame.messages
+
+        for message in messages:
+            is_user = message.role == "user"
+            text = message.content
+
+            logger.info(f"🎯 TRANSCRIPT: Complete {'User' if is_user else 'AI'} message: {text}")
+            await broadcast_transcript_to_websockets(text, is_user=is_user, session_id=session_id)
+
+    # GEMINI USER TRANSCRIPTION CALLBACK: Handle user speech text for frontend display
+    async def handle_user_transcription_callback(text: str):
+        """Handle user transcriptions from Gemini service callback"""
+        try:
+            text = text.strip()
+            if text:
+                logger.info(f"🎯 USER TRANSCRIPTION CALLBACK: {text}")
+                await broadcast_transcript_to_websockets(text, is_user=True, session_id=session_id)
+        except Exception as e:
+            logger.error(f"Error in user transcription callback: {e}")
+
+    # Set the user transcription callback on the Gemini service
+    llm._user_transcript_callback = handle_user_transcription_callback
+    logger.info("🔥 Registered Gemini user transcription callback")
+
+    # ENHANCED PIPELINE WITH OFFICIAL RTVI TRANSCRIPT HANDLING
+    # Audio → RTVI (early for transcript capture) → Transcript → Gemini → Audio (with complete messages)
     pipeline = Pipeline([
         transport.input(),
-        rtvi,                       # RTVI for UI
+        rtvi,                          # RTVI early in pipeline for transcript events (with transcription_events=True)
+        transcript.user(),             # Handle user transcripts for LLM (with event handler)
         context_aggregator.user(),
-        llm,                        # Gemini handles STT+LLM+TTS in one service
+        llm,                           # Gemini handles STT+LLM+TTS in one service
+        transcript.assistant(),        # Handle assistant transcripts (complete messages)
         transport.output(),
         context_aggregator.assistant(),
     ])
@@ -312,20 +327,22 @@ async def run_webrtc_bot_optimized(webrtc_connection: SmallWebRTCConnection, ses
         ),
         observers=[
             RTVIObserver(rtvi),
-            TranscriptObserver(session_id)  # 🎯 Add transcript observer to capture frames
+            # TranscriptProcessor handles complete messages automatically via event handlers
         ],
     )
 
-    # Store optimized session with metrics
+    # Store optimized session with metrics and transcript processors
     active_sessions[session_id] = {
         'task': task,
         'transport': transport,
         'rtvi': rtvi,
+        'transcript': transcript,
         'webrtc_connection': webrtc_connection,
         'response_times': response_times,
         'llm': llm,
         'optimized': True,
-        'pure_gemini': True  # Flag to indicate pure Gemini approach
+        'pure_gemini': True,  # Flag to indicate pure Gemini approach
+        'transcript_enabled': True  # Flag to indicate clean transcript handling
     }
 
     # RTVI client ready handler (for UI configuration)
@@ -686,6 +703,11 @@ async def end_session(session_id: str):
     try:
         session = active_sessions[session_id]
         await session['task'].cancel()
+
+        # Clean up transcript processor if it exists
+        if session_id in transcript_processors:
+            del transcript_processors[session_id]
+
         del active_sessions[session_id]
         
         return {

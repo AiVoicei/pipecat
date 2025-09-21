@@ -23,6 +23,9 @@ interface VoiceState {
   messages: ConversationMessage[];
   isAssistantSpeaking: boolean;
 
+  // Simple message processing (no aggregation needed with TranscriptProcessor)
+  processingMessage: boolean;
+
   // Actions
   setConnectionState: (state: 'idle' | 'connecting' | 'connected' | 'error') => void;
   setCallActive: (active: boolean) => void;
@@ -59,6 +62,9 @@ export const useVoiceStore = create<VoiceState>((set, get) => ({
   // Conversation initial state
   messages: [],
   isAssistantSpeaking: false,
+
+  // Simple message processing initial state
+  processingMessage: false,
   
   setConnectionState: (state) => set({ 
     connectionState: state,
@@ -120,21 +126,18 @@ export const useVoiceStore = create<VoiceState>((set, get) => ({
       // Connect via WebRTC
       await webrtcService.connect();
 
-      // Set up transcript handling
+      // Set up transcript handling (now receives complete messages from TranscriptProcessor)
       webrtcService.onTranscript((text: string, isUser: boolean) => {
-        console.log(`[VoiceStore] Transcript received - ${isUser ? 'User' : 'AI'}: ${text}`);
+        console.log(`[VoiceStore] Complete transcript received - ${isUser ? 'User' : 'AI'}: ${text}`);
 
-        // Add message to conversation history
+        // Directly add complete messages (no aggregation needed)
         get().addMessage(text, isUser);
 
         // Track assistant speaking state
         if (!isUser) {
           get().setAssistantSpeaking(true);
-
-          // Set speaking to false after the message (simulate TTS completion)
-          setTimeout(() => {
-            get().setAssistantSpeaking(false);
-          }, text.length * 50); // Rough estimate of speech duration
+          // Auto-stop assistant speaking after message is complete
+          setTimeout(() => get().setAssistantSpeaking(false), 1000);
         }
       });
 
@@ -186,7 +189,8 @@ export const useVoiceStore = create<VoiceState>((set, get) => ({
         peerConnectionState: 'closed',
         localStream: null,
         remoteStream: null,
-        isRecording: false
+        isRecording: false,
+        processingMessage: false
       });
 
     } catch (error) {
@@ -201,7 +205,8 @@ export const useVoiceStore = create<VoiceState>((set, get) => ({
         peerConnectionState: 'closed',
         localStream: null,
         remoteStream: null,
-        isRecording: false
+        isRecording: false,
+        processingMessage: false
       });
     }
   },
@@ -306,8 +311,12 @@ export const useVoiceStore = create<VoiceState>((set, get) => ({
     console.log(`[VoiceStore] Message added - ${isUser ? 'User' : 'Assistant'}: ${text}`);
   },
 
+
   clearMessages: () => {
-    set({ messages: [] });
+    set({
+      messages: [],
+      processingMessage: false
+    });
     console.log('[VoiceStore] Conversation history cleared');
   },
 
