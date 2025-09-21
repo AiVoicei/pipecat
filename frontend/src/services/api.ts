@@ -75,6 +75,14 @@ class ApiService {
     return this.request<SessionResponse>(`/sessions/${sessionId}`);
   }
 
+  // Control video input for a session
+  async controlVideo(sessionId: string, enabled: boolean): Promise<{status: string, video_enabled: boolean}> {
+    return this.request<{status: string, video_enabled: boolean}>(`/sessions/${sessionId}/video`, {
+      method: 'POST',
+      body: JSON.stringify({ enabled }),
+    });
+  }
+
   // Test API connectivity
   async testConnection(): Promise<boolean> {
     try {

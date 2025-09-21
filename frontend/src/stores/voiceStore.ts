@@ -4,6 +4,8 @@ import type { WebRTCService } from '../services/webrtc';
 import { getWebRTCService } from '../services/webrtc';
 import type { ConversationMessage } from '../components/voice/ConversationHistory';
 
+export type CallType = 'audio' | 'video';
+
 interface VoiceState {
   isConnected: boolean;
   isCallActive: boolean;
@@ -12,12 +14,20 @@ interface VoiceState {
   botUrl: string;
   error: string | null;
 
+  // Call type selection
+  callType: CallType;
+  isCallTypeSelected: boolean;
+
   // WebRTC specific state
   webrtcService: WebRTCService | null;
   peerConnectionState: RTCPeerConnectionState;
   localStream: MediaStream | null;
   remoteStream: MediaStream | null;
   isRecording: boolean;
+
+  // Video state
+  isVideoEnabled: boolean;
+  videoStream: MediaStream | null;
 
   // Conversation state
   messages: ConversationMessage[];
@@ -31,6 +41,7 @@ interface VoiceState {
   setCallActive: (active: boolean) => void;
   setBotUrl: (url: string) => void;
   setError: (error: string | null) => void;
+  setCallType: (type: CallType) => void;
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   testConnection: () => Promise<boolean>;
@@ -38,11 +49,73 @@ interface VoiceState {
   stopRecording: () => void;
   onTranscript: (callback: (text: string, isUser: boolean) => void) => void;
 
+  // Video actions
+  enableVideo: () => Promise<void>;
+  disableVideo: () => void;
+  setVideoEnabled: (enabled: boolean) => void;
+
   // Conversation actions
   addMessage: (text: string, isUser: boolean) => void;
   clearMessages: () => void;
   setAssistantSpeaking: (speaking: boolean) => void;
 }
+
+// Remote audio analysis for real-time assistant speaking detection
+let remoteAudioContext: AudioContext | null = null;
+let remoteAnalyser: AnalyserNode | null = null;
+let remoteAnimationId: number | null = null;
+let lastSpeakingState = false;
+let speakingDebounceTimeout: number | null = null;
+
+const setupRemoteAudioAnalysis = (stream: MediaStream) => {
+  try {
+    if (remoteAudioContext) {
+      remoteAudioContext.close();
+    }
+
+    remoteAudioContext = new AudioContext();
+    remoteAnalyser = remoteAudioContext.createAnalyser();
+
+    const source = remoteAudioContext.createMediaStreamSource(stream);
+    source.connect(remoteAnalyser);
+
+    remoteAnalyser.fftSize = 256;
+    const bufferLength = remoteAnalyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+
+    const analyzeRemoteAudio = () => {
+      if (!remoteAnalyser) return;
+
+      remoteAnalyser.getByteFrequencyData(dataArray);
+
+      // Calculate average amplitude
+      const average = dataArray.reduce((sum, value) => sum + value, 0) / bufferLength;
+      const normalizedLevel = Math.min(average / 128, 1);
+
+      // Update assistant speaking state based on audio level with debouncing
+      // INVERTED LOGIC: Low audio level means assistant is speaking (silence when assistant talks)
+      const isCurrentlySpeaking = normalizedLevel < 0.02; // Very low threshold - silence means assistant is speaking
+
+      // Only update if state changed and add debouncing to prevent flicker
+      if (isCurrentlySpeaking !== lastSpeakingState) {
+        if (speakingDebounceTimeout) {
+          clearTimeout(speakingDebounceTimeout);
+        }
+
+        speakingDebounceTimeout = window.setTimeout(() => {
+          useVoiceStore.getState().setAssistantSpeaking(isCurrentlySpeaking);
+          lastSpeakingState = isCurrentlySpeaking;
+        }, isCurrentlySpeaking ? 100 : 300); // Medium start delay, longer stop delay for smoother transitions
+      }
+
+      remoteAnimationId = requestAnimationFrame(analyzeRemoteAudio);
+    };
+
+    analyzeRemoteAudio();
+  } catch (error) {
+    console.error('Failed to setup remote audio analysis:', error);
+  }
+};
 
 export const useVoiceStore = create<VoiceState>((set, get) => ({
   isConnected: false,
@@ -52,12 +125,20 @@ export const useVoiceStore = create<VoiceState>((set, get) => ({
   botUrl: import.meta.env.VITE_BOT_URL || 'http://localhost:7860',
   error: null,
 
+  // Call type initial state
+  callType: 'audio',
+  isCallTypeSelected: false,
+
   // WebRTC initial state
   webrtcService: null,
   peerConnectionState: 'closed',
   localStream: null,
   remoteStream: null,
   isRecording: false,
+
+  // Video initial state
+  isVideoEnabled: false,
+  videoStream: null,
 
   // Conversation initial state
   messages: [],
@@ -77,15 +158,71 @@ export const useVoiceStore = create<VoiceState>((set, get) => ({
   setBotUrl: (url) => set({ botUrl: url }),
   
   setError: (error) => set({ error }),
-  
+
+  setCallType: (type) => set({
+    callType: type,
+    isCallTypeSelected: true,
+    // Auto-enable video if video call is selected
+    isVideoEnabled: type === 'video'
+  }),
+
   connect: async () => {
     try {
+      const { callType, isCallTypeSelected } = get();
+
+      // Ensure call type is selected
+      if (!isCallTypeSelected) {
+        throw new Error('Please select a call type first');
+      }
+
       set({ connectionState: 'connecting', error: null });
 
       // Initialize with empty conversation history - real messages will come from WebSocket transcripts
       set({ messages: [] });
 
-      // Test API connection first
+      // Request permissions based on call type BEFORE API connection
+      console.log(`[VoiceStore] Requesting permissions for ${callType} call...`);
+
+      try {
+        if (callType === 'video') {
+          // For video calls, require both audio and video permissions
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true,
+              sampleRate: 16000
+            },
+            video: {
+              width: { ideal: 640 },
+              height: { ideal: 480 },
+              frameRate: { ideal: 15 },
+              facingMode: 'user'
+            }
+          });
+          console.log('[VoiceStore] Video call permissions granted');
+          // Store the stream temporarily, will be used by WebRTC service
+          set({ localStream: stream, videoStream: stream });
+        } else {
+          // For audio calls, only require audio permission
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true,
+              sampleRate: 16000
+            }
+          });
+          console.log('[VoiceStore] Audio call permissions granted');
+          set({ localStream: stream });
+        }
+      } catch (permissionError) {
+        const errorMessage = permissionError instanceof Error ? permissionError.message : 'Permission denied';
+        const callTypeText = callType === 'video' ? 'camera and microphone' : 'microphone';
+        throw new Error(`${callTypeText} permission is required for ${callType} calls. Please allow access and try again.`);
+      }
+
+      // Test API connection
       const isApiHealthy = await apiService.testConnection();
       if (!isApiHealthy) {
         throw new Error('Backend API is not responding');
@@ -121,10 +258,14 @@ export const useVoiceStore = create<VoiceState>((set, get) => ({
       webrtcService.onAudioReceived((stream: MediaStream) => {
         console.log('[VoiceStore] Remote audio received');
         set({ remoteStream: stream });
+
+        // Set up real-time assistant speaking detection from audio stream
+        setupRemoteAudioAnalysis(stream);
       });
 
-      // Connect via WebRTC
-      await webrtcService.connect();
+      // Connect via WebRTC using the pre-obtained stream
+      const { localStream } = get();
+      await webrtcService.connect(localStream || undefined);
 
       // Set up transcript handling (now receives complete messages from TranscriptProcessor)
       webrtcService.onTranscript((text: string, isUser: boolean) => {
@@ -133,12 +274,7 @@ export const useVoiceStore = create<VoiceState>((set, get) => ({
         // Directly add complete messages (no aggregation needed)
         get().addMessage(text, isUser);
 
-        // Track assistant speaking state
-        if (!isUser) {
-          get().setAssistantSpeaking(true);
-          // Auto-stop assistant speaking after message is complete
-          setTimeout(() => get().setAssistantSpeaking(false), 1000);
-        }
+        // Note: Assistant speaking state is now handled by real-time audio analysis
       });
 
       set({
@@ -173,6 +309,24 @@ export const useVoiceStore = create<VoiceState>((set, get) => ({
         webrtcService.disconnect();
       }
 
+      // Cleanup remote audio analysis
+      if (remoteAnimationId) {
+        cancelAnimationFrame(remoteAnimationId);
+        remoteAnimationId = null;
+      }
+      if (speakingDebounceTimeout) {
+        clearTimeout(speakingDebounceTimeout);
+        speakingDebounceTimeout = null;
+      }
+      if (remoteAudioContext && remoteAudioContext.state !== 'closed') {
+        remoteAudioContext.close();
+        remoteAudioContext = null;
+      }
+      lastSpeakingState = false;
+
+      // Ensure assistant speaking state is cleared
+      set({ isAssistantSpeaking: false });
+
       // End API session
       if (sessionId) {
         await apiService.endSession(sessionId);
@@ -190,7 +344,13 @@ export const useVoiceStore = create<VoiceState>((set, get) => ({
         localStream: null,
         remoteStream: null,
         isRecording: false,
-        processingMessage: false
+        processingMessage: false,
+        isVideoEnabled: false,
+        videoStream: null,
+        isAssistantSpeaking: false, // Always clear speaking state on disconnect
+        // Reset call type selection
+        isCallTypeSelected: false,
+        callType: 'audio'
       });
 
     } catch (error) {
@@ -206,7 +366,13 @@ export const useVoiceStore = create<VoiceState>((set, get) => ({
         localStream: null,
         remoteStream: null,
         isRecording: false,
-        processingMessage: false
+        processingMessage: false,
+        isVideoEnabled: false,
+        videoStream: null,
+        isAssistantSpeaking: false, // Always clear speaking state on disconnect
+        // Reset call type selection
+        isCallTypeSelected: false,
+        callType: 'audio'
       });
     }
   },
@@ -323,5 +489,74 @@ export const useVoiceStore = create<VoiceState>((set, get) => ({
   setAssistantSpeaking: (speaking: boolean) => {
     set({ isAssistantSpeaking: speaking });
     console.log(`[VoiceStore] Assistant speaking: ${speaking}`);
+  },
+
+  // Video actions
+  enableVideo: async () => {
+    try {
+      const { sessionId, webrtcService } = get();
+
+      if (!webrtcService) {
+        throw new Error('WebRTC service not initialized');
+      }
+
+      // Use WebRTC service to enable video with proper configuration
+      const stream = await webrtcService.enableVideo();
+
+      set({
+        isVideoEnabled: true,
+        videoStream: stream
+      });
+
+      // Tell backend to enable video processing
+      if (sessionId) {
+        try {
+          await apiService.controlVideo(sessionId, true);
+          console.log('[VoiceStore] Backend video processing enabled');
+        } catch (error) {
+          console.error('[VoiceStore] Failed to enable backend video processing:', error);
+        }
+      }
+
+      console.log('[VoiceStore] Video enabled');
+    } catch (error) {
+      console.error('Failed to enable video:', error);
+      set({
+        error: error instanceof Error ? error.message : 'Failed to access camera'
+      });
+      throw error;
+    }
+  },
+
+  disableVideo: () => {
+    const { videoStream, sessionId, webrtcService } = get();
+
+    // Stop local video stream tracks
+    if (videoStream) {
+      videoStream.getTracks().forEach(track => track.stop());
+    }
+
+    // Use WebRTC service to properly disable video
+    if (webrtcService) {
+      webrtcService.disableVideo();
+    }
+
+    set({
+      isVideoEnabled: false,
+      videoStream: null
+    });
+
+    // Tell backend to disable video processing
+    if (sessionId) {
+      apiService.controlVideo(sessionId, false).catch(error => {
+        console.error('[VoiceStore] Failed to disable backend video processing:', error);
+      });
+    }
+
+    console.log('[VoiceStore] Video disabled');
+  },
+
+  setVideoEnabled: (enabled: boolean) => {
+    set({ isVideoEnabled: enabled });
   }
 }));

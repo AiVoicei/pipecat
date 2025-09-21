@@ -11,7 +11,7 @@ function App() {
   const [activeTab, setActiveTab] = useState<'chat' | 'history' | 'settings'>('chat');
 
   // Get real conversation messages from voice store
-  const { messages: conversationMessages } = useVoiceStore();
+  const { messages: conversationMessages, isAssistantSpeaking } = useVoiceStore();
 
   // Enable dark mode and RTL support
   useEffect(() => {
@@ -164,17 +164,17 @@ function App() {
 
       {/* Desktop Content */}
       <main className="hidden md:block flex-1 overflow-y-auto overflow-x-hidden">
-        <div className="container max-w-7xl mx-auto px-6 py-8">
-          <div className="max-w-6xl mx-auto">
-          {/* Desktop Dashboard Grid */}
-          <div className="grid gap-6 lg:grid-cols-2 mb-8">
+        <div className="container max-w-[110rem] mx-auto px-8 py-8">
+          <div className="max-w-[105rem] mx-auto">
+          {/* Desktop Dashboard Grid - Three Column Layout */}
+          <div className="grid gap-6 lg:grid-cols-3 mb-8">
 
             {/* Main Voice Chat Card */}
-            <div className="order-2 lg:order-1">
-              <Card className="ai-card p-6 h-full min-h-[500px]">
+            <div className="order-1 lg:order-1">
+              <Card className="ai-card p-8 h-full min-h-[700px]">
                 <div className="flex flex-col h-full">
                   <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-lg font-semibold text-card-foreground hebrew">שיחה קולית</h2>
+                    <h2 className="text-lg font-semibold text-card-foreground hebrew">משתמש</h2>
                     <div className="w-8 h-6 flex items-center justify-center">
                       <div className="flex gap-1">
                         <div className="w-1 h-3 bg-[#6C2CCC]/30 rounded-full"></div>
@@ -191,14 +191,147 @@ function App() {
             </div>
 
             {/* Conversation History */}
-            <div className="order-1 lg:order-2">
+            <div className="order-2 lg:order-2">
               <ConversationHistory
                 messages={conversationMessages}
-                maxHeight="500px"
+                maxHeight="700px"
                 showTimestamps={true}
                 showMetadata={false}
                 className="h-full"
               />
+            </div>
+
+            {/* Agent Section */}
+            <div className="order-3 lg:order-3">
+              <Card className="ai-card p-8 h-full min-h-[700px]">
+                <div className="flex flex-col h-full">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-lg font-semibold text-card-foreground hebrew">סוכן</h2>
+                    <div className="w-8 h-6 flex items-center justify-center">
+                      <div className="flex gap-1">
+                        <div className="w-1 h-3 bg-[#6C2CCC]/30 rounded-full"></div>
+                        <div className="w-1 h-4 bg-[#6C2CCC]/50 rounded-full"></div>
+                        <div className="w-1 h-2 bg-[#6C2CCC]/30 rounded-full"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex-1 flex flex-col items-center justify-center">
+                    {/* Agent Video Placeholder - Beautiful Gradient Design */}
+                    <div className={`relative w-full max-w-sm aspect-video rounded-2xl overflow-hidden mb-6 transition-all duration-700 ease-out ${
+                      isAssistantSpeaking
+                        ? 'shadow-[0_0_40px_rgba(108,44,204,0.4)] transform scale-105'
+                        : 'shadow-[0_8px_32px_rgba(0,0,0,0.3)]'
+                    }`}>
+                      {/* Gradient Background */}
+                      <div className={`absolute inset-0 transition-all duration-700 ${
+                        isAssistantSpeaking
+                          ? 'bg-gradient-to-br from-[#6C2CCC]/30 via-[#8A4FDB]/20 to-[#6C2CCC]/40'
+                          : 'bg-gradient-to-br from-slate-800/50 via-slate-700/30 to-slate-800/50'
+                      }`}></div>
+
+                      {/* Animated Background Particles */}
+                      <div className="absolute inset-0 overflow-hidden">
+                        {[...Array(6)].map((_, i) => (
+                          <div
+                            key={i}
+                            className={`absolute w-2 h-2 rounded-full transition-all duration-1000 ${
+                              isAssistantSpeaking
+                                ? 'bg-[#6C2CCC]/60 animate-bounce'
+                                : 'bg-slate-400/20'
+                            }`}
+                            style={{
+                              left: `${15 + i * 15}%`,
+                              top: `${20 + (i % 3) * 20}%`,
+                              animationDelay: `${i * 200}ms`,
+                              animationDuration: '2s'
+                            }}
+                          />
+                        ))}
+                      </div>
+
+                      {/* Central AI Avatar */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className={`relative transition-all duration-700 ${
+                          isAssistantSpeaking ? 'animate-breathing' : ''
+                        }`}>
+                          {/* Outer Glow Ring */}
+                          <div className={`absolute inset-0 rounded-full transition-all duration-700 ${
+                            isAssistantSpeaking
+                              ? 'bg-gradient-to-r from-[#6C2CCC]/40 to-[#8A4FDB]/40 animate-spin-slow blur-sm scale-110'
+                              : 'bg-gradient-to-r from-slate-600/30 to-slate-500/30'
+                          }`} style={{ width: '120px', height: '120px' }}></div>
+
+                          {/* Main Avatar Circle */}
+                          <div className={`relative w-24 h-24 rounded-full transition-all duration-700 border-2 ${
+                            isAssistantSpeaking
+                              ? 'bg-gradient-to-br from-[#6C2CCC]/70 via-[#8A4FDB]/60 to-[#6C2CCC]/80 border-[#6C2CCC]/50 shadow-[0_0_30px_rgba(108,44,204,0.6)]'
+                              : 'bg-gradient-to-br from-slate-600/50 via-slate-500/40 to-slate-600/60 border-slate-500/30 shadow-[0_4px_20px_rgba(0,0,0,0.4)]'
+                          } flex items-center justify-center`}>
+
+                            {/* Inner Pulse Dots */}
+                            <div className="relative">
+                              {[...Array(3)].map((_, i) => (
+                                <div
+                                  key={i}
+                                  className={`absolute w-3 h-3 rounded-full transition-all duration-500 ${
+                                    isAssistantSpeaking
+                                      ? 'bg-white/90 animate-pulse'
+                                      : 'bg-slate-300/60'
+                                  }`}
+                                  style={{
+                                    transform: `rotate(${i * 120}deg) translateX(15px)`,
+                                    animationDelay: `${i * 300}ms`
+                                  }}
+                                />
+                              ))}
+
+                              {/* Center Core */}
+                              <div className={`w-4 h-4 rounded-full transition-all duration-500 ${
+                                isAssistantSpeaking
+                                  ? 'bg-white shadow-[0_0_15px_rgba(255,255,255,0.8)]'
+                                  : 'bg-slate-300/80'
+                              }`}></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Glass Overlay Effect */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-transparent via-white/5 to-white/10 pointer-events-none"></div>
+
+                      {/* Status Indicator */}
+                      <div className="absolute top-4 right-4">
+                        <div className={`w-3 h-3 rounded-full transition-all duration-500 ${
+                          isAssistantSpeaking
+                            ? 'bg-green-400 shadow-[0_0_10px_rgba(34,197,94,0.8)] animate-pulse'
+                            : 'bg-slate-400/60'
+                        }`}></div>
+                      </div>
+                    </div>
+
+                    {/* Agent Speaking Indicator */}
+                    <div className="text-center">
+                      <p className="text-sm text-muted-foreground hebrew mb-2">מצב סוכן</p>
+                      <div className={`w-32 h-8 flex items-center justify-center gap-1 rounded-lg transition-all duration-300 ${
+                        isAssistantSpeaking ? 'bg-[#6C2CCC]/10 border border-[#6C2CCC]/30' : 'bg-muted/50'
+                      }`}>
+                        {[1,2,3,4,5].map((i) => (
+                          <div key={i} className={`w-1 rounded-full transition-all duration-300 ${
+                            isAssistantSpeaking ? 'bg-[#6C2CCC] animate-pulse' : 'bg-[#6C2CCC]/40'
+                          }`}
+                               style={{
+                                 height: isAssistantSpeaking ? `${[14, 18, 12, 20, 16][i-1]}px` : '6px',
+                                 animationDelay: `${i * 100}ms`
+                               }}></div>
+                        ))}
+                      </div>
+                      <p className="text-xs text-muted-foreground hebrew mt-1">
+                        {isAssistantSpeaking ? 'הסוכן מדבר...' : 'הסוכן שותק'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </Card>
             </div>
           </div>
 
@@ -265,7 +398,7 @@ function App() {
                 <div className="w-full h-6 flex items-center justify-center gap-1">
                   {[1,2,3,4,5,6].map((i) => (
                     <div key={i} className={`w-1 bg-[#6C2CCC]/40 rounded-full animate-pulse`}
-                         style={{height: `${Math.random() * 12 + 6}px`, animationDelay: `${i * 100}ms`}}></div>
+                         style={{height: `${[8, 12, 6, 14, 10, 7][i-1]}px`, animationDelay: `${i * 100}ms`}}></div>
                   ))}
                 </div>
               </div>

@@ -1,7 +1,7 @@
-import { Mic, MicOff, Phone, PhoneOff, Loader2 } from 'lucide-react';
+import { Mic, MicOff, Phone, PhoneOff, Loader2, Video, VideoOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { VoiceVisualizer } from '@pipecat-ai/client-react';
-import { useVoiceStore } from '@/stores/voiceStore';
+import { useVoiceStore, type CallType } from '@/stores/voiceStore';
 import { useEffect, useRef, useState } from 'react';
 
 interface VoiceChatProps {
@@ -21,12 +21,19 @@ export function VoiceChat({ botUrl }: VoiceChatProps) {
     peerConnectionState,
     messages,
     isAssistantSpeaking,
+    isVideoEnabled,
+    videoStream,
+    callType,
+    isCallTypeSelected,
     connect,
     disconnect,
     setCallActive,
+    setCallType,
     startRecording,
     stopRecording,
-    clearMessages
+    clearMessages,
+    enableVideo,
+    disableVideo
   } = useVoiceStore();
 
   const statusAnnouncementRef = useRef<HTMLDivElement>(null);
@@ -41,6 +48,9 @@ export function VoiceChat({ botUrl }: VoiceChatProps) {
   const [audioLevel, setAudioLevel] = useState(0);
   const [isVoiceActive, setIsVoiceActive] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+
+  // Video ref
+  const userVideoRef = useRef<HTMLVideoElement>(null);
 
   // Audio stream management and analysis setup
   useEffect(() => {
@@ -64,6 +74,13 @@ export function VoiceChat({ botUrl }: VoiceChatProps) {
       remoteAudioRef.current.srcObject = remoteStream;
     }
   }, [remoteStream]);
+
+  // Video stream setup
+  useEffect(() => {
+    if (userVideoRef.current && videoStream) {
+      userVideoRef.current.srcObject = videoStream;
+    }
+  }, [videoStream]);
 
   // Announce status changes to screen readers
   useEffect(() => {
@@ -130,6 +147,21 @@ export function VoiceChat({ botUrl }: VoiceChatProps) {
       if (audioTrack) {
         audioTrack.enabled = !audioTrack.enabled;
         setIsMuted(!audioTrack.enabled);
+      }
+    }
+  };
+
+  const toggleVideo = async () => {
+    if (isVideoEnabled) {
+      // Turn off video
+      disableVideo();
+    } else {
+      // Turn on video
+      try {
+        await enableVideo();
+      } catch (error) {
+        console.error('Failed to access camera:', error);
+        // Error is already handled in the store
       }
     }
   };
@@ -223,6 +255,7 @@ export function VoiceChat({ botUrl }: VoiceChatProps) {
       <audio ref={localAudioRef} muted autoPlay style={{ display: 'none' }} />
       <audio ref={remoteAudioRef} autoPlay style={{ display: 'none' }} />
 
+
       {/* Screen reader announcements */}
       <div
         ref={statusAnnouncementRef}
@@ -241,6 +274,112 @@ export function VoiceChat({ botUrl }: VoiceChatProps) {
         <div className="flex justify-center mb-8 animate-slide-in-down" role="region" aria-label="מצב חיבור">
           {getStatusBadge()}
         </div>
+
+        {/* Call Type Selection - Show only when not connected and call type not selected */}
+        {!isConnected && !isCallTypeSelected && (
+          <div className="mb-8 animate-fade-in" role="region" aria-labelledby="call-type-heading">
+            <h3 id="call-type-heading" className="text-lg font-semibold text-center mb-4 hebrew">
+              בחרו סוג שיחה
+            </h3>
+            <div className="flex flex-col gap-3 max-w-xs mx-auto">
+              <Button
+                onClick={() => setCallType('audio')}
+                variant="outline"
+                className="h-16 flex items-center justify-center gap-3 bg-muted/50 hover:bg-[#6C2CCC]/10 border-[#6C2CCC]/30 transition-all duration-200 hover:scale-105"
+                aria-describedby="audio-call-description"
+              >
+                <Phone className="w-6 h-6" />
+                <div className="text-center">
+                  <div className="hebrew font-medium">שיחה קולית</div>
+                  <div className="text-xs text-muted-foreground hebrew">שמע בלבד</div>
+                </div>
+              </Button>
+              <div id="audio-call-description" className="sr-only">
+                שיחה קולית דורשת הרשאת מיקרופון בלבד
+              </div>
+
+              <Button
+                onClick={() => setCallType('video')}
+                variant="outline"
+                className="h-16 flex items-center justify-center gap-3 bg-muted/50 hover:bg-[#6C2CCC]/10 border-[#6C2CCC]/30 transition-all duration-200 hover:scale-105"
+                aria-describedby="video-call-description"
+              >
+                <Video className="w-6 h-6" />
+                <div className="text-center">
+                  <div className="hebrew font-medium">שיחת וידאו</div>
+                  <div className="text-xs text-muted-foreground hebrew">שמע ותמונה</div>
+                </div>
+              </Button>
+              <div id="video-call-description" className="sr-only">
+                שיחת וידאו דורשת הרשאות מיקרופון ומצלמה
+              </div>
+            </div>
+            <p className="text-xs text-center text-muted-foreground mt-3 hebrew">
+              {callType === 'video'
+                ? 'תידרשו לאשר גישה למצלמה ולמיקרופון'
+                : 'תידרשו לאשר גישה למיקרופון בלבד'
+              }
+            </p>
+          </div>
+        )}
+
+        {/* Call Type Selected Info - Show when type is selected but not connected */}
+        {!isConnected && isCallTypeSelected && (
+          <div className="mb-6 animate-fade-in text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#6C2CCC]/10 border border-[#6C2CCC]/30">
+              {callType === 'video' ? <Video className="w-4 h-4" /> : <Phone className="w-4 h-4" />}
+              <span className="hebrew text-sm font-medium">
+                {callType === 'video' ? 'שיחת וידאו' : 'שיחה קולית'}
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2 hebrew">
+              לחצו על "התחל שיחה" להתחיל
+            </p>
+          </div>
+        )}
+
+        {/* User Video Preview */}
+        {isVideoEnabled && videoStream && (
+          <div className="mb-6 animate-fade-in">
+            <div className="relative">
+              <video
+                ref={userVideoRef}
+                autoPlay
+                muted
+                playsInline
+                className="w-full max-w-xs mx-auto aspect-video bg-muted rounded-lg border-2 border-[#6C2CCC]/30 object-cover"
+              />
+              <div className="absolute top-2 right-2">
+                <Button
+                  onClick={toggleVideo}
+                  size="sm"
+                  variant="secondary"
+                  className="h-8 w-8 p-0 bg-black/50 hover:bg-black/70 border-none"
+                >
+                  <VideoOff className="h-4 w-4 text-white" />
+                </Button>
+              </div>
+            </div>
+            <p className="text-xs text-center text-muted-foreground mt-2 hebrew">תצוגה מקדימה של הוידאו שלך</p>
+          </div>
+        )}
+
+        {/* Video Control Button - Only show for video calls */}
+        {!isVideoEnabled && callType === 'video' && isCallTypeSelected && (
+          <div className="mb-6 animate-fade-in">
+            <div className="text-center">
+              <Button
+                onClick={toggleVideo}
+                variant="outline"
+                className="mb-2 bg-muted/50 hover:bg-[#6C2CCC]/10 border-[#6C2CCC]/30"
+              >
+                <Video className="w-4 h-4 ml-2" />
+                <span className="hebrew">הפעל וידאו</span>
+              </Button>
+              <p className="text-xs text-muted-foreground hebrew">הפעל מצלמה לשיחת וידאו</p>
+            </div>
+          </div>
+        )}
 
         {/* Voice Indicator with Enhanced Pipecat Audio Visualization */}
         <div className="relative mb-8 animate-fade-in" role="img" aria-label={isCallActive ? 'מיקרופון פעיל - השיחה פועלת' : 'מיקרופון כבוי - השיחה לא פעילה'}>
@@ -318,39 +457,48 @@ export function VoiceChat({ botUrl }: VoiceChatProps) {
           </div>
         )}
 
-        {/* Enhanced Controls with Better State Management */}
-        <div className="flex justify-center mb-6">
-          {!isCallActive ? (
-            <Button
-              ref={mainButtonRef}
-              id="voice-chat-main-button"
-              onClick={startCall}
-              disabled={connectionState === 'connecting' || connectionState === 'error'}
-              className="ai-accessible-button ai-touch-target px-8 py-4 text-base h-auto rounded-xl shadow-lg focus-visible:focus-visible bg-[#6C2CCC] hover:bg-[#6C2CCC]/90 text-white transform transition-all duration-300 hover:scale-105 active:scale-95"
-              aria-describedby="start-call-description"
-            >
-              {connectionState === 'connecting' ? (
-                <Loader2 className="w-5 h-5 ml-3 animate-spin" aria-hidden="true" />
-              ) : (
-                <Phone className="w-5 h-5 ml-3" aria-hidden="true" />
-              )}
-              <span className="hebrew">
-                {connectionState === 'connecting' ? 'מתחבר...' : 'התחל שיחה'}
-              </span>
-            </Button>
-          ) : (
-            <Button
-              ref={mainButtonRef}
-              id="voice-chat-main-button"
-              onClick={endCall}
-              className="ai-accessible-button ai-touch-target bg-destructive hover:bg-destructive/90 text-destructive-foreground px-8 py-4 text-base h-auto rounded-xl shadow-lg focus-visible:focus-visible transform transition-all duration-300 hover:scale-105 active:scale-95"
-              aria-describedby="end-call-description"
-            >
-              <PhoneOff className="w-5 h-5 ml-3" aria-hidden="true" />
-              <span className="hebrew">סיים שיחה</span>
-            </Button>
-          )}
-        </div>
+        {/* Enhanced Controls with Better State Management - Only show when call type is selected */}
+        {isCallTypeSelected && (
+          <div className="flex justify-center mb-6">
+            {!isCallActive ? (
+              <Button
+                ref={mainButtonRef}
+                id="voice-chat-main-button"
+                onClick={startCall}
+                disabled={connectionState === 'connecting' || connectionState === 'error'}
+                className="ai-accessible-button ai-touch-target px-8 py-4 text-base h-auto rounded-xl shadow-lg focus-visible:focus-visible bg-[#6C2CCC] hover:bg-[#6C2CCC]/90 text-white transform transition-all duration-300 hover:scale-105 active:scale-95"
+                aria-describedby="start-call-description"
+              >
+                {connectionState === 'connecting' ? (
+                  <Loader2 className="w-5 h-5 ml-3 animate-spin" aria-hidden="true" />
+                ) : callType === 'video' ? (
+                  <Video className="w-5 h-5 ml-3" aria-hidden="true" />
+                ) : (
+                  <Phone className="w-5 h-5 ml-3" aria-hidden="true" />
+                )}
+                <span className="hebrew">
+                  {connectionState === 'connecting'
+                    ? 'מתחבר...'
+                    : callType === 'video'
+                      ? 'התחל שיחת וידאו'
+                      : 'התחל שיחה קולית'
+                  }
+                </span>
+              </Button>
+            ) : (
+              <Button
+                ref={mainButtonRef}
+                id="voice-chat-main-button"
+                onClick={endCall}
+                className="ai-accessible-button ai-touch-target bg-destructive hover:bg-destructive/90 text-destructive-foreground px-8 py-4 text-base h-auto rounded-xl shadow-lg focus-visible:focus-visible transform transition-all duration-300 hover:scale-105 active:scale-95"
+                aria-describedby="end-call-description"
+              >
+                <PhoneOff className="w-5 h-5 ml-3" aria-hidden="true" />
+                <span className="hebrew">סיים שיחה</span>
+              </Button>
+            )}
+          </div>
+        )}
 
         {/* Session Info */}
         {sessionId && (

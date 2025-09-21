@@ -12,7 +12,7 @@ import logging
 from typing import Optional
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from loguru import logger
@@ -186,13 +186,13 @@ async def run_webrtc_bot_optimized(webrtc_connection: SmallWebRTCConnection, ses
     response_times = []
     start_time = None
 
-    # Create SmallWebRTC transport with optimized VAD settings
+    # Create SmallWebRTC transport with video support and optimized VAD settings
     transport = SmallWebRTCTransport(
         webrtc_connection=webrtc_connection,
         params=TransportParams(
             audio_in_enabled=True,
             audio_out_enabled=True,
-            video_in_enabled=False,
+            video_in_enabled=True,  # Enable video input for Gemini multimodal
             # Optimized VAD for faster response
             vad_analyzer=SileroVADAnalyzer(params=VADParams(
                 stop_secs=0.5,  # Use working reference settings
@@ -337,9 +337,9 @@ async def run_webrtc_bot_optimized(webrtc_connection: SmallWebRTCConnection, ses
         'transport': transport,
         'rtvi': rtvi,
         'transcript': transcript,
+        'llm': llm,  # Store LLM service for video control
         'webrtc_connection': webrtc_connection,
         'response_times': response_times,
-        'llm': llm,
         'optimized': True,
         'pure_gemini': True,  # Flag to indicate pure Gemini approach
         'transcript_enabled': True  # Flag to indicate clean transcript handling
@@ -367,12 +367,16 @@ async def run_webrtc_bot_optimized(webrtc_connection: SmallWebRTCConnection, ses
     async def on_client_connected(transport, client):
         logger.info(f"Pure Gemini WebRTC client connected to session {session_id}")
 
+        # Capture video input from camera and screen for multimodal interaction
+        await maybe_capture_participant_camera(transport, client, framerate=1)
+        await maybe_capture_participant_screen(transport, client, framerate=1)
+
         # Start conversation with Hebrew greeting (like working reference)
         await task.queue_frames([LLMRunFrame()])
         await asyncio.sleep(3)
-        logger.debug("Unpausing audio and video")
+        logger.debug("Unpausing audio only - video starts paused")
         llm.set_audio_input_paused(False)
-        llm.set_video_input_paused(False)
+        llm.set_video_input_paused(True)  # Keep video paused by default
 
     @transport.event_handler("on_client_disconnected")
     async def on_client_disconnected(transport, client):
@@ -752,6 +756,30 @@ async def get_session(session_id: str):
         "created_at": "N/A",  # TODO: Add session timestamps
     }
 
+
+@app.post("/sessions/{session_id}/video")
+async def control_video(session_id: str, request: Request):
+    """Control video input for a session"""
+    try:
+        if session_id not in active_sessions:
+            raise HTTPException(status_code=404, detail="Session not found")
+
+        data = await request.json()
+        enabled = data.get("enabled", False)
+
+        session = active_sessions[session_id]
+        llm = session.get('llm')
+
+        if llm:
+            llm.set_video_input_paused(not enabled)
+            logger.info(f"Video input {'enabled' if enabled else 'disabled'} for session {session_id}")
+            return {"status": "success", "video_enabled": enabled}
+        else:
+            raise HTTPException(status_code=500, detail="LLM service not available")
+
+    except Exception as e:
+        logger.error(f"Error controlling video for session {session_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/metrics")
 async def get_system_metrics():

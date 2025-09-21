@@ -5,9 +5,11 @@ import SimplePeer from 'simple-peer'
  * Handles direct peer-to-peer connection with Gemini backend
  */
 export interface WebRTCService {
-  connect(): Promise<void>
+  connect(existingStream?: MediaStream): Promise<void>
   disconnect(): void
   sendAudio(stream: MediaStream): void
+  enableVideo(): Promise<MediaStream>
+  disableVideo(): void
   onAudioReceived(callback: (stream: MediaStream) => void): void
   onTranscript(callback: (text: string, isUser: boolean) => void): void
   onConnectionStateChange(callback: (state: RTCPeerConnectionState) => void): void
@@ -56,15 +58,20 @@ export class DirectWebRTCService implements WebRTCService {
   /**
    * Establish WebRTC connection to backend
    */
-  async connect(): Promise<void> {
+  async connect(existingStream?: MediaStream): Promise<void> {
     try {
       console.log('[WebRTC] Starting connection process...')
 
       // Step 1: Initialize WebSocket for signaling
       await this.initializeSignaling()
 
-      // Step 2: Get user media (microphone)
-      await this.getUserMedia()
+      // Step 2: Use existing stream or get user media
+      if (existingStream) {
+        console.log('[WebRTC] Using pre-obtained media stream')
+        this.localStream = existingStream
+      } else {
+        await this.getUserMedia()
+      }
 
       // Step 3: Initialize peer connection
       await this.initializePeer()
@@ -170,11 +177,11 @@ export class DirectWebRTCService implements WebRTCService {
   }
 
   /**
-   * Get user media (microphone access)
+   * Get user media (microphone and camera access for multimodal AI)
    */
   private async getUserMedia(): Promise<void> {
     try {
-      console.log('[WebRTC] Requesting microphone access...')
+      console.log('[WebRTC] Requesting microphone access only (video will be added when user enables it)...')
 
       this.localStream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -183,14 +190,14 @@ export class DirectWebRTCService implements WebRTCService {
           autoGainControl: true,
           sampleRate: 16000 // Optimize for speech
         },
-        video: false
+        video: false // Start with audio only
       })
 
-      console.log('[WebRTC] Microphone access granted')
+      console.log('[WebRTC] Microphone and camera access granted')
     } catch (error) {
-      console.error('[WebRTC] Microphone access denied:', error)
+      console.error('[WebRTC] Microphone and camera access denied:', error)
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      throw new Error(`Microphone access denied: ${errorMessage}`)
+      throw new Error(`Microphone and camera access denied: ${errorMessage}`)
     }
   }
 
@@ -391,6 +398,69 @@ export class DirectWebRTCService implements WebRTCService {
 
     const pc = (this.peer as any)._pc as RTCPeerConnection
     return pc.connectionState
+  }
+
+  /**
+   * Enable video with proper configuration
+   */
+  async enableVideo(): Promise<MediaStream> {
+    try {
+      console.log('[WebRTC] Enabling video with proper configuration...')
+
+      // Get video stream with the proper configuration
+      const videoStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          frameRate: { ideal: 15 }, // Optimize for AI processing
+          facingMode: 'user' // Front-facing camera
+        },
+        audio: false // Only get video, audio is already handled
+      })
+
+      // Add video track to existing peer connection
+      if (this.peer && this.localStream) {
+        const videoTrack = videoStream.getVideoTracks()[0]
+        if (videoTrack) {
+          console.log('[WebRTC] Adding video track to peer connection')
+          this.peer.addTrack(videoTrack, this.localStream)
+
+          // Add video track to local stream
+          this.localStream.addTrack(videoTrack)
+        }
+      }
+
+      console.log('[WebRTC] Video enabled successfully')
+      return videoStream
+
+    } catch (error) {
+      console.error('[WebRTC] Failed to enable video:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      throw new Error(`Failed to enable video: ${errorMessage}`)
+    }
+  }
+
+  /**
+   * Disable video and remove video tracks
+   */
+  disableVideo(): void {
+    try {
+      console.log('[WebRTC] Disabling video...')
+
+      if (this.localStream) {
+        // Remove and stop all video tracks
+        const videoTracks = this.localStream.getVideoTracks()
+        videoTracks.forEach(track => {
+          console.log('[WebRTC] Removing video track')
+          this.localStream!.removeTrack(track)
+          track.stop()
+        })
+      }
+
+      console.log('[WebRTC] Video disabled successfully')
+    } catch (error) {
+      console.error('[WebRTC] Failed to disable video:', error)
+    }
   }
 
   /**

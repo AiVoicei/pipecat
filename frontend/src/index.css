@@ -177,7 +177,7 @@
   
   /* Voice indicator animations */
   .voice-pulse {
-    animation: pulse-primary 1.5s infinite;
+    animation: pulse-primary 2.5s ease-in-out infinite;
   }
 
   @keyframes pulse-primary {
@@ -252,6 +252,10 @@
     animation: breathing 3s ease-in-out infinite;
   }
 
+  .animate-spin-slow {
+    animation: spin-slow 8s linear infinite;
+  }
+
   .animation-delay-75 {
     animation-delay: 75ms;
   }
@@ -306,17 +310,22 @@
     }
   }
 
+  @keyframes spin-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
   /* Voice Activity Indicators */
   .voice-activity-low {
-    animation: voiceActivityLow 1s ease-in-out infinite;
+    animation: voiceActivityLow 2s ease-in-out infinite;
   }
 
   .voice-activity-medium {
-    animation: voiceActivityMedium 0.8s ease-in-out infinite;
+    animation: voiceActivityMedium 1.6s ease-in-out infinite;
   }
 
   .voice-activity-high {
-    animation: voiceActivityHigh 0.5s ease-in-out infinite;
+    animation: voiceActivityHigh 1.2s ease-in-out infinite;
   }
 
   @keyframes voiceActivityLow {
@@ -332,6 +341,26 @@
   @keyframes voiceActivityHigh {
     0%, 100% { transform: scaleY(0.7); }
     50% { transform: scaleY(1.2); }
+  }
+
+  /* Agent speaking voice bars animation */
+  @keyframes voice-bars {
+    0%, 100% {
+      transform: scaleY(0.3);
+      opacity: 0.6;
+    }
+    25% {
+      transform: scaleY(0.8);
+      opacity: 0.9;
+    }
+    50% {
+      transform: scaleY(1.2);
+      opacity: 1;
+    }
+    75% {
+      transform: scaleY(0.9);
+      opacity: 0.8;
+    }
   }
 
   /* Loading States */
