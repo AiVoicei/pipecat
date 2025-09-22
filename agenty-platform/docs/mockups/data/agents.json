@@ -1,0 +1,203 @@
+{
+  "agents": [
+    {
+      "id": "agt_1",
+      "userId": "usr_1",
+      "name": "Customer Support Bot",
+      "description": "AI assistant for handling customer inquiries and support tickets",
+      "status": "active",
+      "templateId": "tpl_1",
+      "configuration": {
+        "stt": {
+          "provider": "openai",
+          "model": "whisper-1",
+          "language": "en"
+        },
+        "llm": {
+          "provider": "anthropic",
+          "model": "claude-3-sonnet",
+          "systemPrompt": "You are a helpful customer support assistant. Be friendly, professional, and helpful.",
+          "temperature": 0.7,
+          "maxTokens": 500
+        },
+        "tts": {
+          "provider": "elevenlabs",
+          "voice": "Rachel",
+          "stability": 0.7,
+          "clarity": 0.8
+        }
+      },
+      "deploymentConfig": {
+        "type": "webrtc",
+        "domain": "support.example.com",
+        "embedCode": "<script src='https://agenty.com/embed/agt_1.js'></script>"
+      },
+      "analytics": {
+        "totalConversations": 1247,
+        "averageResponseTime": 850,
+        "satisfactionScore": 4.6,
+        "activeToday": 23
+      },
+      "createdAt": "2024-06-15T14:30:00Z",
+      "updatedAt": "2024-09-20T16:45:00Z"
+    },
+    {
+      "id": "agt_2",
+      "userId": "usr_1",
+      "name": "Sales Assistant",
+      "description": "AI-powered sales bot for lead qualification and product demos",
+      "status": "active",
+      "templateId": "tpl_2",
+      "configuration": {
+        "stt": {
+          "provider": "deepgram",
+          "model": "nova-2",
+          "language": "en"
+        },
+        "llm": {
+          "provider": "openai",
+          "model": "gpt-4",
+          "systemPrompt": "You are a sales assistant. Help qualify leads and showcase our product features.",
+          "temperature": 0.8,
+          "maxTokens": 750
+        },
+        "tts": {
+          "provider": "cartesia",
+          "voice": "professional_male",
+          "speed": 1.1
+        }
+      },
+      "deploymentConfig": {
+        "type": "phone",
+        "twilioNumber": "+1-555-SALES-01"
+      },
+      "analytics": {
+        "totalConversations": 687,
+        "averageResponseTime": 920,
+        "satisfactionScore": 4.8,
+        "activeToday": 12
+      },
+      "createdAt": "2024-07-22T09:15:00Z",
+      "updatedAt": "2024-09-21T10:20:00Z"
+    },
+    {
+      "id": "agt_3",
+      "userId": "usr_2",
+      "name": "Hebrew Support Bot",
+      "description": "Hebrew customer support bot for Israeli market",
+      "status": "active",
+      "templateId": null,
+      "configuration": {
+        "stt": {
+          "provider": "google",
+          "model": "latest",
+          "language": "he"
+        },
+        "llm": {
+          "provider": "anthropic",
+          "model": "claude-3-haiku",
+          "systemPrompt": "אתה עוזר תמיכת לקוחות בעברית. היה ידידותי ומועיל.",
+          "temperature": 0.6,
+          "maxTokens": 400
+        },
+        "tts": {
+          "provider": "azure",
+          "voice": "he-IL-AvriNeural",
+          "rate": "medium"
+        }
+      },
+      "deploymentConfig": {
+        "type": "whatsapp",
+        "phoneNumber": "+972-50-123-4567"
+      },
+      "analytics": {
+        "totalConversations": 342,
+        "averageResponseTime": 780,
+        "satisfactionScore": 4.4,
+        "activeToday": 8
+      },
+      "createdAt": "2024-08-05T11:45:00Z",
+      "updatedAt": "2024-09-22T14:30:00Z"
+    },
+    {
+      "id": "agt_4",
+      "userId": "usr_3",
+      "name": "Restaurant Booking Bot",
+      "description": "AI bot for restaurant reservations and menu inquiries",
+      "status": "draft",
+      "templateId": "tpl_3",
+      "configuration": {
+        "stt": {
+          "provider": "openai",
+          "model": "whisper-1",
+          "language": "en"
+        },
+        "llm": {
+          "provider": "openai",
+          "model": "gpt-3.5-turbo",
+          "systemPrompt": "You help customers make restaurant reservations and answer menu questions.",
+          "temperature": 0.5,
+          "maxTokens": 300
+        },
+        "tts": {
+          "provider": "playht",
+          "voice": "jennifer",
+          "speed": 1.0
+        }
+      },
+      "deploymentConfig": {
+        "type": "webrtc",
+        "domain": null,
+        "embedCode": null
+      },
+      "analytics": {
+        "totalConversations": 0,
+        "averageResponseTime": 0,
+        "satisfactionScore": 0,
+        "activeToday": 0
+      },
+      "createdAt": "2024-09-20T16:00:00Z",
+      "updatedAt": "2024-09-20T16:00:00Z"
+    },
+    {
+      "id": "agt_5",
+      "userId": "usr_1",
+      "name": "E-commerce Assistant",
+      "description": "Shopping assistant for product recommendations and order tracking",
+      "status": "inactive",
+      "templateId": "tpl_4",
+      "configuration": {
+        "stt": {
+          "provider": "deepgram",
+          "model": "nova-2",
+          "language": "en"
+        },
+        "llm": {
+          "provider": "anthropic",
+          "model": "claude-3-sonnet",
+          "systemPrompt": "You are an e-commerce assistant. Help customers find products and track orders.",
+          "temperature": 0.7,
+          "maxTokens": 600
+        },
+        "tts": {
+          "provider": "elevenlabs",
+          "voice": "Bella",
+          "stability": 0.8,
+          "clarity": 0.9
+        }
+      },
+      "deploymentConfig": {
+        "type": "api",
+        "apiEndpoint": "https://api.shop.example.com/agent"
+      },
+      "analytics": {
+        "totalConversations": 156,
+        "averageResponseTime": 1200,
+        "satisfactionScore": 4.2,
+        "activeToday": 0
+      },
+      "createdAt": "2024-05-10T13:20:00Z",
+      "updatedAt": "2024-08-15T09:45:00Z"
+    }
+  ]
+}

@@ -1,0 +1,216 @@
+{
+  "templates": [
+    {
+      "id": "tpl_1",
+      "name": "Customer Support Assistant",
+      "description": "Professional customer support bot with ticket handling capabilities",
+      "category": "customer_service",
+      "previewUrl": "https://agenty.com/previews/customer-support",
+      "thumbnailUrl": "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop",
+      "isPublic": true,
+      "createdBy": "agenty_official",
+      "usageCount": 1247,
+      "rating": 4.8,
+      "configuration": {
+        "stt": {
+          "provider": "openai",
+          "model": "whisper-1",
+          "language": "en"
+        },
+        "llm": {
+          "provider": "anthropic",
+          "model": "claude-3-sonnet",
+          "systemPrompt": "You are a professional customer support assistant. Help customers with their inquiries, be patient, empathetic, and solution-focused. Always ask clarifying questions when needed and provide clear next steps.",
+          "temperature": 0.7,
+          "maxTokens": 500
+        },
+        "tts": {
+          "provider": "elevenlabs",
+          "voice": "Rachel",
+          "stability": 0.8,
+          "clarity": 0.9
+        }
+      },
+      "deploymentOptions": ["webrtc", "phone", "whatsapp"],
+      "tags": ["support", "customer-service", "professional", "popular"],
+      "createdAt": "2024-03-01T00:00:00Z",
+      "updatedAt": "2024-09-15T12:00:00Z"
+    },
+    {
+      "id": "tpl_2",
+      "name": "Sales Qualification Bot",
+      "description": "Lead qualification and sales assistant for converting prospects",
+      "category": "sales",
+      "previewUrl": "https://agenty.com/previews/sales-bot",
+      "thumbnailUrl": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop",
+      "isPublic": true,
+      "createdBy": "agenty_official",
+      "usageCount": 892,
+      "rating": 4.6,
+      "configuration": {
+        "stt": {
+          "provider": "deepgram",
+          "model": "nova-2",
+          "language": "en"
+        },
+        "llm": {
+          "provider": "openai",
+          "model": "gpt-4",
+          "systemPrompt": "You are a friendly sales assistant. Your goal is to qualify leads and showcase product benefits. Ask engaging questions about their needs, pain points, and budget. Be consultative, not pushy.",
+          "temperature": 0.8,
+          "maxTokens": 600
+        },
+        "tts": {
+          "provider": "cartesia",
+          "voice": "professional_male",
+          "speed": 1.1
+        }
+      },
+      "deploymentOptions": ["webrtc", "phone", "api"],
+      "tags": ["sales", "lead-qualification", "conversion", "business"],
+      "createdAt": "2024-03-05T00:00:00Z",
+      "updatedAt": "2024-09-10T14:30:00Z"
+    },
+    {
+      "id": "tpl_3",
+      "name": "Restaurant Booking Assistant",
+      "description": "Handles reservations, menu inquiries, and special requests",
+      "category": "hospitality",
+      "previewUrl": "https://agenty.com/previews/restaurant-bot",
+      "thumbnailUrl": "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&h=300&fit=crop",
+      "isPublic": true,
+      "createdBy": "agenty_official",
+      "usageCount": 567,
+      "rating": 4.7,
+      "configuration": {
+        "stt": {
+          "provider": "openai",
+          "model": "whisper-1",
+          "language": "en"
+        },
+        "llm": {
+          "provider": "openai",
+          "model": "gpt-3.5-turbo",
+          "systemPrompt": "You are a friendly restaurant assistant. Help customers make reservations, answer menu questions, and handle special dietary requests. Be warm and welcoming.",
+          "temperature": 0.6,
+          "maxTokens": 400
+        },
+        "tts": {
+          "provider": "elevenlabs",
+          "voice": "Bella",
+          "stability": 0.7,
+          "clarity": 0.8
+        }
+      },
+      "deploymentOptions": ["webrtc", "phone"],
+      "tags": ["restaurant", "booking", "hospitality", "reservations"],
+      "createdAt": "2024-04-12T00:00:00Z",
+      "updatedAt": "2024-08-22T16:15:00Z"
+    },
+    {
+      "id": "tpl_4",
+      "name": "E-commerce Shopping Assistant",
+      "description": "Product recommendations, order tracking, and shopping help",
+      "category": "ecommerce",
+      "previewUrl": "https://agenty.com/previews/ecommerce-bot",
+      "thumbnailUrl": "https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=400&h=300&fit=crop",
+      "isPublic": true,
+      "createdBy": "agenty_official",
+      "usageCount": 743,
+      "rating": 4.5,
+      "configuration": {
+        "stt": {
+          "provider": "deepgram",
+          "model": "nova-2",
+          "language": "en"
+        },
+        "llm": {
+          "provider": "anthropic",
+          "model": "claude-3-sonnet",
+          "systemPrompt": "You are a helpful shopping assistant. Help customers find products, track orders, and answer questions about shipping and returns. Be informative and helpful.",
+          "temperature": 0.7,
+          "maxTokens": 500
+        },
+        "tts": {
+          "provider": "azure",
+          "voice": "en-US-JennyNeural",
+          "rate": "medium"
+        }
+      },
+      "deploymentOptions": ["webrtc", "api", "whatsapp"],
+      "tags": ["ecommerce", "shopping", "recommendations", "orders"],
+      "createdAt": "2024-05-08T00:00:00Z",
+      "updatedAt": "2024-09-05T11:45:00Z"
+    },
+    {
+      "id": "tpl_5",
+      "name": "Healthcare Appointment Scheduler",
+      "description": "Medical appointment booking and patient intake assistant",
+      "category": "healthcare",
+      "previewUrl": "https://agenty.com/previews/healthcare-bot",
+      "thumbnailUrl": "https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=400&h=300&fit=crop",
+      "isPublic": true,
+      "createdBy": "agenty_official",
+      "usageCount": 234,
+      "rating": 4.9,
+      "configuration": {
+        "stt": {
+          "provider": "google",
+          "model": "latest",
+          "language": "en-US"
+        },
+        "llm": {
+          "provider": "anthropic",
+          "model": "claude-3-sonnet",
+          "systemPrompt": "You are a professional medical appointment scheduler. Handle appointment bookings, collect patient information, and provide basic scheduling information. Always maintain patient privacy and be compassionate.",
+          "temperature": 0.5,
+          "maxTokens": 400
+        },
+        "tts": {
+          "provider": "azure",
+          "voice": "en-US-AriaNeural",
+          "rate": "medium"
+        }
+      },
+      "deploymentOptions": ["webrtc", "phone"],
+      "tags": ["healthcare", "appointments", "medical", "scheduling"],
+      "createdAt": "2024-06-20T00:00:00Z",
+      "updatedAt": "2024-09-18T09:30:00Z"
+    },
+    {
+      "id": "tpl_6",
+      "name": "Hebrew Support Assistant",
+      "description": "עוזר תמיכה בעברית לשירות לקוחות ישראלי",
+      "category": "customer_service",
+      "previewUrl": "https://agenty.com/previews/hebrew-support",
+      "thumbnailUrl": "https://images.unsplash.com/photo-1526280760714-f9e8b26f318f?w=400&h=300&fit=crop",
+      "isPublic": true,
+      "createdBy": "agenty_official",
+      "usageCount": 156,
+      "rating": 4.8,
+      "configuration": {
+        "stt": {
+          "provider": "google",
+          "model": "latest",
+          "language": "he-IL"
+        },
+        "llm": {
+          "provider": "anthropic",
+          "model": "claude-3-haiku",
+          "systemPrompt": "אתה עוזר תמיכת לקוחות מקצועי בעברית. עזור ללקוחות עם שאלות ובעיות, היה סבלני ומועיל. תמיד שאל שאלות הבהרה כשצריך ותן הוראות ברורות.",
+          "temperature": 0.6,
+          "maxTokens": 400
+        },
+        "tts": {
+          "provider": "azure",
+          "voice": "he-IL-AvriNeural",
+          "rate": "medium"
+        }
+      },
+      "deploymentOptions": ["webrtc", "whatsapp", "phone"],
+      "tags": ["hebrew", "support", "israel", "rtl"],
+      "createdAt": "2024-07-15T00:00:00Z",
+      "updatedAt": "2024-09-12T15:20:00Z"
+    }
+  ]
+}

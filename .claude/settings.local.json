@@ -32,7 +32,8 @@
       "Bash(npm run build:*)",
       "Bash(timeout 10s uv run:*)",
       "Bash(lsof:*)",
-      "Bash(xargs -r kill -9)"
+      "Bash(xargs -r kill -9)",
+      "Bash(npm run lint)"
     ],
     "deny": [],
     "ask": []

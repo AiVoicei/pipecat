@@ -1,0 +1,137 @@
+{
+  "whiteLabelConfigs": [
+    {
+      "id": "wl_1",
+      "name": "TechCorp Solutions",
+      "domain": "voice.techcorp.com",
+      "logoUrl": "https://techcorp.com/logo.svg",
+      "faviconUrl": "https://techcorp.com/favicon.ico",
+      "brandColors": {
+        "primary": "#2563eb",
+        "secondary": "#7c3aed",
+        "accent": "#06b6d4",
+        "neutral": "#64748b",
+        "background": "#0f172a",
+        "surface": "#1e293b"
+      },
+      "typography": {
+        "fontFamily": "Inter, sans-serif",
+        "headingFont": "Cal Sans, sans-serif"
+      },
+      "customCss": "/* Custom styles for TechCorp */\n.header { border-bottom: 2px solid var(--primary); }\n.agent-card:hover { transform: translateY(-2px); }",
+      "companyInfo": {
+        "name": "TechCorp Solutions",
+        "tagline": "AI-Powered Voice Solutions",
+        "website": "https://techcorp.com",
+        "supportEmail": "support@techcorp.com",
+        "address": "123 Tech Street, San Francisco, CA 94105"
+      },
+      "revenueShare": {
+        "percentage": 70,
+        "paymentMethod": "stripe",
+        "billingCycle": "monthly"
+      },
+      "features": {
+        "customDomain": true,
+        "whiteLabeling": true,
+        "advancedAnalytics": true,
+        "prioritySupport": true,
+        "customIntegrations": true
+      },
+      "clientCount": 23,
+      "monthlyRevenue": 12850.00,
+      "createdAt": "2024-02-01T09:15:00Z",
+      "updatedAt": "2024-09-20T14:30:00Z"
+    },
+    {
+      "id": "wl_2",
+      "name": "VoiceFirst Agency",
+      "domain": "agents.voicefirst.io",
+      "logoUrl": "https://voicefirst.io/assets/logo.png",
+      "faviconUrl": "https://voicefirst.io/favicon.png",
+      "brandColors": {
+        "primary": "#dc2626",
+        "secondary": "#ea580c",
+        "accent": "#f59e0b",
+        "neutral": "#6b7280",
+        "background": "#111827",
+        "surface": "#1f2937"
+      },
+      "typography": {
+        "fontFamily": "Poppins, sans-serif",
+        "headingFont": "Montserrat, sans-serif"
+      },
+      "customCss": "/* VoiceFirst custom styles */\n.sidebar { background: linear-gradient(180deg, var(--primary), var(--secondary)); }\n.button { border-radius: 12px; }",
+      "companyInfo": {
+        "name": "VoiceFirst Agency",
+        "tagline": "Voice AI for Everyone",
+        "website": "https://voicefirst.io",
+        "supportEmail": "hello@voicefirst.io",
+        "address": "456 Innovation Blvd, Austin, TX 78701"
+      },
+      "revenueShare": {
+        "percentage": 65,
+        "paymentMethod": "stripe",
+        "billingCycle": "monthly"
+      },
+      "features": {
+        "customDomain": true,
+        "whiteLabeling": true,
+        "advancedAnalytics": false,
+        "prioritySupport": true,
+        "customIntegrations": false
+      },
+      "clientCount": 8,
+      "monthlyRevenue": 4200.00,
+      "createdAt": "2024-05-15T16:22:00Z",
+      "updatedAt": "2024-09-18T11:45:00Z"
+    }
+  ],
+  "whiteLabelClients": [
+    {
+      "id": "wlc_1",
+      "whiteLabelConfigId": "wl_1",
+      "clientName": "Acme Corp",
+      "clientEmail": "admin@acme.com",
+      "subscriptionTier": "professional",
+      "agentCount": 3,
+      "monthlyUsage": {
+        "conversationMinutes": 2847,
+        "apiCalls": 12543
+      },
+      "monthlyRevenue": 297.00,
+      "status": "active",
+      "joinedAt": "2024-03-15T10:30:00Z"
+    },
+    {
+      "id": "wlc_2",
+      "whiteLabelConfigId": "wl_1",
+      "clientName": "StartupXYZ",
+      "clientEmail": "founder@startupxyz.com",
+      "subscriptionTier": "starter",
+      "agentCount": 1,
+      "monthlyUsage": {
+        "conversationMinutes": 567,
+        "apiCalls": 2341
+      },
+      "monthlyRevenue": 29.00,
+      "status": "active",
+      "joinedAt": "2024-07-22T14:15:00Z"
+    },
+    {
+      "id": "wlc_3",
+      "whiteLabelConfigId": "wl_2",
+      "clientName": "Local Restaurant",
+      "clientEmail": "owner@localrestaurant.com",
+      "subscriptionTier": "professional",
+      "agentCount": 2,
+      "monthlyUsage": {
+        "conversationMinutes": 1234,
+        "apiCalls": 5678
+      },
+      "monthlyRevenue": 99.00,
+      "status": "active",
+      "joinedAt": "2024-08-10T09:45:00Z"
+    }
+  ]
+}

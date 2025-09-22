@@ -1,0 +1,84 @@
+{
+  "users": [
+    {
+      "id": "usr_1",
+      "email": "john@example.com",
+      "firstName": "John",
+      "lastName": "Doe",
+      "role": "user",
+      "subscriptionTier": "professional",
+      "avatarUrl": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face",
+      "whiteLabelConfigId": null,
+      "createdAt": "2024-01-15T10:30:00Z",
+      "lastLoginAt": "2024-09-22T14:20:00Z",
+      "settings": {
+        "theme": "dark",
+        "language": "en",
+        "notifications": {
+          "email": true,
+          "push": false
+        }
+      }
+    },
+    {
+      "id": "usr_2",
+      "email": "sarah@techcorp.com",
+      "firstName": "Sarah",
+      "lastName": "Johnson",
+      "role": "reseller",
+      "subscriptionTier": "white_label",
+      "avatarUrl": "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face",
+      "whiteLabelConfigId": "wl_1",
+      "createdAt": "2024-02-01T09:15:00Z",
+      "lastLoginAt": "2024-09-22T16:45:00Z",
+      "settings": {
+        "theme": "light",
+        "language": "en",
+        "notifications": {
+          "email": true,
+          "push": true
+        }
+      }
+    },
+    {
+      "id": "usr_3",
+      "email": "david@startup.io",
+      "firstName": "David",
+      "lastName": "Chen",
+      "role": "user",
+      "subscriptionTier": "starter",
+      "avatarUrl": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face",
+      "whiteLabelConfigId": null,
+      "createdAt": "2024-03-10T15:22:00Z",
+      "lastLoginAt": "2024-09-21T11:30:00Z",
+      "settings": {
+        "theme": "dark",
+        "language": "en",
+        "notifications": {
+          "email": false,
+          "push": true
+        }
+      }
+    },
+    {
+      "id": "usr_4",
+      "email": "admin@agenty.com",
+      "firstName": "Admin",
+      "lastName": "User",
+      "role": "admin",
+      "subscriptionTier": "enterprise",
+      "avatarUrl": "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop&crop=face",
+      "whiteLabelConfigId": null,
+      "createdAt": "2024-01-01T00:00:00Z",
+      "lastLoginAt": "2024-09-22T17:00:00Z",
+      "settings": {
+        "theme": "dark",
+        "language": "en",
+        "notifications": {
+          "email": true,
+          "push": true
+        }
+      }
+    }
+  ]
+}

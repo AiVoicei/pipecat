@@ -10,7 +10,7 @@ export function ConnectionStatus() {
       case 'connected':
         return <Wifi className="w-4 h-4 text-green-600" />;
       case 'connecting':
-        return <Loader2 className="w-4 h-4 text-blue-600 animate-spin" />;
+        return <Loader2 className="w-4 h-4 text-primary animate-spin" />;
       case 'error':
         return <AlertCircle className="w-4 h-4 text-red-600" />;
       default:

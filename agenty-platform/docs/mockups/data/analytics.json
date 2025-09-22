@@ -1,0 +1,199 @@
+{
+  "dashboard": {
+    "overview": {
+      "totalAgents": 5,
+      "activeAgents": 3,
+      "totalConversations": 2432,
+      "conversationsToday": 43,
+      "averageResponseTime": 856,
+      "satisfactionScore": 4.6,
+      "monthlyGrowth": {
+        "conversations": 12.5,
+        "responseTime": -8.3,
+        "satisfaction": 2.1
+      }
+    },
+    "usageMetrics": {
+      "currentMonthUsage": {
+        "conversationMinutes": 4847,
+        "apiCalls": 23567,
+        "totalCost": 147.23
+      },
+      "planLimits": {
+        "conversationMinutes": 10000,
+        "apiCalls": 50000,
+        "maxAgents": 10
+      },
+      "usagePercentage": {
+        "conversationMinutes": 48.47,
+        "apiCalls": 47.13,
+        "agents": 50.0
+      }
+    },
+    "topPerformingAgents": [
+      {
+        "agentId": "agt_1",
+        "name": "Customer Support Bot",
+        "conversations": 1247,
+        "satisfaction": 4.6,
+        "responseTime": 850,
+        "growth": 8.5
+      },
+      {
+        "agentId": "agt_2",
+        "name": "Sales Assistant",
+        "conversations": 687,
+        "satisfaction": 4.8,
+        "responseTime": 920,
+        "growth": 15.2
+      },
+      {
+        "agentId": "agt_3",
+        "name": "Hebrew Support Bot",
+        "conversations": 342,
+        "satisfaction": 4.4,
+        "responseTime": 780,
+        "growth": 22.1
+      }
+    ]
+  },
+  "conversationHistory": [
+    {
+      "id": "conv_1",
+      "agentId": "agt_1",
+      "agentName": "Customer Support Bot",
+      "startTime": "2024-09-22T14:30:00Z",
+      "endTime": "2024-09-22T14:35:30Z",
+      "duration": 330,
+      "satisfactionScore": 5,
+      "responseCount": 8,
+      "avgResponseTime": 750,
+      "userSentiment": "positive",
+      "tags": ["resolved", "billing_question"],
+      "transcript": [
+        {
+          "speaker": "user",
+          "message": "Hi, I have a question about my recent billing.",
+          "timestamp": "2024-09-22T14:30:15Z"
+        },
+        {
+          "speaker": "agent",
+          "message": "Hello! I'd be happy to help you with your billing question. Can you tell me what specific concern you have?",
+          "timestamp": "2024-09-22T14:30:22Z",
+          "responseTime": 700
+        }
+      ]
+    },
+    {
+      "id": "conv_2",
+      "agentId": "agt_2",
+      "agentName": "Sales Assistant",
+      "startTime": "2024-09-22T13:45:00Z",
+      "endTime": "2024-09-22T13:52:15Z",
+      "duration": 435,
+      "satisfactionScore": 4,
+      "responseCount": 12,
+      "avgResponseTime": 890,
+      "userSentiment": "neutral",
+      "tags": ["lead_qualified", "demo_scheduled"],
+      "transcript": [
+        {
+          "speaker": "user",
+          "message": "I'm interested in learning more about your voice AI solutions.",
+          "timestamp": "2024-09-22T13:45:10Z"
+        },
+        {
+          "speaker": "agent",
+          "message": "That's wonderful! I'd love to help you learn more about our voice AI platform. What type of business are you looking to implement this for?",
+          "timestamp": "2024-09-22T13:45:18Z",
+          "responseTime": 800
+        }
+      ]
+    }
+  ],
+  "timeSeriesData": {
+    "conversations": [
+      { "date": "2024-09-15", "count": 45, "duration": 2340 },
+      { "date": "2024-09-16", "count": 52, "duration": 2678 },
+      { "date": "2024-09-17", "count": 38, "duration": 1987 },
+      { "date": "2024-09-18", "count": 61, "duration": 3145 },
+      { "date": "2024-09-19", "count": 47, "duration": 2456 },
+      { "date": "2024-09-20", "count": 55, "duration": 2891 },
+      { "date": "2024-09-21", "count": 43, "duration": 2234 },
+      { "date": "2024-09-22", "count": 28, "duration": 1456 }
+    ],
+    "responseTime": [
+      { "date": "2024-09-15", "avg": 892, "p95": 1245 },
+      { "date": "2024-09-16", "avg": 876, "p95": 1198 },
+      { "date": "2024-09-17", "avg": 923, "p95": 1334 },
+      { "date": "2024-09-18", "avg": 834, "p95": 1156 },
+      { "date": "2024-09-19", "avg": 845, "p95": 1178 },
+      { "date": "2024-09-20", "avg": 812, "p95": 1089 },
+      { "date": "2024-09-21", "avg": 798, "p95": 1067 },
+      { "date": "2024-09-22", "avg": 786, "p95": 1034 }
+    ],
+    "satisfaction": [
+      { "date": "2024-09-15", "score": 4.4, "responses": 42 },
+      { "date": "2024-09-16", "score": 4.6, "responses": 48 },
+      { "date": "2024-09-17", "score": 4.3, "responses": 35 },
+      { "date": "2024-09-18", "score": 4.7, "responses": 56 },
+      { "date": "2024-09-19", "score": 4.5, "responses": 43 },
+      { "date": "2024-09-20", "score": 4.8, "responses": 51 },
+      { "date": "2024-09-21", "score": 4.6, "responses": 39 },
+      { "date": "2024-09-22", "score": 4.7, "responses": 25 }
+    ]
+  },
+  "agentComparison": [
+    {
+      "agentId": "agt_1",
+      "name": "Customer Support Bot",
+      "metrics": {
+        "conversations": 1247,
+        "avgDuration": 285,
+        "satisfaction": 4.6,
+        "responseTime": 850,
+        "resolutionRate": 78.5
+      }
+    },
+    {
+      "agentId": "agt_2",
+      "name": "Sales Assistant",
+      "metrics": {
+        "conversations": 687,
+        "avgDuration": 412,
+        "satisfaction": 4.8,
+        "responseTime": 920,
+        "resolutionRate": 65.2
+      }
+    },
+    {
+      "agentId": "agt_3",
+      "name": "Hebrew Support Bot",
+      "metrics": {
+        "conversations": 342,
+        "avgDuration": 256,
+        "satisfaction": 4.4,
+        "responseTime": 780,
+        "resolutionRate": 82.1
+      }
+    }
+  ],
+  "geographicDistribution": [
+    { "country": "United States", "conversations": 1456, "percentage": 59.8 },
+    { "country": "Israel", "conversations": 342, "percentage": 14.1 },
+    { "country": "United Kingdom", "conversations": 234, "percentage": 9.6 },
+    { "country": "Canada", "conversations": 167, "percentage": 6.9 },
+    { "country": "Australia", "conversations": 123, "percentage": 5.1 },
+    { "country": "Germany", "conversations": 110, "percentage": 4.5 }
+  ],
+  "topIntents": [
+    { "intent": "billing_inquiry", "count": 456, "percentage": 18.7 },
+    { "intent": "technical_support", "count": 389, "percentage": 16.0 },
+    { "intent": "product_information", "count": 312, "percentage": 12.8 },
+    { "intent": "account_management", "count": 278, "percentage": 11.4 },
+    { "intent": "general_inquiry", "count": 245, "percentage": 10.1 },
+    { "intent": "complaint", "count": 189, "percentage": 7.8 },
+    { "intent": "sales_inquiry", "count": 156, "percentage": 6.4 },
+    { "intent": "other", "count": 407, "percentage": 16.8 }
+  ]
+}
