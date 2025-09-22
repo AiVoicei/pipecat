@@ -6,7 +6,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useEffect, useRef, useState } from 'react';
 
 interface VoiceChatProps {
-  // botUrl?: string;
+  botUrl?: string;
 }
 
 export function VoiceChat({}: VoiceChatProps) {

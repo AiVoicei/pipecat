@@ -14,7 +14,8 @@ import {
   Palette,
   Plus,
   ChevronLeft,
-  Sparkles
+  Sparkles,
+  Workflow
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -28,6 +29,7 @@ export function Sidebar() {
   const navigation = [
     { name: t('dashboard', 'navigation'), href: '/', icon: LayoutDashboard },
     { name: t('myAgents', 'navigation'), href: '/agents', icon: Bot },
+    { name: t('pipelineBuilder', 'navigation'), href: '/builder', icon: Workflow },
     { name: t('analytics', 'navigation'), href: '/analytics', icon: BarChart3 },
     { name: t('templates', 'navigation'), href: '/templates', icon: Palette },
     { name: t('whiteLabel', 'navigation'), href: '/white-label', icon: Users, badge: 'Pro' },

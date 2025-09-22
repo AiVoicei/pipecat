@@ -7,63 +7,41 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { useAgentStore } from '@/stores/useAgentStore'
 import Link from 'next/link'
 
-// Mock data - will be replaced with actual API calls
-const mockAnalytics = {
-  totalAgents: 5,
-  activeAgents: 3,
-  totalConversations: 2432,
-  conversationsToday: 43,
-  averageResponseTime: 856,
-  satisfactionScore: 4.6,
-  monthlyGrowth: {
-    conversations: 12.5,
-    responseTime: -8.3,
-    satisfaction: 2.1
-  }
-}
-
-// Mock agents with translation keys
-const getMockAgents = (t: (key: string, namespace?: string) => string) => [
-  {
-    id: 'agt_1',
-    name: t('customerSupportBot', 'dashboard'),
-    status: 'active' as const,
-    conversations: 1247,
-    satisfaction: 4.6,
-    responseTime: 850
-  },
-  {
-    id: 'agt_2',
-    name: t('salesAssistant', 'dashboard'),
-    status: 'active' as const,
-    conversations: 687,
-    satisfaction: 4.8,
-    responseTime: 920
-  },
-  {
-    id: 'agt_3',
-    name: t('hebrewSupportBot', 'dashboard'),
-    status: 'active' as const,
-    conversations: 342,
-    satisfaction: 4.4,
-    responseTime: 780
-  }
-]
-
 export function Dashboard() {
-  const [isLoading, setIsLoading] = useState(true)
   const { t } = useLanguage()
-  const mockAgents = getMockAgents(t)
+  const { agents, isLoading, fetchAgents, getActiveAgents, getTotalConversations } = useAgentStore()
 
   useEffect(() => {
-    // Simulate loading
-    const timer = setTimeout(() => setIsLoading(false), 1000)
-    return () => clearTimeout(timer)
-  }, [])
+    fetchAgents()
+  }, [fetchAgents])
 
-  if (isLoading) {
+  // Calculate analytics from real data
+  const analytics = {
+    totalAgents: agents.length,
+    activeAgents: getActiveAgents().length,
+    totalConversations: getTotalConversations(),
+    conversationsToday: agents.reduce((sum, agent) => sum + agent.analytics.activeToday, 0),
+    averageResponseTime: agents.length > 0
+      ? Math.round(agents.reduce((sum, agent) => sum + agent.analytics.averageResponseTime, 0) / agents.length)
+      : 0,
+    satisfactionScore: agents.length > 0
+      ? Math.round((agents.reduce((sum, agent) => sum + agent.analytics.satisfactionScore, 0) / agents.length) * 10) / 10
+      : 0,
+    monthlyGrowth: {
+      conversations: 12.5,
+      responseTime: -8.3,
+      satisfaction: 2.1
+    }
+  }
+
+  const recentAgents = agents
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    .slice(0, 3)
+
+  if (isLoading && agents.length === 0) {
     return (
       <div className="space-y-6">
         <div className="animate-pulse">
@@ -107,9 +85,9 @@ export function Dashboard() {
             <Bot className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockAnalytics.totalAgents}</div>
+            <div className="text-2xl font-bold">{analytics.totalAgents}</div>
             <p className="text-xs text-muted-foreground">
-              {mockAnalytics.activeAgents} {t('active', 'dashboard')}
+              {analytics.activeAgents} {t('active', 'dashboard')}
             </p>
           </CardContent>
         </Card>
@@ -120,9 +98,9 @@ export function Dashboard() {
             <MessageSquare className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockAnalytics.totalConversations.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{analytics.totalConversations.toLocaleString()}</div>
             <p className="text-xs text-emerald-600">
-              +{mockAnalytics.monthlyGrowth.conversations}% {t('fromLastMonth', 'dashboard')}
+              +{analytics.monthlyGrowth.conversations}% {t('fromLastMonth', 'dashboard')}
             </p>
           </CardContent>
         </Card>
@@ -133,9 +111,9 @@ export function Dashboard() {
             <TrendingUp className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockAnalytics.averageResponseTime}ms</div>
+            <div className="text-2xl font-bold">{analytics.averageResponseTime}ms</div>
             <p className="text-xs text-emerald-600">
-              {mockAnalytics.monthlyGrowth.responseTime}% {t('improvement', 'dashboard')}
+              {analytics.monthlyGrowth.responseTime}% {t('improvement', 'dashboard')}
             </p>
           </CardContent>
         </Card>
@@ -146,9 +124,9 @@ export function Dashboard() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockAnalytics.satisfactionScore}/5</div>
+            <div className="text-2xl font-bold">{analytics.satisfactionScore}/5</div>
             <p className="text-xs text-emerald-600">
-              +{mockAnalytics.monthlyGrowth.satisfaction}% {t('fromLastMonth', 'dashboard')}
+              +{analytics.monthlyGrowth.satisfaction}% {t('fromLastMonth', 'dashboard')}
             </p>
           </CardContent>
         </Card>
@@ -169,40 +147,54 @@ export function Dashboard() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {mockAgents.map((agent) => (
-              <div key={agent.id} className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent/50 transition-colors">
-                <div className="flex items-center space-x-4">
-                  <Avatar>
-                    <AvatarFallback className="bg-primary text-primary-foreground">
-                      <Bot className="w-4 h-4" />
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <h3 className="font-medium">{agent.name}</h3>
-                    <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                      <span>{agent.conversations} {t('conversations_', 'dashboard')}</span>
-                      <span>⭐ {agent.satisfaction}</span>
-                      <span>{agent.responseTime}ms avg</span>
+            {recentAgents.length === 0 ? (
+              <div className="text-center py-8">
+                <Bot className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">{t('noAgentsYet', 'agents')}</h3>
+                <p className="text-muted-foreground mb-4">{t('createFirstAgent', 'agents')}</p>
+                <Button asChild>
+                  <Link href="/agents/new">
+                    <Plus className="w-4 h-4 mr-2" />
+                    {t('createAgent', 'navigation')}
+                  </Link>
+                </Button>
+              </div>
+            ) : (
+              recentAgents.map((agent) => (
+                <div key={agent.id} className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent/50 transition-colors">
+                  <div className="flex items-center space-x-4">
+                    <Avatar>
+                      <AvatarFallback className="bg-primary text-primary-foreground">
+                        <Bot className="w-4 h-4" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="font-medium">{agent.name}</h3>
+                      <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                        <span>{agent.analytics.totalConversations} {t('conversations_', 'dashboard')}</span>
+                        <span>⭐ {agent.analytics.satisfactionScore}</span>
+                        <span>{agent.analytics.averageResponseTime}ms avg</span>
+                      </div>
                     </div>
                   </div>
+                  <div className="flex items-center space-x-2">
+                    <Badge variant={agent.status === 'active' ? 'default' : 'secondary'}>
+                      {t(agent.status, 'dashboard')}
+                    </Badge>
+                    <Button variant="ghost" size="sm" asChild>
+                      <Link href={`/agents/${agent.id}`}>
+                        <Settings2 className="w-4 h-4" />
+                      </Link>
+                    </Button>
+                    <Button variant="ghost" size="sm" asChild>
+                      <Link href={`/agents/${agent.id}/test`}>
+                        <Play className="w-4 h-4" />
+                      </Link>
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Badge variant={agent.status === 'active' ? 'default' : 'secondary'}>
-                    {t(agent.status, 'dashboard')}
-                  </Badge>
-                  <Button variant="ghost" size="sm" asChild>
-                    <Link href={`/agents/${agent.id}`}>
-                      <Settings2 className="w-4 h-4" />
-                    </Link>
-                  </Button>
-                  <Button variant="ghost" size="sm" asChild>
-                    <Link href={`/agents/${agent.id}/test`}>
-                      <Play className="w-4 h-4" />
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </CardContent>
       </Card>

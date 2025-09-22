@@ -1,0 +1,386 @@
+import { create } from 'zustand'
+import { devtools } from 'zustand/middleware'
+
+// Provider types and interfaces
+export interface Provider {
+  id: string
+  name: string
+  type: 'stt' | 'llm' | 'tts'
+  logoUrl: string
+  description: string
+  isActive: boolean
+  popularity: number
+  pricing: {
+    model: string
+    cost?: number
+    inputCost?: number
+    outputCost?: number
+    currency: string
+  }
+  configurationSchema: {
+    type: string
+    properties: Record<string, Record<string, unknown>>
+    required: string[]
+  }
+  capabilities: string[]
+  supportedLanguages?: string[]
+  supportedFormats?: string[]
+}
+
+interface ProviderStore {
+  // State
+  providers: Provider[]
+  isLoading: boolean
+  error: string | null
+
+  // Actions
+  fetchProviders: () => Promise<void>
+  getProvidersByType: (type: 'stt' | 'llm' | 'tts') => Provider[]
+  getPopularProviders: () => Provider[]
+  searchProviders: (query: string) => Provider[]
+  setLoading: (loading: boolean) => void
+  setError: (error: string | null) => void
+}
+
+// Mock provider data based on the existing providers.json
+const mockProviders: Provider[] = [
+  {
+    id: 'prv_1',
+    name: 'OpenAI',
+    type: 'stt',
+    logoUrl: 'https://cdn.openai.com/API/logo-openai.svg',
+    description: 'High-quality speech-to-text with Whisper models',
+    isActive: true,
+    popularity: 95,
+    pricing: {
+      model: 'per_minute',
+      cost: 0.006,
+      currency: 'USD'
+    },
+    configurationSchema: {
+      type: 'object',
+      properties: {
+        model: {
+          type: 'string',
+          enum: ['whisper-1'],
+          default: 'whisper-1'
+        },
+        language: {
+          type: 'string',
+          enum: ['en', 'es', 'fr', 'de', 'it', 'pt', 'ru', 'ja', 'ko', 'zh', 'he'],
+          default: 'en'
+        },
+        temperature: {
+          type: 'number',
+          minimum: 0,
+          maximum: 1,
+          default: 0
+        }
+      },
+      required: ['model']
+    },
+    capabilities: ['multi_language', 'high_accuracy', 'real_time'],
+    supportedFormats: ['wav', 'mp3', 'm4a', 'webm'],
+    supportedLanguages: ['en', 'es', 'fr', 'de', 'it', 'pt', 'ru', 'ja', 'ko', 'zh', 'he']
+  },
+  {
+    id: 'prv_2',
+    name: 'Anthropic',
+    type: 'llm',
+    logoUrl: 'https://cdn.anthropic.com/logo.svg',
+    description: 'Advanced language models with Claude series',
+    isActive: true,
+    popularity: 88,
+    pricing: {
+      model: 'per_token',
+      inputCost: 0.008,
+      outputCost: 0.024,
+      currency: 'USD'
+    },
+    configurationSchema: {
+      type: 'object',
+      properties: {
+        model: {
+          type: 'string',
+          enum: ['claude-3-haiku', 'claude-3-sonnet', 'claude-3-opus'],
+          default: 'claude-3-sonnet'
+        },
+        maxTokens: {
+          type: 'integer',
+          minimum: 1,
+          maximum: 4096,
+          default: 1000
+        },
+        temperature: {
+          type: 'number',
+          minimum: 0,
+          maximum: 1,
+          default: 0.7
+        },
+        systemPrompt: {
+          type: 'string',
+          default: 'You are a helpful AI assistant.'
+        }
+      },
+      required: ['model', 'maxTokens']
+    },
+    capabilities: ['function_calling', 'reasoning', 'multilingual', 'context_aware'],
+    supportedLanguages: ['en', 'es', 'fr', 'de', 'it', 'pt', 'ru', 'ja', 'ko', 'zh', 'he']
+  },
+  {
+    id: 'prv_3',
+    name: 'ElevenLabs',
+    type: 'tts',
+    logoUrl: 'https://elevenlabs.io/favicon.ico',
+    description: 'Ultra-realistic text-to-speech with voice cloning',
+    isActive: true,
+    popularity: 92,
+    pricing: {
+      model: 'per_character',
+      cost: 0.00018,
+      currency: 'USD'
+    },
+    configurationSchema: {
+      type: 'object',
+      properties: {
+        voice: {
+          type: 'string',
+          enum: ['Rachel', 'Drew', 'Clyde', 'Paul', 'Domi', 'Bella', 'Antoni', 'Elli', 'Josh', 'Arnold', 'Adam', 'Sam'],
+          default: 'Rachel'
+        },
+        stability: {
+          type: 'number',
+          minimum: 0,
+          maximum: 1,
+          default: 0.75
+        },
+        clarity: {
+          type: 'number',
+          minimum: 0,
+          maximum: 1,
+          default: 0.75
+        },
+        style: {
+          type: 'number',
+          minimum: 0,
+          maximum: 1,
+          default: 0
+        }
+      },
+      required: ['voice']
+    },
+    capabilities: ['voice_cloning', 'emotional_range', 'streaming', 'multilingual'],
+    supportedLanguages: ['en', 'es', 'fr', 'de', 'it', 'pt', 'hi', 'pl']
+  },
+  {
+    id: 'prv_4',
+    name: 'Deepgram',
+    type: 'stt',
+    logoUrl: 'https://deepgram.com/favicon.ico',
+    description: 'Fast and accurate speech recognition with Nova models',
+    isActive: true,
+    popularity: 78,
+    pricing: {
+      model: 'per_minute',
+      cost: 0.0043,
+      currency: 'USD'
+    },
+    configurationSchema: {
+      type: 'object',
+      properties: {
+        model: {
+          type: 'string',
+          enum: ['nova-2', 'nova', 'enhanced', 'base'],
+          default: 'nova-2'
+        },
+        language: {
+          type: 'string',
+          enum: ['en', 'es', 'fr', 'de', 'it', 'pt', 'ru', 'ja', 'ko', 'zh', 'hi'],
+          default: 'en'
+        },
+        punctuate: {
+          type: 'boolean',
+          default: true
+        },
+        diarize: {
+          type: 'boolean',
+          default: false
+        }
+      },
+      required: ['model']
+    },
+    capabilities: ['real_time', 'speaker_diarization', 'punctuation', 'streaming'],
+    supportedFormats: ['wav', 'mp3', 'm4a', 'flac', 'webm'],
+    supportedLanguages: ['en', 'es', 'fr', 'de', 'it', 'pt', 'ru', 'ja', 'ko', 'zh', 'hi']
+  },
+  {
+    id: 'prv_5',
+    name: 'Azure Cognitive Services',
+    type: 'tts',
+    logoUrl: 'https://azure.microsoft.com/favicon.ico',
+    description: 'Microsoft\'s neural text-to-speech service',
+    isActive: true,
+    popularity: 85,
+    pricing: {
+      model: 'per_character',
+      cost: 0.000015,
+      currency: 'USD'
+    },
+    configurationSchema: {
+      type: 'object',
+      properties: {
+        voice: {
+          type: 'string',
+          enum: ['en-US-JennyNeural', 'en-US-GuyNeural', 'he-IL-AvriNeural', 'he-IL-HilaNeural'],
+          default: 'en-US-JennyNeural'
+        },
+        rate: {
+          type: 'string',
+          enum: ['x-slow', 'slow', 'medium', 'fast', 'x-fast'],
+          default: 'medium'
+        },
+        pitch: {
+          type: 'string',
+          enum: ['x-low', 'low', 'medium', 'high', 'x-high'],
+          default: 'medium'
+        }
+      },
+      required: ['voice']
+    },
+    capabilities: ['neural_voices', 'ssml', 'custom_voice', 'streaming'],
+    supportedLanguages: ['en', 'es', 'fr', 'de', 'it', 'pt', 'ru', 'ja', 'ko', 'zh', 'he', 'ar']
+  },
+  {
+    id: 'prv_6',
+    name: 'Google Cloud',
+    type: 'stt',
+    logoUrl: 'https://cloud.google.com/favicon.ico',
+    description: 'Google\'s speech-to-text with latest models',
+    isActive: true,
+    popularity: 82,
+    pricing: {
+      model: 'per_minute',
+      cost: 0.004,
+      currency: 'USD'
+    },
+    configurationSchema: {
+      type: 'object',
+      properties: {
+        model: {
+          type: 'string',
+          enum: ['latest', 'latest_long', 'latest_short'],
+          default: 'latest'
+        },
+        language: {
+          type: 'string',
+          enum: ['en-US', 'es-ES', 'fr-FR', 'de-DE', 'it-IT', 'pt-BR', 'ru-RU', 'ja-JP', 'ko-KR', 'zh-CN', 'he-IL'],
+          default: 'en-US'
+        },
+        enableAutomaticPunctuation: {
+          type: 'boolean',
+          default: true
+        },
+        enableSpeakerDiarization: {
+          type: 'boolean',
+          default: false
+        }
+      },
+      required: ['model']
+    },
+    capabilities: ['speaker_diarization', 'punctuation', 'profanity_filter', 'streaming'],
+    supportedFormats: ['wav', 'flac', 'mp3', 'webm'],
+    supportedLanguages: ['en-US', 'es-ES', 'fr-FR', 'de-DE', 'it-IT', 'pt-BR', 'ru-RU', 'ja-JP', 'ko-KR', 'zh-CN', 'he-IL']
+  },
+  {
+    id: 'prv_7',
+    name: 'Cartesia',
+    type: 'tts',
+    logoUrl: 'https://cartesia.ai/favicon.ico',
+    description: 'Real-time neural text-to-speech with low latency',
+    isActive: true,
+    popularity: 76,
+    pricing: {
+      model: 'per_character',
+      cost: 0.00025,
+      currency: 'USD'
+    },
+    configurationSchema: {
+      type: 'object',
+      properties: {
+        voice: {
+          type: 'string',
+          enum: ['professional_male', 'professional_female', 'casual_male', 'casual_female', 'energetic', 'calm'],
+          default: 'professional_female'
+        },
+        speed: {
+          type: 'number',
+          minimum: 0.5,
+          maximum: 2.0,
+          default: 1.0
+        },
+        emotion: {
+          type: 'string',
+          enum: ['neutral', 'happy', 'sad', 'angry', 'excited', 'calm'],
+          default: 'neutral'
+        }
+      },
+      required: ['voice']
+    },
+    capabilities: ['real_time', 'low_latency', 'emotional_range', 'streaming'],
+    supportedLanguages: ['en', 'es', 'fr', 'de', 'it']
+  }
+]
+
+export const useProviderStore = create<ProviderStore>()(
+  devtools(
+    (set, get) => ({
+      // Initial state
+      providers: mockProviders,
+      isLoading: false,
+      error: null,
+
+      // Actions
+      fetchProviders: async () => {
+        try {
+          set({ isLoading: true, error: null })
+          // Simulate API call - in real app, this would fetch from API
+          await new Promise(resolve => setTimeout(resolve, 500))
+          set({ isLoading: false })
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Failed to fetch providers',
+            isLoading: false
+          })
+        }
+      },
+
+      getProvidersByType: (type: 'stt' | 'llm' | 'tts') => {
+        return get().providers.filter(provider => provider.type === type && provider.isActive)
+      },
+
+      getPopularProviders: () => {
+        return get().providers
+          .filter(provider => provider.isActive)
+          .sort((a, b) => b.popularity - a.popularity)
+          .slice(0, 6)
+      },
+
+      searchProviders: (query: string) => {
+        const lowercaseQuery = query.toLowerCase()
+        return get().providers.filter(provider =>
+          provider.isActive && (
+            provider.name.toLowerCase().includes(lowercaseQuery) ||
+            provider.description.toLowerCase().includes(lowercaseQuery) ||
+            provider.capabilities.some(cap => cap.toLowerCase().includes(lowercaseQuery))
+          )
+        )
+      },
+
+      setLoading: (loading) => set({ isLoading: loading }),
+      setError: (error) => set({ error }),
+    }),
+    {
+      name: 'provider-store',
+    }
+  )
+)

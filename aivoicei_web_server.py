@@ -9,9 +9,11 @@ import uuid
 import time
 import re
 import logging
-from typing import Optional
+from typing import Optional, List, Dict, Any
+from datetime import datetime
 
 from dotenv import load_dotenv
+from pydantic import BaseModel, Field
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -97,6 +99,134 @@ webrtc_connections = {}
 
 # WebSocket connections for transcript broadcasting
 websocket_connections = {}
+
+# ===============================
+# Agent Configuration Models
+# ===============================
+
+class STTConfig(BaseModel):
+    provider: str = Field(..., description="STT provider name")
+    model: str = Field(..., description="Model name")
+    language: str = Field(default="en", description="Language code")
+    temperature: Optional[float] = Field(default=0, description="Temperature setting")
+
+class LLMConfig(BaseModel):
+    provider: str = Field(..., description="LLM provider name")
+    model: str = Field(..., description="Model name")
+    systemPrompt: str = Field(..., description="System prompt")
+    temperature: float = Field(default=0.7, description="Temperature setting")
+    maxTokens: int = Field(default=1000, description="Maximum tokens")
+
+class TTSConfig(BaseModel):
+    provider: str = Field(..., description="TTS provider name")
+    voice: str = Field(..., description="Voice name")
+    stability: Optional[float] = Field(default=0.75, description="Voice stability")
+    clarity: Optional[float] = Field(default=0.75, description="Voice clarity")
+    speed: Optional[float] = Field(default=1.0, description="Speech speed")
+
+class AgentConfiguration(BaseModel):
+    stt: STTConfig
+    llm: LLMConfig
+    tts: TTSConfig
+
+class DeploymentConfig(BaseModel):
+    type: str = Field(..., description="Deployment type: webrtc, phone, whatsapp, api")
+    settings: Dict[str, Any] = Field(default_factory=dict, description="Deployment-specific settings")
+
+class AgentAnalytics(BaseModel):
+    totalConversations: int = Field(default=0)
+    averageResponseTime: float = Field(default=0)
+    satisfactionScore: float = Field(default=0)
+    activeToday: int = Field(default=0)
+
+class Agent(BaseModel):
+    id: str = Field(..., description="Unique agent identifier")
+    userId: str = Field(..., description="Owner user ID")
+    name: str = Field(..., description="Agent name")
+    description: str = Field(..., description="Agent description")
+    status: str = Field(default="draft", description="Agent status: active, inactive, draft")
+    templateId: Optional[str] = Field(default=None, description="Template ID if created from template")
+    configuration: AgentConfiguration
+    deploymentConfig: DeploymentConfig
+    analytics: AgentAnalytics
+    createdAt: datetime = Field(default_factory=datetime.now)
+    updatedAt: datetime = Field(default_factory=datetime.now)
+
+class CreateAgentRequest(BaseModel):
+    name: str = Field(..., description="Agent name")
+    description: str = Field(..., description="Agent description")
+    templateId: Optional[str] = Field(default=None, description="Template ID to use")
+    configuration: Optional[AgentConfiguration] = Field(default=None, description="Agent configuration")
+    deploymentConfig: Optional[DeploymentConfig] = Field(default=None, description="Deployment configuration")
+
+class UpdateAgentRequest(BaseModel):
+    name: Optional[str] = Field(default=None, description="Agent name")
+    description: Optional[str] = Field(default=None, description="Agent description")
+    status: Optional[str] = Field(default=None, description="Agent status")
+    configuration: Optional[AgentConfiguration] = Field(default=None, description="Agent configuration")
+    deploymentConfig: Optional[DeploymentConfig] = Field(default=None, description="Deployment configuration")
+
+# In-memory storage for agents (will be replaced with database)
+agents_storage: Dict[str, Agent] = {}
+
+# Sample agents for testing
+sample_agents = {
+    "agt_1": Agent(
+        id="agt_1",
+        userId="user_1",
+        name="Customer Support Assistant",
+        description="AI assistant specialized in customer support and product inquiries",
+        status="active",
+        templateId="customer-support",
+        configuration=AgentConfiguration(
+            stt=STTConfig(provider="OpenAI", model="whisper-1", language="en-US"),
+            llm=LLMConfig(
+                provider="OpenAI",
+                model="gpt-4o",
+                systemPrompt="You are a helpful customer support assistant.",
+                temperature=0.7,
+                maxTokens=1000
+            ),
+            tts=TTSConfig(provider="OpenAI", voice="alloy")
+        ),
+        deploymentConfig=DeploymentConfig(type="webrtc"),
+        analytics=AgentAnalytics(
+            totalConversations=1247,
+            averageResponseTime=850,
+            satisfactionScore=4.2,
+            activeToday=23
+        )
+    ),
+    "agt_2": Agent(
+        id="agt_2",
+        userId="user_1",
+        name="Hebrew Support Bot",
+        description="עוזר תמיכה בעברית לשירות לקוחות ישראלי",
+        status="active",
+        templateId="hebrew-support",
+        configuration=AgentConfiguration(
+            stt=STTConfig(provider="Google", model="latest", language="he-IL"),
+            llm=LLMConfig(
+                provider="Anthropic",
+                model="claude-3-haiku",
+                systemPrompt="אתה עוזר תמיכת לקוחות מקצועי בעברית. עזור ללקוחות עם שאלות ובעיות.",
+                temperature=0.6,
+                maxTokens=400
+            ),
+            tts=TTSConfig(provider="Azure", voice="he-IL-AvriNeural")
+        ),
+        deploymentConfig=DeploymentConfig(type="webrtc"),
+        analytics=AgentAnalytics(
+            totalConversations=342,
+            averageResponseTime=780,
+            satisfactionScore=4.4,
+            activeToday=12
+        )
+    )
+}
+
+# Initialize with sample data
+agents_storage.update(sample_agents)
 
 
 async def broadcast_transcript_to_websockets(text: str, is_user: bool, session_id: str):
@@ -780,6 +910,156 @@ async def control_video(session_id: str, request: Request):
     except Exception as e:
         logger.error(f"Error controlling video for session {session_id}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+# ===============================
+# Agent Management API Endpoints
+# ===============================
+
+@app.get("/api/agents", response_model=List[Agent])
+async def list_agents(user_id: str = "user_1"):
+    """List all agents for a user"""
+    user_agents = [agent for agent in agents_storage.values() if agent.userId == user_id]
+    return user_agents
+
+@app.post("/api/agents", response_model=Agent)
+async def create_agent(request: CreateAgentRequest, user_id: str = "user_1"):
+    """Create a new agent"""
+    agent_id = f"agt_{uuid.uuid4().hex[:8]}"
+
+    # Default configuration if not provided
+    if not request.configuration:
+        request.configuration = AgentConfiguration(
+            stt=STTConfig(provider="OpenAI", model="whisper-1", language="en"),
+            llm=LLMConfig(
+                provider="OpenAI",
+                model="gpt-4o",
+                systemPrompt="You are a helpful AI assistant.",
+                temperature=0.7,
+                maxTokens=1000
+            ),
+            tts=TTSConfig(provider="OpenAI", voice="alloy")
+        )
+
+    # Default deployment config if not provided
+    if not request.deploymentConfig:
+        request.deploymentConfig = DeploymentConfig(type="webrtc")
+
+    # Create new agent
+    agent = Agent(
+        id=agent_id,
+        userId=user_id,
+        name=request.name,
+        description=request.description,
+        status="draft",
+        templateId=request.templateId,
+        configuration=request.configuration,
+        deploymentConfig=request.deploymentConfig,
+        analytics=AgentAnalytics()
+    )
+
+    agents_storage[agent_id] = agent
+    logger.info(f"Created new agent: {agent_id} - {agent.name}")
+
+    return agent
+
+@app.get("/api/agents/{agent_id}", response_model=Agent)
+async def get_agent(agent_id: str):
+    """Get agent details by ID"""
+    if agent_id not in agents_storage:
+        raise HTTPException(status_code=404, detail="Agent not found")
+
+    return agents_storage[agent_id]
+
+@app.put("/api/agents/{agent_id}", response_model=Agent)
+async def update_agent(agent_id: str, request: UpdateAgentRequest):
+    """Update agent configuration"""
+    if agent_id not in agents_storage:
+        raise HTTPException(status_code=404, detail="Agent not found")
+
+    agent = agents_storage[agent_id]
+
+    # Update fields if provided
+    if request.name is not None:
+        agent.name = request.name
+    if request.description is not None:
+        agent.description = request.description
+    if request.status is not None:
+        agent.status = request.status
+    if request.configuration is not None:
+        agent.configuration = request.configuration
+    if request.deploymentConfig is not None:
+        agent.deploymentConfig = request.deploymentConfig
+
+    agent.updatedAt = datetime.now()
+    agents_storage[agent_id] = agent
+
+    logger.info(f"Updated agent: {agent_id} - {agent.name}")
+    return agent
+
+@app.delete("/api/agents/{agent_id}")
+async def delete_agent(agent_id: str):
+    """Delete an agent"""
+    if agent_id not in agents_storage:
+        raise HTTPException(status_code=404, detail="Agent not found")
+
+    agent = agents_storage[agent_id]
+    del agents_storage[agent_id]
+
+    logger.info(f"Deleted agent: {agent_id} - {agent.name}")
+    return {"message": "Agent deleted successfully", "agent_id": agent_id}
+
+@app.post("/api/agents/{agent_id}/duplicate", response_model=Agent)
+async def duplicate_agent(agent_id: str, user_id: str = "user_1"):
+    """Clone an existing agent"""
+    if agent_id not in agents_storage:
+        raise HTTPException(status_code=404, detail="Agent not found")
+
+    original_agent = agents_storage[agent_id]
+    new_agent_id = f"agt_{uuid.uuid4().hex[:8]}"
+
+    # Create a copy with new ID and modified name
+    new_agent = Agent(
+        id=new_agent_id,
+        userId=user_id,
+        name=f"{original_agent.name} (Copy)",
+        description=original_agent.description,
+        status="draft",
+        templateId=original_agent.templateId,
+        configuration=original_agent.configuration.model_copy(),
+        deploymentConfig=original_agent.deploymentConfig.model_copy(),
+        analytics=AgentAnalytics()
+    )
+
+    agents_storage[new_agent_id] = new_agent
+    logger.info(f"Duplicated agent: {agent_id} -> {new_agent_id}")
+
+    return new_agent
+
+@app.post("/api/agents/{agent_id}/deploy")
+async def deploy_agent(agent_id: str):
+    """Deploy an agent (change status to active)"""
+    if agent_id not in agents_storage:
+        raise HTTPException(status_code=404, detail="Agent not found")
+
+    agent = agents_storage[agent_id]
+    agent.status = "active"
+    agent.updatedAt = datetime.now()
+
+    logger.info(f"Deployed agent: {agent_id} - {agent.name}")
+    return {"message": "Agent deployed successfully", "agent_id": agent_id, "status": "active"}
+
+@app.post("/api/agents/{agent_id}/stop")
+async def stop_agent(agent_id: str):
+    """Stop an agent (change status to inactive)"""
+    if agent_id not in agents_storage:
+        raise HTTPException(status_code=404, detail="Agent not found")
+
+    agent = agents_storage[agent_id]
+    agent.status = "inactive"
+    agent.updatedAt = datetime.now()
+
+    logger.info(f"Stopped agent: {agent_id} - {agent.name}")
+    return {"message": "Agent stopped successfully", "agent_id": agent_id, "status": "inactive"}
 
 @app.get("/metrics")
 async def get_system_metrics():

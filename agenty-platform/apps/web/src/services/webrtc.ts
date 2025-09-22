@@ -311,7 +311,7 @@ export class DirectWebRTCService implements WebRTCService {
     if (!this.peer) return
 
     // Access underlying RTCPeerConnection for state monitoring
-    const pc = (this.peer as any)._pc as RTCPeerConnection
+    const pc = (this.peer as unknown as { _pc: RTCPeerConnection })._pc
 
     pc.onconnectionstatechange = () => {
       const state = pc.connectionState
@@ -396,7 +396,7 @@ export class DirectWebRTCService implements WebRTCService {
   getConnectionState(): RTCPeerConnectionState {
     if (!this.peer) return 'closed'
 
-    const pc = (this.peer as any)._pc as RTCPeerConnection
+    const pc = (this.peer as unknown as { _pc: RTCPeerConnection })._pc
     return pc.connectionState
   }
 

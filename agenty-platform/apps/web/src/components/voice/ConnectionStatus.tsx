@@ -32,7 +32,7 @@ export function ConnectionStatus() {
       const interval = setInterval(() => {
         setMetrics(prev => ({
           latency: Math.random() * 200 + 100, // 100-300ms
-          quality: ['excellent', 'good', 'fair'][Math.floor(Math.random() * 3)] as any,
+          quality: ['excellent', 'good', 'fair'][Math.floor(Math.random() * 3)] as 'excellent' | 'good' | 'fair',
           uptime: prev.uptime + 1,
           lastConnected: prev.lastConnected || new Date()
         }));

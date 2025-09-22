@@ -1,46 +1,6 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
-
-// Types from our mock data structure
-export interface Agent {
-  id: string
-  userId: string
-  name: string
-  description: string
-  status: 'active' | 'inactive' | 'draft'
-  templateId?: string
-  configuration: {
-    stt: {
-      provider: string
-      model: string
-      language: string
-    }
-    llm: {
-      provider: string
-      model: string
-      systemPrompt: string
-      temperature: number
-      maxTokens: number
-    }
-    tts: {
-      provider: string
-      voice: string
-      [key: string]: unknown
-    }
-  }
-  deploymentConfig: {
-    type: 'webrtc' | 'phone' | 'whatsapp' | 'api'
-    [key: string]: unknown
-  }
-  analytics: {
-    totalConversations: number
-    averageResponseTime: number
-    satisfactionScore: number
-    activeToday: number
-  }
-  createdAt: string
-  updatedAt: string
-}
+import { apiService, Agent, CreateAgentRequest, UpdateAgentRequest } from '@/services/api'
 
 interface AgentStore {
   // State
@@ -50,10 +10,13 @@ interface AgentStore {
   error: string | null
 
   // Actions
-  setAgents: (agents: Agent[]) => void
-  addAgent: (agent: Agent) => void
-  updateAgent: (id: string, updates: Partial<Agent>) => void
-  deleteAgent: (id: string) => void
+  fetchAgents: () => Promise<void>
+  createAgent: (request: CreateAgentRequest) => Promise<Agent>
+  updateAgent: (id: string, updates: UpdateAgentRequest) => Promise<Agent>
+  deleteAgent: (id: string) => Promise<void>
+  duplicateAgent: (id: string) => Promise<Agent>
+  deployAgent: (id: string) => Promise<void>
+  stopAgent: (id: string) => Promise<void>
   setSelectedAgent: (agent: Agent | null) => void
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
@@ -64,72 +27,147 @@ interface AgentStore {
   getTotalConversations: () => number
 }
 
-// Sample agent data for testing
-const sampleAgents: Agent[] = [
-  {
-    id: 'agt_1',
-    userId: 'user_1',
-    name: 'Customer Support Assistant',
-    description: 'AI assistant specialized in customer support and product inquiries',
-    status: 'active',
-    templateId: 'customer-support',
-    configuration: {
-      stt: {
-        provider: 'OpenAI',
-        model: 'whisper-1',
-        language: 'en-US'
-      },
-      llm: {
-        provider: 'OpenAI',
-        model: 'gpt-4o',
-        systemPrompt: 'You are a helpful customer support assistant.',
-        temperature: 0.7,
-        maxTokens: 1000
-      },
-      tts: {
-        provider: 'OpenAI',
-        voice: 'alloy'
-      }
-    },
-    deploymentConfig: {
-      type: 'webrtc'
-    },
-    analytics: {
-      totalConversations: 1247,
-      averageResponseTime: 850,
-      satisfactionScore: 4.2,
-      activeToday: 23
-    },
-    createdAt: '2024-01-15T10:00:00Z',
-    updatedAt: '2024-01-20T15:30:00Z'
-  }
-]
-
 export const useAgentStore = create<AgentStore>()(
   devtools(
     (set, get) => ({
-      // Initial state with sample data
-      agents: sampleAgents,
+      // Initial state
+      agents: [],
       selectedAgent: null,
       isLoading: false,
       error: null,
 
-      // Actions
-      setAgents: (agents) => set({ agents }),
+      // API Actions
+      fetchAgents: async () => {
+        try {
+          set({ isLoading: true, error: null })
+          const agents = await apiService.listAgents()
+          set({ agents, isLoading: false })
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Failed to fetch agents',
+            isLoading: false
+          })
+        }
+      },
 
-      addAgent: (agent) => set((state) => ({
-        agents: [...state.agents, agent]
-      })),
+      createAgent: async (request: CreateAgentRequest) => {
+        try {
+          set({ isLoading: true, error: null })
+          const newAgent = await apiService.createAgent(request)
+          set((state) => ({
+            agents: [...state.agents, newAgent],
+            isLoading: false
+          }))
+          return newAgent
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Failed to create agent',
+            isLoading: false
+          })
+          throw error
+        }
+      },
 
-      updateAgent: (id, updates) => set((state) => ({
-        agents: state.agents.map(agent =>
-          agent.id === id ? { ...agent, ...updates } : agent
-        )
-      })),
+      updateAgent: async (id: string, updates: UpdateAgentRequest) => {
+        try {
+          set({ isLoading: true, error: null })
+          const updatedAgent = await apiService.updateAgent(id, updates)
+          set((state) => ({
+            agents: state.agents.map(agent =>
+              agent.id === id ? updatedAgent : agent
+            ),
+            selectedAgent: state.selectedAgent?.id === id ? updatedAgent : state.selectedAgent,
+            isLoading: false
+          }))
+          return updatedAgent
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Failed to update agent',
+            isLoading: false
+          })
+          throw error
+        }
+      },
 
-      deleteAgent: (id) => set((state) => ({
-        agents: state.agents.filter(agent => agent.id !== id)
-      })),
+      deleteAgent: async (id: string) => {
+        try {
+          set({ isLoading: true, error: null })
+          await apiService.deleteAgent(id)
+          set((state) => ({
+            agents: state.agents.filter(agent => agent.id !== id),
+            selectedAgent: state.selectedAgent?.id === id ? null : state.selectedAgent,
+            isLoading: false
+          }))
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Failed to delete agent',
+            isLoading: false
+          })
+          throw error
+        }
+      },
+
+      duplicateAgent: async (id: string) => {
+        try {
+          set({ isLoading: true, error: null })
+          const duplicatedAgent = await apiService.duplicateAgent(id)
+          set((state) => ({
+            agents: [...state.agents, duplicatedAgent],
+            isLoading: false
+          }))
+          return duplicatedAgent
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Failed to duplicate agent',
+            isLoading: false
+          })
+          throw error
+        }
+      },
+
+      deployAgent: async (id: string) => {
+        try {
+          set({ isLoading: true, error: null })
+          await apiService.deployAgent(id)
+          set((state) => ({
+            agents: state.agents.map(agent =>
+              agent.id === id ? { ...agent, status: 'active' as const } : agent
+            ),
+            selectedAgent: state.selectedAgent?.id === id
+              ? { ...state.selectedAgent, status: 'active' as const }
+              : state.selectedAgent,
+            isLoading: false
+          }))
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Failed to deploy agent',
+            isLoading: false
+          })
+          throw error
+        }
+      },
+
+      stopAgent: async (id: string) => {
+        try {
+          set({ isLoading: true, error: null })
+          await apiService.stopAgent(id)
+          set((state) => ({
+            agents: state.agents.map(agent =>
+              agent.id === id ? { ...agent, status: 'inactive' as const } : agent
+            ),
+            selectedAgent: state.selectedAgent?.id === id
+              ? { ...state.selectedAgent, status: 'inactive' as const }
+              : state.selectedAgent,
+            isLoading: false
+          }))
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Failed to stop agent',
+            isLoading: false
+          })
+          throw error
+        }
+      },
 
       setSelectedAgent: (agent) => set({ selectedAgent: agent }),
       setLoading: (loading) => set({ isLoading: loading }),
