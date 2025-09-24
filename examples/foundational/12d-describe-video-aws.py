@@ -31,7 +31,7 @@ from pipecat.runner.utils import (
     get_transport_client_id,
     maybe_capture_participant_camera,
 )
-from pipecat.services.anthropic.llm import AnthropicLLMService
+from pipecat.services.aws.llm import AWSBedrockLLMService
 from pipecat.services.cartesia.tts import CartesiaTTSService
 from pipecat.services.deepgram.stt import DeepgramSTTService
 from pipecat.transports.base_transport import BaseTransport, TransportParams
@@ -70,6 +70,7 @@ class UserImageProcessor(FrameProcessor):
 
         if isinstance(frame, UserImageRawFrame):
             if frame.request and frame.request.context:
+                # Note: AWS Bedrock does not yet support the universal LLMContext
                 context = LLMContext()
                 context.add_image_frame_message(
                     image=frame.image,
@@ -114,8 +115,15 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
 
     stt = DeepgramSTTService(api_key=os.getenv("DEEPGRAM_API_KEY"))
 
-    # Anthropic for vision analysis
-    anthropic = AnthropicLLMService(api_key=os.getenv("ANTHROPIC_API_KEY"))
+    # AWS for vision analysis
+    aws = AWSBedrockLLMService(
+        aws_region="us-west-2",
+        model="us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+        # Note: usually, prefer providing latency="optimized" param.
+        # Here we can't because AWS Bedrock doesn't support it for Claude 3.7,
+        # which we need for image input.
+        params=AWSBedrockLLMService.InputParams(temperature=0.8),
+    )
 
     tts = CartesiaTTSService(
         api_key=os.getenv("CARTESIA_API_KEY"),
@@ -129,7 +137,7 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
             user_response,
             image_requester,
             image_processor,
-            anthropic,
+            aws,
             tts,
             transport.output(),
         ]
