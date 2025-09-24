@@ -33,7 +33,11 @@
       "Bash(timeout 10s uv run:*)",
       "Bash(lsof:*)",
       "Bash(xargs -r kill -9)",
-      "Bash(npm run lint)"
+      "Bash(npm run lint)",
+      "Bash(git add:*)",
+      "Bash(python3:*)",
+      "Bash(uv add:*)",
+      "Bash(pip install:*)"
     ],
     "deny": [],
     "ask": []
