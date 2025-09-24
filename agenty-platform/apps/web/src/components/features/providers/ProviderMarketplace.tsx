@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Search, Filter, Star, Globe, Zap, Clock, DollarSign } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -29,10 +29,10 @@ export function ProviderMarketplace({
   const [filterType, setFilterType] = useState('all')
   const [showFavorites, setShowFavorites] = useState(false)
 
-  // Initialize providers if empty
-  if (providers.length === 0) {
+  // Initialize providers on mount
+  useEffect(() => {
     fetchProviders()
-  }
+  }, [])
 
   // Filter and sort providers
   const filteredProviders = useMemo(() => {
@@ -79,7 +79,8 @@ export function ProviderMarketplace({
     const groups: { [key: string]: Provider[] } = {
       stt: [],
       llm: [],
-      tts: []
+      tts: [],
+      realtime: []
     }
 
     filteredProviders.forEach(provider => {
@@ -258,7 +259,7 @@ export function ProviderMarketplace({
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
           <div className="text-center p-3 bg-muted/30 rounded-lg">
             <div className="text-2xl font-bold text-primary">{groupedProviders.stt.length}</div>
             <div className="text-xs text-muted-foreground">{t('sttProviders', 'providers')}</div>
@@ -272,6 +273,10 @@ export function ProviderMarketplace({
             <div className="text-xs text-muted-foreground">{t('ttsProviders', 'providers')}</div>
           </div>
           <div className="text-center p-3 bg-muted/30 rounded-lg">
+            <div className="text-2xl font-bold text-primary">{groupedProviders.realtime.length}</div>
+            <div className="text-xs text-muted-foreground">Realtime</div>
+          </div>
+          <div className="text-center p-3 bg-muted/30 rounded-lg">
             <div className="text-2xl font-bold text-primary">{filteredProviders.length}</div>
             <div className="text-xs text-muted-foreground">{t('totalProviders', 'providers')}</div>
           </div>
@@ -280,11 +285,12 @@ export function ProviderMarketplace({
 
       {/* Provider Categories */}
       <Tabs value={filterType} onValueChange={setFilterType}>
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="all">{t('all', 'providers')} ({filteredProviders.length})</TabsTrigger>
           <TabsTrigger value="stt">STT ({groupedProviders.stt.length})</TabsTrigger>
           <TabsTrigger value="llm">LLM ({groupedProviders.llm.length})</TabsTrigger>
           <TabsTrigger value="tts">TTS ({groupedProviders.tts.length})</TabsTrigger>
+          <TabsTrigger value="realtime">Realtime ({groupedProviders.realtime.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="all" className="mt-6">
@@ -320,6 +326,12 @@ export function ProviderMarketplace({
         <TabsContent value="tts" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {groupedProviders.tts.map(renderProviderCard)}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="realtime" className="mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {groupedProviders.realtime.map(renderProviderCard)}
           </div>
         </TabsContent>
       </Tabs>

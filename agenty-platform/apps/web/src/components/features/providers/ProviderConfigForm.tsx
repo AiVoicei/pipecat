@@ -16,7 +16,7 @@ import { Settings, Eye, EyeOff } from 'lucide-react'
 
 interface ProviderConfigFormProps {
   providerId: string
-  type: 'stt' | 'llm' | 'tts'
+  type: 'stt' | 'llm' | 'tts' | 'realtime'
   config: Record<string, string | number | boolean>
   onConfigChange: (config: Record<string, string | number | boolean>) => void
   className?: string

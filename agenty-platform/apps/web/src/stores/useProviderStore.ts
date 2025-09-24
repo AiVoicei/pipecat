@@ -5,7 +5,7 @@ import { devtools } from 'zustand/middleware'
 export interface Provider {
   id: string
   name: string
-  type: 'stt' | 'llm' | 'tts'
+  type: 'stt' | 'llm' | 'tts' | 'realtime'
   logoUrl: string
   description: string
   isActive: boolean
@@ -35,15 +35,18 @@ interface ProviderStore {
 
   // Actions
   fetchProviders: () => Promise<void>
-  getProvidersByType: (type: 'stt' | 'llm' | 'tts') => Provider[]
+  getProvidersByType: (type: 'stt' | 'llm' | 'tts' | 'realtime') => Provider[]
   getPopularProviders: () => Provider[]
   searchProviders: (query: string) => Provider[]
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
 }
 
-// Mock provider data based on the existing providers.json
-const mockProviders: Provider[] = [
+// API base URL - in production this would come from environment
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+
+// Mock provider data for fallback (kept for offline mode)
+const fallbackProviders: Provider[] = [
   {
     id: 'prv_1',
     name: 'OpenAI',
@@ -328,14 +331,129 @@ const mockProviders: Provider[] = [
     },
     capabilities: ['real_time', 'low_latency', 'emotional_range', 'streaming'],
     supportedLanguages: ['en', 'es', 'fr', 'de', 'it']
+  },
+  {
+    id: 'prv_8',
+    name: 'OpenAI Realtime API',
+    type: 'realtime',
+    logoUrl: 'https://cdn.openai.com/API/logo-openai.svg',
+    description: 'Next-generation speech-to-speech with gpt-realtime model. Function calling, multilingual, and natural conversations.',
+    isActive: true,
+    popularity: 95,
+    pricing: {
+      model: 'per_minute',
+      inputCost: 0.06,
+      outputCost: 0.24,
+      currency: 'USD'
+    },
+    configurationSchema: {
+      type: 'object',
+      properties: {
+        model: {
+          type: 'string',
+          enum: ['gpt-realtime', 'gpt-4o-realtime-preview'],
+          default: 'gpt-realtime'
+        },
+        voice: {
+          type: 'string',
+          enum: ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer', 'cedar', 'marin'],
+          default: 'alloy'
+        },
+        temperature: {
+          type: 'number',
+          minimum: 0,
+          maximum: 2,
+          default: 0.8
+        }
+      },
+      required: ['model', 'voice']
+    },
+    capabilities: ['real_time', 'speech_to_speech', 'low_latency', 'interruption', 'function_calling', 'multilingual', 'non_verbal_cues'],
+    supportedLanguages: ['en', 'es', 'fr', 'de', 'it', 'pt', 'ru', 'ja', 'ko', 'zh', 'hi', 'ar']
+  },
+  {
+    id: 'prv_9',
+    name: 'Gemini 2.0 Flash Live API',
+    type: 'realtime',
+    logoUrl: 'https://ai.google.dev/static/site-assets/images/gemini-gradient.svg',
+    description: 'Real-time multimodal conversations with vision, audio, and video. 30 HD voices across 24 languages.',
+    isActive: true,
+    popularity: 90,
+    pricing: {
+      model: 'per_token',
+      inputCost: 0.075,
+      outputCost: 0.30,
+      currency: 'USD'
+    },
+    configurationSchema: {
+      type: 'object',
+      properties: {
+        model: {
+          type: 'string',
+          enum: ['gemini-2.0-flash-exp', 'gemini-2.0-flash'],
+          default: 'gemini-2.0-flash'
+        },
+        voice: {
+          type: 'string',
+          enum: ['Puck', 'Charon', 'Kore', 'Fenrir', 'Aoede', 'Ballad'],
+          default: 'Puck'
+        },
+        temperature: {
+          type: 'number',
+          minimum: 0,
+          maximum: 2,
+          default: 1.0
+        }
+      },
+      required: ['model']
+    },
+    capabilities: ['real_time', 'speech_to_speech', 'multimodal', 'vision', 'video', 'low_latency', 'interruption', 'function_calling', 'screen_sharing'],
+    supportedLanguages: ['en', 'es', 'fr', 'de', 'it', 'pt', 'ru', 'ja', 'ko', 'zh', 'hi', 'ar', 'he', 'nl', 'pl', 'sv', 'da', 'no', 'fi', 'tr', 'th', 'vi', 'id', 'ms']
   }
 ]
+
+// API client functions
+async function fetchProvidersFromAPI(): Promise<Provider[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/providers`)
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    const data = await response.json()
+
+    // Transform API response to match frontend Provider interface
+    return data.map((provider: any) => ({
+      id: provider.id,
+      name: provider.display_name || provider.name,
+      type: provider.type,
+      logoUrl: provider.logo_url || `/logos/${provider.name}.svg`,
+      description: provider.description,
+      isActive: provider.status === 'available' || provider.status === 'beta',
+      popularity: provider.implementation_status === 'implemented' ? 95 : 70,
+      pricing: {
+        model: provider.pricing?.model || 'pay_per_use',
+        cost: provider.pricing?.cost_per_unit,
+        inputCost: provider.pricing?.input_cost,
+        outputCost: provider.pricing?.output_cost,
+        currency: provider.pricing?.currency || 'USD'
+      },
+      configurationSchema: provider.configuration_schema || { type: 'object', properties: {}, required: [] },
+      capabilities: Object.keys(provider.capabilities || {}),
+      supportedLanguages: provider.capabilities?.languages || ['en'],
+      supportedFormats: provider.supported_formats || []
+    }))
+  } catch (error) {
+    console.error('Failed to fetch providers from API:', error)
+    // Return fallback providers if API fails
+    return fallbackProviders
+  }
+}
 
 export const useProviderStore = create<ProviderStore>()(
   devtools(
     (set, get) => ({
       // Initial state
-      providers: mockProviders,
+      providers: [],
       isLoading: false,
       error: null,
 
@@ -343,18 +461,18 @@ export const useProviderStore = create<ProviderStore>()(
       fetchProviders: async () => {
         try {
           set({ isLoading: true, error: null })
-          // Simulate API call - in real app, this would fetch from API
-          await new Promise(resolve => setTimeout(resolve, 500))
-          set({ isLoading: false })
+          const providers = await fetchProvidersFromAPI()
+          set({ providers, isLoading: false })
         } catch (error) {
           set({
+            providers: fallbackProviders, // Use fallback on error
             error: error instanceof Error ? error.message : 'Failed to fetch providers',
             isLoading: false
           })
         }
       },
 
-      getProvidersByType: (type: 'stt' | 'llm' | 'tts') => {
+      getProvidersByType: (type: 'stt' | 'llm' | 'tts' | 'realtime') => {
         return get().providers.filter(provider => provider.type === type && provider.isActive)
       },
 

@@ -3,7 +3,7 @@ import { devtools } from 'zustand/middleware'
 import { Node, Edge, Connection, addEdge, applyNodeChanges, applyEdgeChanges, NodeChange, EdgeChange } from 'reactflow'
 
 // Pipeline node types
-export type PipelineNodeType = 'stt' | 'llm' | 'tts' | 'filter' | 'aggregator' | 'custom'
+export type PipelineNodeType = 'stt' | 'llm' | 'tts' | 'realtime' | 'filter' | 'aggregator' | 'custom'
 
 // Node data structure
 export interface PipelineNodeData {

@@ -11,7 +11,7 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { useProviderStore, Provider } from '@/stores/useProviderStore'
 
 interface ProviderSelectorProps {
-  type: 'stt' | 'llm' | 'tts'
+  type: 'stt' | 'llm' | 'tts' | 'realtime'
   selectedProvider?: string
   onProviderChange: (providerId: string, provider: Provider) => void
   className?: string
@@ -47,6 +47,8 @@ export function ProviderSelector({
         return t('selectLLMProvider', 'providers')
       case 'tts':
         return t('selectTTSProvider', 'providers')
+      case 'realtime':
+        return t('selectRealtimeProvider', 'providers')
       default:
         return t('selectProvider', 'providers')
     }
@@ -60,6 +62,8 @@ export function ProviderSelector({
         return t('llmProviderDesc', 'providers')
       case 'tts':
         return t('ttsProviderDesc', 'providers')
+      case 'realtime':
+        return t('realtimeProviderDesc', 'providers')
       default:
         return t('selectProviderDesc', 'providers')
     }

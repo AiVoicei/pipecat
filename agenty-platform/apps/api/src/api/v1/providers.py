@@ -6,14 +6,16 @@ Handles provider marketplace, credential management, and validation.
 from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Depends, status
 
-from ...schemas.provider import (
+from schemas.provider import (
     Provider, ProviderCredentialCreate, ProviderCredentialUpdate,
     ProviderCredentialResponse, ProviderValidationRequest,
     ProviderValidationResult, ProviderMarketplaceFilter,
     ProviderType, ProviderStatus
 )
-from ...services.provider_service import ProviderService
-from ...utils.dependencies import get_current_user, get_provider_service
+from services.provider_service import ProviderService
+from utils.dependencies import get_current_user, get_provider_service
+from core.dependencies import get_data_layer_dependency, get_encryption_key
+from core.data_layer import DataLayer
 
 router = APIRouter(prefix="/providers", tags=["providers"])
 

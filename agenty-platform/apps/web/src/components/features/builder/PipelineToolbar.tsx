@@ -8,6 +8,7 @@ import {
   Mic,
   Brain,
   Volume2,
+  Zap,
   Filter,
   Layers,
   Code,
@@ -86,6 +87,13 @@ export function PipelineToolbar() {
       description: t('ttsDescription', 'builder'),
       icon: Volume2,
       color: 'bg-purple-500'
+    },
+    {
+      type: 'realtime',
+      label: 'Realtime Speech',
+      description: 'End-to-end speech-to-speech conversation',
+      icon: Zap,
+      color: 'bg-red-500'
     }
   ]
 

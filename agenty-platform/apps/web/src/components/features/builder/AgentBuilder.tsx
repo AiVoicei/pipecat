@@ -22,7 +22,8 @@ import {
   AlertCircle,
   Info,
   ArrowRight,
-  ArrowLeft
+  ArrowLeft,
+  Zap
 } from 'lucide-react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useAgentStore } from '@/stores/useAgentStore'
@@ -43,6 +44,10 @@ interface AgentConfiguration {
     config: Record<string, any>
   } | null
   tts: {
+    provider: string
+    config: Record<string, any>
+  } | null
+  realtime: {
     provider: string
     config: Record<string, any>
   } | null
@@ -73,6 +78,7 @@ export function AgentBuilder({ agentId, templateId, onSave, onTest }: AgentBuild
     stt: null,
     llm: null,
     tts: null,
+    realtime: null,
     transport: {
       type: 'webrtc',
       settings: {}
@@ -120,29 +126,38 @@ export function AgentBuilder({ agentId, templateId, onSave, onTest }: AgentBuild
       errors.push(t('nameRequired', 'agents'))
     }
 
-    if (!config.stt) {
-      errors.push(t('sttProviderRequired', 'agents'))
-    }
+    // Realtime providers handle all functions, so they don't need STT/LLM/TTS
+    if (config.realtime) {
+      // Only validate realtime provider configuration
+      if (!config.realtime.config.apiKey) {
+        errors.push('Realtime provider API key is required')
+      }
+    } else {
+      // Traditional setup requires all three providers
+      if (!config.stt) {
+        errors.push(t('sttProviderRequired', 'agents'))
+      }
 
-    if (!config.llm) {
-      errors.push(t('llmProviderRequired', 'agents'))
-    }
+      if (!config.llm) {
+        errors.push(t('llmProviderRequired', 'agents'))
+      }
 
-    if (!config.tts) {
-      errors.push(t('ttsProviderRequired', 'agents'))
-    }
+      if (!config.tts) {
+        errors.push(t('ttsProviderRequired', 'agents'))
+      }
 
-    // Validate provider configurations
-    if (config.stt && !config.stt.config.apiKey) {
-      errors.push(t('sttApiKeyRequired', 'agents'))
-    }
+      // Validate provider configurations
+      if (config.stt && !config.stt.config.apiKey) {
+        errors.push(t('sttApiKeyRequired', 'agents'))
+      }
 
-    if (config.llm && !config.llm.config.apiKey) {
-      errors.push(t('llmApiKeyRequired', 'agents'))
-    }
+      if (config.llm && !config.llm.config.apiKey) {
+        errors.push(t('llmApiKeyRequired', 'agents'))
+      }
 
-    if (config.tts && !config.tts.config.apiKey) {
-      errors.push(t('ttsApiKeyRequired', 'agents'))
+      if (config.tts && !config.tts.config.apiKey) {
+        errors.push(t('ttsApiKeyRequired', 'agents'))
+      }
     }
 
     setValidationErrors(errors)
@@ -150,18 +165,36 @@ export function AgentBuilder({ agentId, templateId, onSave, onTest }: AgentBuild
   }, [config, t])
 
   // Provider selection handlers
-  const handleProviderSelect = useCallback((type: 'stt' | 'llm' | 'tts') =>
+  const handleProviderSelect = useCallback((type: 'stt' | 'llm' | 'tts' | 'realtime') =>
     (providerId: string, provider: Provider) => {
-      setConfig(prev => ({
-        ...prev,
-        [type]: {
-          provider: providerId,
-          config: { apiKey: '', ...prev[type]?.config }
+      setConfig(prev => {
+        // If selecting a realtime provider, clear traditional providers
+        if (type === 'realtime') {
+          return {
+            ...prev,
+            stt: null,
+            llm: null,
+            tts: null,
+            [type]: {
+              provider: providerId,
+              config: { apiKey: '', ...prev[type]?.config }
+            }
+          }
+        } else {
+          // If selecting traditional providers, clear realtime
+          return {
+            ...prev,
+            realtime: null,
+            [type]: {
+              provider: providerId,
+              config: { apiKey: '', ...prev[type]?.config }
+            }
+          }
         }
-      }))
+      })
     }, [])
 
-  const handleProviderConfig = useCallback((type: 'stt' | 'llm' | 'tts') =>
+  const handleProviderConfig = useCallback((type: 'stt' | 'llm' | 'tts' | 'realtime') =>
     (newConfig: Record<string, any>) => {
       setConfig(prev => ({
         ...prev,
@@ -258,7 +291,7 @@ export function AgentBuilder({ agentId, templateId, onSave, onTest }: AgentBuild
     }
   }
 
-  const isFormValid = config.name.trim() && config.stt && config.llm && config.tts
+  const isFormValid = config.name.trim() && (config.realtime || (config.stt && config.llm && config.tts))
 
   return (
     <div className="h-full flex flex-col">
@@ -409,55 +442,99 @@ export function AgentBuilder({ agentId, templateId, onSave, onTest }: AgentBuild
         {/* Step 2: Provider Selection */}
         {currentStep === 1 && (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* STT Provider */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">{t('speechToText', 'agents')}</CardTitle>
-                  <CardDescription>{t('selectSTTProvider', 'agents')}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ProviderSelector
-                    type="stt"
-                    selectedProvider={config.stt?.provider}
-                    onProviderChange={handleProviderSelect('stt')}
-                  />
-                </CardContent>
-              </Card>
+            {/* Realtime Provider Option */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Zap className="w-5 h-5" />
+                  {t('realtimeSpeech', 'agents')}
+                </CardTitle>
+                <CardDescription>{t('selectRealtimeProvider', 'agents')}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ProviderSelector
+                  type="realtime"
+                  selectedProvider={config.realtime?.provider}
+                  onProviderChange={handleProviderSelect('realtime')}
+                />
+              </CardContent>
+            </Card>
 
-              {/* LLM Provider */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">{t('languageModel', 'agents')}</CardTitle>
-                  <CardDescription>{t('selectLLMProvider', 'agents')}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ProviderSelector
-                    type="llm"
-                    selectedProvider={config.llm?.provider}
-                    onProviderChange={handleProviderSelect('llm')}
-                  />
-                </CardContent>
-              </Card>
+            {/* Separator */}
+            {!config.realtime && (
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                    Or choose individual providers
+                  </span>
+                </div>
+              </div>
+            )}
 
-              {/* TTS Provider */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">{t('textToSpeech', 'agents')}</CardTitle>
-                  <CardDescription>{t('selectTTSProvider', 'agents')}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ProviderSelector
-                    type="tts"
-                    selectedProvider={config.tts?.provider}
-                    onProviderChange={handleProviderSelect('tts')}
-                  />
-                </CardContent>
-              </Card>
-            </div>
+            {/* Traditional Providers - Only show if realtime not selected */}
+            {!config.realtime && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* STT Provider */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">{t('speechToText', 'agents')}</CardTitle>
+                    <CardDescription>{t('selectSTTProvider', 'agents')}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ProviderSelector
+                      type="stt"
+                      selectedProvider={config.stt?.provider}
+                      onProviderChange={handleProviderSelect('stt')}
+                    />
+                  </CardContent>
+                </Card>
+
+                {/* LLM Provider */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">{t('languageModel', 'agents')}</CardTitle>
+                    <CardDescription>{t('selectLLMProvider', 'agents')}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ProviderSelector
+                      type="llm"
+                      selectedProvider={config.llm?.provider}
+                      onProviderChange={handleProviderSelect('llm')}
+                    />
+                  </CardContent>
+                </Card>
+
+                {/* TTS Provider */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">{t('textToSpeech', 'agents')}</CardTitle>
+                    <CardDescription>{t('selectTTSProvider', 'agents')}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ProviderSelector
+                      type="tts"
+                      selectedProvider={config.tts?.provider}
+                      onProviderChange={handleProviderSelect('tts')}
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+            )}
 
             {/* Provider Configuration */}
             <div className="space-y-6">
+              {config.realtime && (
+                <ProviderConfigForm
+                  providerId={config.realtime.provider}
+                  type="realtime"
+                  config={config.realtime.config}
+                  onConfigChange={handleProviderConfig('realtime')}
+                />
+              )}
+
               {config.stt && (
                 <ProviderConfigForm
                   providerId={config.stt.provider}

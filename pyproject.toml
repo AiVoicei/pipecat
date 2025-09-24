@@ -44,6 +44,10 @@ dependencies = [
     "pipecat-ai-small-webrtc-prebuilt>=1.0.0",
     "cryptography>=45.0.6",
     "pyaudio",
+    "sqlalchemy>=2.0.43",
+    "psycopg2-binary>=2.9.10",
+    "alembic>=1.16.5",
+    "python-dotenv>=1.1.1",
 ]
 
 [project.urls]

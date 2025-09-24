@@ -15,6 +15,7 @@ from fastapi.openapi.utils import get_openapi
 from api.v1.agents import router as agents_router
 from api.v1.providers import router as providers_router
 from utils.dependencies import get_app_config
+from core.database import init_database
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -56,6 +57,13 @@ async def log_requests(request: Request, call_next):
     print(f"{request.method} {request.url.path} - {response.status_code} - {duration:.3f}s")
 
     return response
+
+# Database initialization
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database on startup"""
+    await init_database()
+    print("✓ Database initialized successfully")
 
 # Include API routers
 app.include_router(agents_router, prefix="/api/v1")

@@ -3,19 +3,23 @@ Agent API endpoints for the Agenty platform.
 Handles CRUD operations for agents, configurations, and runtime management.
 """
 
+import uuid
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.responses import JSONResponse
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...schemas.agent import (
+from schemas.agent import (
     AgentCreate, AgentUpdate, AgentResponse, AgentConfiguration,
     AgentTemplate, ConfigurationTest, ConfigurationTestResult,
     AgentSession
 )
-from ...services.agent_factory import AgentFactory
-from ...services.provider_service import ProviderService
-from ...utils.dependencies import get_current_user, get_agent_factory
+from services.agent_factory import AgentFactory
+from services.provider_service import ProviderService
+from services.database_service import DatabaseService
+from core.database import get_async_db
+from utils.dependencies import get_current_user, get_agent_factory
 
 router = APIRouter(prefix="/agents", tags=["agents"])
 
@@ -24,30 +28,33 @@ router = APIRouter(prefix="/agents", tags=["agents"])
 async def create_agent(
     agent_data: AgentCreate,
     current_user: dict = Depends(get_current_user),
-    agent_factory: AgentFactory = Depends(get_agent_factory)
+    agent_factory: AgentFactory = Depends(get_agent_factory),
+    db: AsyncSession = Depends(get_async_db)
 ):
     """Create a new agent with the specified configuration"""
     try:
-        # Generate agent ID
-        import uuid
-        agent_id = str(uuid.uuid4())
+        # Create database service
+        db_service = DatabaseService(db)
 
-        # Create agent in factory
-        agent_instance = await agent_factory.create_agent(
-            agent_config=agent_data.configuration,
-            user_id=current_user["id"],
-            agent_id=agent_id
+        # Create agent in database
+        agent = await db_service.create_agent(
+            user_id=uuid.UUID(current_user["id"]),
+            agent_data=agent_data
         )
 
-        # Create response (in production, save to database)
+        # If template was used, increment usage count
+        if agent_data.template_id:
+            await db_service.increment_template_usage(uuid.UUID(agent_data.template_id))
+
+        # Create response
         agent_response = AgentResponse(
-            id=agent_id,
-            user_id=current_user["id"],
-            name=agent_data.name,
-            description=agent_data.description,
-            configuration=agent_data.configuration,
-            deployment=agent_data.deployment,
-            template_id=agent_data.template_id,
+            id=str(agent.id),
+            user_id=str(agent.user_id),
+            name=agent.name,
+            description=agent.description,
+            configuration=agent.configuration,
+            deployment=agent.deployment_config,
+            template_id=str(agent.template_id) if agent.template_id else None,
             created_at=datetime.now(),
             updated_at=datetime.now()
         )
@@ -68,33 +75,39 @@ async def create_agent(
 
 @router.get("/", response_model=List[AgentResponse])
 async def get_agents(
+    status: Optional[str] = None,
+    limit: int = 100,
+    offset: int = 0,
     current_user: dict = Depends(get_current_user),
-    agent_factory: AgentFactory = Depends(get_agent_factory)
+    db: AsyncSession = Depends(get_async_db)
 ):
     """Get all agents for the current user"""
     try:
-        # Get active agents from factory
-        active_agents = agent_factory.get_active_agents()
+        # Create database service
+        db_service = DatabaseService(db)
 
-        # Filter by user
-        user_agents = [
-            agent for agent in active_agents
-            if agent.get("session", {}).get("metadata", {}).get("user_id") == current_user["id"]
-        ]
+        # Get agents from database
+        agents = await db_service.get_agents_by_user(
+            user_id=uuid.UUID(current_user["id"]),
+            status=status,
+            limit=limit,
+            offset=offset
+        )
 
         # Convert to response format
         agent_responses = []
-        for agent in user_agents:
+        for agent in agents:
             agent_responses.append(AgentResponse(
-                id=agent["id"],
-                user_id=current_user["id"],
-                name=f"Agent {agent['id'][:8]}",  # Mock name
-                description="Generated agent",
-                configuration=agent["configuration"],
-                deployment={"status": agent["status"], "endpoints": [], "custom_domain": None},
-                template_id=None,
-                created_at=agent["started_at"],
-                updated_at=agent["started_at"]
+                id=str(agent.id),
+                user_id=str(agent.user_id),
+                name=agent.name,
+                description=agent.description,
+                configuration=agent.configuration,
+                deployment=agent.deployment_config,
+                template_id=str(agent.template_id) if agent.template_id else None,
+                status=agent.status,
+                created_at=agent.created_at,
+                updated_at=agent.updated_at
             ))
 
         return agent_responses
