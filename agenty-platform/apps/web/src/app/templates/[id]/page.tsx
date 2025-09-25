@@ -88,6 +88,7 @@ export default function TemplateDetailPage() {
             </div>
           ))}
         </div>
+        </div>
       </AppLayout>
     )
   }
@@ -112,6 +113,7 @@ export default function TemplateDetailPage() {
             <Link href="/templates">{t('backToTemplates', 'templates')}</Link>
           </Button>
         </Card>
+        </div>
       </AppLayout>
     )
   }
@@ -379,6 +381,7 @@ export default function TemplateDetailPage() {
             </CardContent>
           </Card>
         </div>
+      </div>
       </div>
     </AppLayout>
   )

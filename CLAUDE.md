@@ -17,6 +17,28 @@ uv sync --group dev --all-extras --no-extra gstreamer --no-extra krisp --no-extr
 uv run pre-commit install
 ```
 
+### Agenty Platform Operations
+When user asks to "run agenty" or "restart agenty":
+
+1. **Kill all existing background processes** (if any are running):
+   - Use KillShell tool to stop any running backend/frontend processes
+
+2. **Start AI Voicei Backend** (working reference implementation):
+   ```bash
+   uv run aivoicei_web_server.py
+   ```
+   - Runs on localhost:7860 with Gemini Multimodal Live
+   - Provides WebRTC voice communication
+
+3. **Start Agenty Frontend** (Next.js platform):
+   ```bash
+   cd agenty-platform/apps/web && npm run dev
+   ```
+   - Runs on http://localhost:3000 with Turbopack
+   - Full platform interface with agent builder
+
+**Note**: Always kill background tasks first when restarting to avoid port conflicts.
+
 ### Testing
 ```bash
 # Run all tests

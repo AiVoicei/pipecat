@@ -191,6 +191,41 @@
     border: 1px solid hsl(var(--border));
   }
 
+  /* ReactFlow node overrides - remove white background */
+  .react-flow__node {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .react-flow__node-default {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+
+  .react-flow__node > div {
+    background: transparent !important;
+  }
+
+  .react-flow .react-flow__node {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* ReactFlow selection styling */
+  .react-flow__node.selected {
+    background: transparent !important;
+  }
+
+  /* ReactFlow handles styling */
+  .react-flow__handle {
+    border: 2px solid hsl(var(--background)) !important;
+    background: hsl(var(--muted-foreground)) !important;
+  }
+
   /* Voice indicator animations */
   .voice-pulse {
     animation: pulse-primary 2.5s ease-in-out infinite;

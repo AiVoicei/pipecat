@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useRef } from 'react'
+import React, { useCallback, useRef, useEffect } from 'react'
 import ReactFlow, {
   Background,
   Controls,
@@ -15,7 +15,7 @@ import ReactFlow, {
 } from 'reactflow'
 import 'reactflow/dist/style.css'
 
-import { DndContext, DragEndEvent, useSensor, useSensors, PointerSensor } from '@dnd-kit/core'
+// Removed DnD Kit import - using native HTML5 drag and drop
 import { usePipelineStore } from '@/stores/usePipelineStore'
 import { PipelineToolbar } from './PipelineToolbar'
 import { PipelineNode } from './PipelineNode'
@@ -40,9 +40,15 @@ const nodeTypes: NodeTypes = {
 interface PipelineBuilderProps {
   agentId?: string
   readonly?: boolean
+  selectedProviders?: {
+    stt?: string
+    llm?: string
+    tts?: string
+    realtime?: string
+  }
 }
 
-export function PipelineBuilder({ agentId, readonly = false }: PipelineBuilderProps) {
+export function PipelineBuilder({ agentId, readonly = false, selectedProviders }: PipelineBuilderProps) {
   const { t } = useLanguage()
   const reactFlowWrapper = useRef<HTMLDivElement>(null)
   const reactFlowInstance = useRef<ReactFlowInstance | null>(null)
@@ -60,31 +66,69 @@ export function PipelineBuilder({ agentId, readonly = false }: PipelineBuilderPr
     savePipeline,
     validatePipeline,
     exportPipeline,
-    resetPipeline
+    resetPipeline,
+    initializePipeline
   } = usePipelineStore()
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    })
-  )
+  // Pre-populate pipeline with selected providers
+  useEffect(() => {
+    if (selectedProviders && nodes.length === 0) {
+      const { stt, llm, tts, realtime } = selectedProviders
 
-  const onDragEnd = useCallback((event: DragEndEvent) => {
-    const { active, over } = event
+      if (realtime) {
+        // For realtime providers, create a single node
+        addNode('realtime', { x: 300, y: 200 })
+      } else if (stt && llm && tts) {
+        // For traditional pipeline, create STT -> LLM -> TTS chain
+        const sttNode = addNode('stt', { x: 100, y: 200 })
+        const llmNode = addNode('llm', { x: 350, y: 200 })
+        const ttsNode = addNode('tts', { x: 600, y: 200 })
 
-    if (over && over.id === 'pipeline-canvas') {
-      const reactFlowBounds = reactFlowWrapper.current?.getBoundingClientRect()
-      if (reactFlowBounds && reactFlowInstance.current) {
-        const position = reactFlowInstance.current.project({
-          x: event.activatorEvent.clientX - reactFlowBounds.left - 100,
-          y: event.activatorEvent.clientY - reactFlowBounds.top - 50,
-        })
-
-        const nodeType = active.id as string
-        addNode(nodeType, position)
+        // Auto-connect the nodes with a slight delay to ensure nodes are rendered
+        setTimeout(() => {
+          onConnect({
+            source: sttNode.id,
+            target: llmNode.id,
+            sourceHandle: null,
+            targetHandle: null
+          })
+          onConnect({
+            source: llmNode.id,
+            target: ttsNode.id,
+            sourceHandle: null,
+            targetHandle: null
+          })
+        }, 200)
       }
+    }
+  }, [selectedProviders, nodes.length, addNode, onConnect])
+
+  // Native HTML5 drag and drop handlers
+
+  // Handle native drag and drop
+  const onDragOver = useCallback((event: React.DragEvent) => {
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'move'
+    console.log('Drag over canvas') // Debug log
+  }, [])
+
+  const onDrop = useCallback((event: React.DragEvent) => {
+    event.preventDefault()
+    console.log('Drop event triggered') // Debug log
+
+    const reactFlowBounds = reactFlowWrapper.current?.getBoundingClientRect()
+    const nodeType = event.dataTransfer.getData('application/reactflow')
+
+    console.log('Node type:', nodeType, 'Bounds:', reactFlowBounds) // Debug log
+
+    if (reactFlowBounds && reactFlowInstance.current && nodeType) {
+      const position = reactFlowInstance.current.project({
+        x: event.clientX - reactFlowBounds.left - 100,
+        y: event.clientY - reactFlowBounds.top - 50,
+      })
+
+      console.log('Adding node at position:', position) // Debug log
+      addNode(nodeType as any, position)
     }
   }, [addNode])
 
@@ -126,8 +170,7 @@ export function PipelineBuilder({ agentId, readonly = false }: PipelineBuilderPr
   const isValid = validatePipeline()
 
   return (
-    <DndContext sensors={sensors} onDragEnd={onDragEnd}>
-      <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
           <div className="flex items-center gap-4">
@@ -181,6 +224,10 @@ export function PipelineBuilder({ agentId, readonly = false }: PipelineBuilderPr
                 ref={reactFlowWrapper}
                 className="w-full h-full"
                 data-testid="pipeline-canvas"
+                id="reactflow-wrapper"
+                onDragOver={onDragOver}
+                onDrop={onDrop}
+                style={{ position: 'relative' }}
               >
                 <ReactFlow
                   nodes={nodes}
@@ -196,10 +243,9 @@ export function PipelineBuilder({ agentId, readonly = false }: PipelineBuilderPr
                   fitView
                   snapToGrid
                   snapGrid={[20, 20]}
-                  droppable
                   className="pipeline-canvas"
                 >
-                  <Background color="#aaa" gap={20} />
+                  <Background color="#aaaaaa" gap={20} />
                   <Controls />
                   <MiniMap />
 
@@ -239,6 +285,5 @@ export function PipelineBuilder({ agentId, readonly = false }: PipelineBuilderPr
           )}
         </div>
       </div>
-    </DndContext>
   )
 }

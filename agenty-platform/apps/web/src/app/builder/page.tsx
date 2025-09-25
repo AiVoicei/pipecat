@@ -1,6 +1,6 @@
 'use client'
 
-import { AgentBuilder } from '@/components/features/builder/AgentBuilder'
+import { PipelineBuilder } from '@/components/features/builder/PipelineBuilder'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { AppLayout } from '@/components/layout/AppLayout'
 
@@ -10,7 +10,7 @@ export default function BuilderPage() {
   return (
     <AppLayout>
       <div className="h-[calc(100vh-4rem)]">
-        <AgentBuilder />
+        <PipelineBuilder />
       </div>
     </AppLayout>
   )

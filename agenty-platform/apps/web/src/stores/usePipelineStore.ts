@@ -51,7 +51,7 @@ interface PipelineStore {
   onConnect: (connection: Connection) => void
 
   // Node management
-  addNode: (type: PipelineNodeType, position: { x: number; y: number }) => void
+  addNode: (type: PipelineNodeType, position: { x: number; y: number }) => PipelineNode
   removeNode: (nodeId: string) => void
   updateNode: (nodeId: string, data: Partial<PipelineNodeData>) => void
   selectNode: (node: PipelineNode | null) => void
@@ -85,6 +85,11 @@ const nodeTemplates: Record<PipelineNodeType, Partial<PipelineNodeData>> = {
   tts: {
     label: 'Text to Speech',
     type: 'tts',
+    isConfigured: false
+  },
+  realtime: {
+    label: 'Realtime Speech',
+    type: 'realtime',
     isConfigured: false
   },
   filter: {
@@ -156,6 +161,8 @@ export const usePipelineStore = create<PipelineStore>()(
         set({
           nodes: [...get().nodes, newNode]
         })
+
+        return newNode
       },
 
       removeNode: (nodeId) => {
@@ -245,20 +252,23 @@ export const usePipelineStore = create<PipelineStore>()(
         // Basic validation rules
         if (nodes.length === 0) return false
 
-        // Check for required node types (at least STT, LLM, TTS)
         const nodeTypes = nodes.map(n => n.data.type)
-        const hasSTT = nodeTypes.includes('stt')
-        const hasLLM = nodeTypes.includes('llm')
-        const hasTTS = nodeTypes.includes('tts')
+        const hasRealtime = nodeTypes.includes('realtime')
 
-        if (!hasSTT || !hasLLM || !hasTTS) return false
+        if (hasRealtime) {
+          // For realtime pipelines, we just need the realtime node
+          return nodes.length >= 1
+        } else {
+          // Check for required node types (at least STT, LLM, TTS)
+          const hasSTT = nodeTypes.includes('stt')
+          const hasLLM = nodeTypes.includes('llm')
+          const hasTTS = nodeTypes.includes('tts')
 
-        // Check that all nodes are configured
-        const allConfigured = nodes.every(n => n.data.isConfigured)
-        if (!allConfigured) return false
+          if (!hasSTT || !hasLLM || !hasTTS) return false
 
-        // Check for proper connections (simplified)
-        if (nodes.length > 1 && edges.length === 0) return false
+          // Check for proper connections (simplified)
+          if (nodes.length > 1 && edges.length === 0) return false
+        }
 
         return true
       },

@@ -1,6 +1,6 @@
 'use client'
 
-import { useDraggable } from '@dnd-kit/core'
+// Using native HTML5 drag and drop instead of DnD Kit
 import { cn } from '@/lib/utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
@@ -26,29 +26,19 @@ interface DraggableNodeProps {
 }
 
 function DraggableNode({ type, label, description, icon: Icon, color }: DraggableNodeProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    isDragging,
-  } = useDraggable({
-    id: type,
-  })
-
-  const style = transform ? {
-    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-  } : undefined
+  // Native HTML5 drag and drop
+  const onDragStart = (event: React.DragEvent) => {
+    event.dataTransfer.setData('application/reactflow', type)
+    event.dataTransfer.effectAllowed = 'move'
+    console.log('Drag started for:', type) // Debug log
+  }
 
   return (
     <div
-      ref={setNodeRef}
-      style={style}
-      {...listeners}
-      {...attributes}
+      draggable
+      onDragStart={onDragStart}
       className={cn(
-        'flex items-center gap-3 p-3 rounded-lg border-2 border-dashed border-muted-foreground/30 hover:border-muted-foreground/60 hover:bg-accent/50 cursor-grab active:cursor-grabbing transition-all',
-        isDragging && 'opacity-50 rotate-3 scale-95'
+        'flex items-center gap-3 p-3 rounded-lg border-2 border-dashed border-muted-foreground/30 hover:border-muted-foreground/60 hover:bg-accent/50 cursor-grab active:cursor-grabbing transition-all'
       )}
     >
       <div className={cn('p-2 rounded-md text-white', color)}>

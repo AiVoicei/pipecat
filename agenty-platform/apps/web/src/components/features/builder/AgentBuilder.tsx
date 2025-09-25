@@ -294,9 +294,9 @@ export function AgentBuilder({ agentId, templateId, onSave, onTest }: AgentBuild
   const isFormValid = config.name.trim() && (config.realtime || (config.stt && config.llm && config.tts))
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="p-6 border-b">
+    <div className="h-screen flex flex-col">
+      {/* Fixed Header */}
+      <div className="flex-shrink-0 p-6 border-b bg-background">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-2xl font-bold">
@@ -370,7 +370,7 @@ export function AgentBuilder({ agentId, templateId, onSave, onTest }: AgentBuild
 
       {/* Validation Errors */}
       {validationErrors.length > 0 && (
-        <div className="px-6 pt-4">
+        <div className="flex-shrink-0 px-6 pt-4">
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
@@ -384,8 +384,9 @@ export function AgentBuilder({ agentId, templateId, onSave, onTest }: AgentBuild
         </div>
       )}
 
-      {/* Step Content */}
-      <div className="flex-1 p-6">
+      {/* Scrollable Step Content */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-6">
         {/* Step 1: Basic Information */}
         {currentStep === 0 && (
           <div className="max-w-2xl space-y-6">
@@ -567,8 +568,16 @@ export function AgentBuilder({ agentId, templateId, onSave, onTest }: AgentBuild
 
         {/* Step 3: Pipeline Builder */}
         {currentStep === 2 && (
-          <div className="h-full">
-            <PipelineBuilder agentId={agentId} />
+          <div className="min-h-[600px]">
+            <PipelineBuilder
+              agentId={agentId}
+              selectedProviders={{
+                stt: config.stt?.provider,
+                llm: config.llm?.provider,
+                tts: config.tts?.provider,
+                realtime: config.realtime?.provider
+              }}
+            />
           </div>
         )}
 
@@ -630,10 +639,11 @@ export function AgentBuilder({ agentId, templateId, onSave, onTest }: AgentBuild
             </Card>
           </div>
         )}
+        </div>
       </div>
 
-      {/* Navigation */}
-      <div className="flex items-center justify-between p-6 border-t">
+      {/* Fixed Navigation Footer */}
+      <div className="flex-shrink-0 flex items-center justify-between p-6 border-t bg-background">
         <Button
           variant="outline"
           onClick={handlePrevious}

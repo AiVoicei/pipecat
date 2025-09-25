@@ -13,7 +13,8 @@ import {
   Code,
   CheckCircle,
   AlertCircle,
-  Settings
+  Settings,
+  Zap
 } from 'lucide-react'
 import { PipelineNodeData } from '@/stores/usePipelineStore'
 
@@ -22,6 +23,7 @@ const nodeIcons = {
   stt: Mic,
   llm: Brain,
   tts: Volume2,
+  realtime: Zap,
   filter: Filter,
   aggregator: Layers,
   custom: Code
@@ -32,6 +34,7 @@ const nodeColors = {
   stt: 'bg-blue-500',
   llm: 'bg-green-500',
   tts: 'bg-purple-500',
+  realtime: 'bg-red-500',
   filter: 'bg-orange-500',
   aggregator: 'bg-yellow-500',
   custom: 'bg-gray-500'
@@ -42,6 +45,7 @@ const nodeBorders = {
   stt: 'border-blue-500',
   llm: 'border-green-500',
   tts: 'border-purple-500',
+  realtime: 'border-red-500',
   filter: 'border-orange-500',
   aggregator: 'border-yellow-500',
   custom: 'border-gray-500'
@@ -62,7 +66,7 @@ export const PipelineNode = memo(({ data, selected }: PipelineNodeComponentProps
   return (
     <div
       className={cn(
-        'relative bg-background border-2 rounded-lg shadow-lg min-w-[160px] transition-all',
+        'relative bg-transparent border-2 rounded-lg shadow-lg min-w-[160px] transition-all',
         borderClass,
         selected && 'ring-2 ring-primary ring-offset-2',
         data.isConfigured ? 'opacity-100' : 'opacity-75'
@@ -93,7 +97,7 @@ export const PipelineNode = memo(({ data, selected }: PipelineNodeComponentProps
       </div>
 
       {/* Content */}
-      <div className="p-3 space-y-2">
+      <div className="p-3 space-y-2 bg-black/20 rounded-b-md backdrop-blur-sm">
         {/* Provider Badge */}
         {data.provider && (
           <Badge variant="secondary" className="text-xs">
@@ -102,8 +106,8 @@ export const PipelineNode = memo(({ data, selected }: PipelineNodeComponentProps
         )}
 
         {/* Configuration Status */}
-        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-          <Settings className="w-3 h-3" />
+        <div className={`flex items-center gap-1 text-xs ${data.isConfigured ? 'text-muted-foreground' : 'text-red-500'}`}>
+          <Settings className={`w-3 h-3 ${data.isConfigured ? '' : 'text-red-500'}`} />
           <span>
             {data.isConfigured ? 'Configured' : 'Not configured'}
           </span>
