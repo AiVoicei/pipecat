@@ -619,9 +619,16 @@ class ProviderService:
 
     async def get_provider_by_name(self, name: str, provider_type: ProviderType) -> Optional[Provider]:
         """Get provider by name and type"""
-        provider_id = f"{name}_{provider_type.value}" if provider_type != ProviderType.STT else name
-        if provider_id not in self.provider_registry:
-            provider_id = f"{name}_stt" if provider_type == ProviderType.STT else f"{name}_{provider_type.value}"
+        # For STT, continue using the STT-specific logic
+        if provider_type == ProviderType.STT:
+            provider_id = name
+            if provider_id not in self.provider_registry:
+                provider_id = f"{name}_stt"
+        else:
+            # For non-STT types, try original logic first, then fall back to plain name
+            provider_id = f"{name}_{provider_type.value}"
+            if provider_id not in self.provider_registry:
+                provider_id = name
 
         return self.provider_registry.get(provider_id)
 

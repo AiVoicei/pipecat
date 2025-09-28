@@ -224,7 +224,7 @@ async def update_agent(
             name=updated_agent.name,
             description=updated_agent.description,
             configuration=updated_agent.configuration,
-            deployment=updated_agent.deployment,
+            deployment=updated_agent.deployment_config,
             template_id=updated_agent.template_id,
             created_at=updated_agent.created_at,
             updated_at=updated_agent.updated_at

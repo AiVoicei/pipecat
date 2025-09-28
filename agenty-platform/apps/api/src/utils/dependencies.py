@@ -10,6 +10,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from ..services.agent_factory import AgentFactory
 from ..services.provider_service import ProviderService
+from ..core.dependencies import get_data_layer
 
 # Global service instances
 _agent_factory: Optional[AgentFactory] = None
@@ -24,14 +25,15 @@ def get_provider_service() -> ProviderService:
     global _provider_service
 
     if _provider_service is None:
-        # Initialize with encryption key from environment
+        # Initialize with data layer and encryption key from environment
+        data_layer = get_data_layer()
         encryption_key = os.environ.get("PROVIDER_ENCRYPTION_KEY")
         if not encryption_key:
             raise RuntimeError(
                 "PROVIDER_ENCRYPTION_KEY environment variable is required but not set. "
                 "Please set this environment variable with a secure encryption key."
             )
-        _provider_service = ProviderService(encryption_key=encryption_key)
+        _provider_service = ProviderService(data_layer, encryption_key=encryption_key)
 
     return _provider_service
 
