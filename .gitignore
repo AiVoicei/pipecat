@@ -28,6 +28,8 @@ share/python-wheels/
 MANIFEST
 .DS_Store
 .env
+.env.production
+.env.development
 fly.toml
 
 # Examples

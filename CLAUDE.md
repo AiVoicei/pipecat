@@ -321,7 +321,7 @@ Platform has access to Context7 MCP server for enhanced capabilities:
 
 #### MCP Server Details
 - **Server**: Context7 (https://mcp.context7.com/mcp)
-- **Authentication**: API key configured (ctx7sk-21ffc30d-f533-48c9-b811-5a1bd7b0f4fd)
+- **Authentication**: API key must be provided via CONTEXT7_API_KEY environment variable
 - **Transport**: HTTP transport
 - **Purpose**: Enhanced context management and external integrations
 

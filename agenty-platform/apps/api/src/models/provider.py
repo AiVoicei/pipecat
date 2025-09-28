@@ -22,8 +22,8 @@ class Provider(BaseModel):
     configuration_schema = Column(JSON, nullable=False)
 
     # Provider capabilities and metadata
-    capabilities = Column(JSON, default={}, nullable=False)
-    pricing_info = Column(JSON, default={}, nullable=False)
+    capabilities = Column(JSON, default=dict, nullable=False)
+    pricing_info = Column(JSON, default=dict, nullable=False)
 
     # Provider status and availability
     is_available = Column(Boolean, default=True, nullable=False)
@@ -35,7 +35,7 @@ class Provider(BaseModel):
     logo_url = Column(String(500), nullable=True)
 
     # Provider metadata
-    tags = Column(JSON, default=[], nullable=False)
+    tags = Column(JSON, default=list, nullable=False)
     popularity_score = Column(Integer, default=0, nullable=False)  # For sorting in UI
 
     def __repr__(self):

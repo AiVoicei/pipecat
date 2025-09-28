@@ -3,12 +3,14 @@ Dependency injection utilities for the Agenty platform API.
 Provides shared instances and authentication dependencies.
 """
 
+import os
 from typing import Dict, Any, Optional
 from fastapi import HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from ..services.agent_factory import AgentFactory
 from ..services.provider_service import ProviderService
+from ..core.dependencies import get_data_layer
 
 # Global service instances
 _agent_factory: Optional[AgentFactory] = None
@@ -23,10 +25,15 @@ def get_provider_service() -> ProviderService:
     global _provider_service
 
     if _provider_service is None:
-        # Initialize with encryption key (in production, use secure key from env)
-        _provider_service = ProviderService(
-            encryption_key="your-secure-encryption-key-here"  # TODO: Use env variable
-        )
+        # Initialize with data layer and encryption key from environment
+        data_layer = get_data_layer()
+        encryption_key = os.environ.get("PROVIDER_ENCRYPTION_KEY")
+        if not encryption_key:
+            raise RuntimeError(
+                "PROVIDER_ENCRYPTION_KEY environment variable is required but not set. "
+                "Please set this environment variable with a secure encryption key."
+            )
+        _provider_service = ProviderService(data_layer, encryption_key=encryption_key)
 
     return _provider_service
 
@@ -64,6 +71,7 @@ async def get_current_user(
         "id": "user_123",
         "email": "user@example.com",
         "name": "Test User",
+        "role": "admin",
         "subscription_tier": "pro",
         "created_at": "2024-01-01T00:00:00Z"
     }

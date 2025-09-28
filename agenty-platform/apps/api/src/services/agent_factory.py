@@ -13,6 +13,8 @@ from datetime import datetime
 from pipecat.pipeline.pipeline import Pipeline
 from pipecat.pipeline.runner import PipelineRunner
 from pipecat.pipeline.task import PipelineParams, PipelineTask
+
+from ..schemas.agent import ProviderType
 from pipecat.transports.daily.transport import DailyTransport
 from pipecat.transports.local.audio import LocalAudioTransport
 from pipecat.audio.vad.silero import SileroVADAnalyzer
@@ -179,9 +181,9 @@ class AgentFactory:
         """Validate agent configuration and user credentials"""
         # Check if user has credentials for all required providers
         providers_needed = [
-            (config.stt.provider, "stt"),
-            (config.llm.provider, "llm"),
-            (config.tts.provider, "tts")
+            (config.stt.provider, ProviderType.STT),
+            (config.llm.provider, ProviderType.LLM),
+            (config.tts.provider, ProviderType.TTS)
         ]
 
         for provider_name, provider_type in providers_needed:
@@ -210,7 +212,7 @@ class AgentFactory:
 
         # Get user credentials
         credentials = await self.provider_service.get_user_credentials(
-            user_id, provider, "stt"
+            user_id, provider, ProviderType.STT
         )
 
         # Fully implemented providers
@@ -218,7 +220,7 @@ class AgentFactory:
             try:
                 from pipecat.services.openai.stt import OpenAISTTService
                 return OpenAISTTService(
-                    api_key=credentials["api_key"],
+                    api_key=credentials.api_key,
                     model=settings.get("model", "whisper-1"),
                     language=settings.get("language", "en")
                 )
@@ -229,7 +231,7 @@ class AgentFactory:
             try:
                 from pipecat.services.deepgram.stt import DeepgramSTTService
                 return DeepgramSTTService(
-                    api_key=credentials["api_key"],
+                    api_key=credentials.api_key,
                     model=settings.get("model", "nova-2"),
                     language=settings.get("language", "en")
                 )
@@ -240,8 +242,8 @@ class AgentFactory:
             try:
                 from pipecat.services.azure.stt import AzureSTTService
                 return AzureSTTService(
-                    api_key=credentials["api_key"],
-                    region=credentials["region"],
+                    api_key=credentials.api_key,
+                    region=credentials.region,
                     language=settings.get("language", "en-US")
                 )
             except ImportError:
@@ -273,14 +275,14 @@ class AgentFactory:
         settings = llm_config.get("settings", {})
 
         credentials = await self.provider_service.get_user_credentials(
-            user_id, provider, "llm"
+            user_id, provider, ProviderType.LLM
         )
 
         if provider == "openai":
             try:
                 from pipecat.services.openai.llm import OpenAILLMService
                 return OpenAILLMService(
-                    api_key=credentials["api_key"],
+                    api_key=credentials.api_key,
                     model=settings.get("model", "gpt-4"),
                     max_tokens=settings.get("max_tokens", 150),
                     temperature=settings.get("temperature", 0.7)
@@ -292,7 +294,7 @@ class AgentFactory:
             try:
                 from pipecat.services.anthropic.llm import AnthropicLLMService
                 return AnthropicLLMService(
-                    api_key=credentials["api_key"],
+                    api_key=credentials.api_key,
                     model=settings.get("model", "claude-3-sonnet-20240229"),
                     max_tokens=settings.get("max_tokens", 150)
                 )
@@ -303,10 +305,10 @@ class AgentFactory:
             try:
                 from pipecat.services.azure.llm import AzureLLMService
                 return AzureLLMService(
-                    api_key=credentials["api_key"],
-                    endpoint=credentials["endpoint"],
+                    api_key=credentials.api_key,
+                    endpoint=credentials.endpoint,
                     model=settings.get("model", "gpt-4"),
-                    api_version=credentials.get("api_version", "2024-02-01")
+                    api_version=getattr(credentials, "api_version", "2024-02-01")
                 )
             except ImportError:
                 raise ValueError(f"Azure LLM service not available - install with: pip install pipecat-ai[azure]")
@@ -334,14 +336,14 @@ class AgentFactory:
         settings = tts_config.get("settings", {})
 
         credentials = await self.provider_service.get_user_credentials(
-            user_id, provider, "tts"
+            user_id, provider, ProviderType.TTS
         )
 
         if provider == "elevenlabs":
             try:
                 from pipecat.services.elevenlabs.tts import ElevenLabsTTSService
                 return ElevenLabsTTSService(
-                    api_key=credentials["api_key"],
+                    api_key=credentials.api_key,
                     voice_id=settings.get("voice_id", "21m00Tcm4TlvDq8ikWAM"),
                     stability=settings.get("stability", 0.5),
                     similarity_boost=settings.get("similarity_boost", 0.8)
@@ -353,7 +355,7 @@ class AgentFactory:
             try:
                 from pipecat.services.cartesia.tts import CartesiaTTSService
                 return CartesiaTTSService(
-                    api_key=credentials["api_key"],
+                    api_key=credentials.api_key,
                     voice_id=settings.get("voice_id", "a0e99841-438c-4a64-b679-ae501e7d6091"),
                     model_id=settings.get("model_id", "sonic-english")
                 )
@@ -364,8 +366,8 @@ class AgentFactory:
             try:
                 from pipecat.services.azure.tts import AzureTTSService
                 return AzureTTSService(
-                    api_key=credentials["api_key"],
-                    region=credentials["region"],
+                    api_key=credentials.api_key,
+                    region=credentials.region,
                     voice=settings.get("voice", "en-US-AriaNeural")
                 )
             except ImportError:

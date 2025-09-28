@@ -3,6 +3,7 @@ Agent configuration schemas for the Agenty platform.
 Defines the structure for agent configurations, templates, and related data models.
 """
 
+import re
 from typing import Dict, Any, Optional, List, Literal
 from datetime import datetime
 from pydantic import BaseModel, Field, validator

@@ -47,7 +47,7 @@ class AgentSession(BaseModel):
     peak_memory_usage = Column(Integer, default=0, nullable=False)  # MB
 
     # Session metadata
-    metadata = Column(JSON, default={}, nullable=False)
+    session_metadata = Column('metadata', JSON, default=dict, nullable=False)
 
     # Relationships
     agent = relationship("Agent", foreign_keys=[agent_id])
