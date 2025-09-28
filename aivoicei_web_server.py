@@ -1025,8 +1025,8 @@ async def duplicate_agent(agent_id: str, user_id: str = "user_1"):
         description=original_agent.description,
         status="draft",
         templateId=original_agent.templateId,
-        configuration=original_agent.configuration.model_copy(),
-        deploymentConfig=original_agent.deploymentConfig.model_copy(),
+        configuration=original_agent.configuration.model_copy(deep=True),
+        deploymentConfig=original_agent.deploymentConfig.model_copy(deep=True),
         analytics=AgentAnalytics()
     )
 

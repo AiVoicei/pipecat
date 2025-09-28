@@ -28,7 +28,7 @@ class User(BaseModel):
     subscription_status = Column(String(50), default="active", nullable=False)
 
     # Metadata
-    metadata = Column(JSON, default={}, nullable=False)
+    profile_metadata = Column('metadata', JSON, default=dict, nullable=False)
 
     def __repr__(self):
         return f"<User(email={self.email}, username={self.username})>"

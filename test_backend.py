@@ -44,6 +44,15 @@ async def health_check():
         "timestamp": datetime.now().isoformat()
     }
 
+@app.get("/health")
+async def health_check_alt():
+    """Alternative health check endpoint"""
+    return {
+        "status": "healthy",
+        "message": "AI Voicei Test Backend is running",
+        "timestamp": datetime.now().isoformat()
+    }
+
 @app.post("/sessions")
 async def create_session():
     """Create a new voice session"""
@@ -90,6 +99,14 @@ async def end_session(session_id: str):
 async def list_sessions():
     """List all sessions"""
     return {"sessions": list(sessions.values())}
+
+@app.get("/sessions/{session_id}")
+async def get_session_status(session_id: str):
+    """Get status of a specific session"""
+    session = sessions.get(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    return {"session": session}
 
 if __name__ == "__main__":
     import uvicorn

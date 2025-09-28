@@ -38,7 +38,6 @@ dependencies = [
     # Pinning numba to resolve package dependencies
     "numba==0.61.2",
     "wait_for2>=0.4.1; python_version<'3.12'",
-    "pipecat-ai[cartesia,daily,deepgram,google,silero,webrtc]>=0.0.84",
     "fastapi>=0.116.1",
     "uvicorn>=0.35.0",
     "pipecat-ai-small-webrtc-prebuilt>=1.0.0",

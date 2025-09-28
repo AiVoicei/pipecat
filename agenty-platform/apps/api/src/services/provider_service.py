@@ -50,7 +50,6 @@ class ProviderService:
 
         # The registry will be populated from the centralized mock data source
         # All providers defined in provider_implementations.py will be included
-        return registry
 
         registry["deepgram"] = Provider(
             id="deepgram",
@@ -620,9 +619,9 @@ class ProviderService:
 
     async def get_provider_by_name(self, name: str, provider_type: ProviderType) -> Optional[Provider]:
         """Get provider by name and type"""
-        provider_id = f"{name}_{provider_type}" if provider_type != ProviderType.STT else name
+        provider_id = f"{name}_{provider_type.value}" if provider_type != ProviderType.STT else name
         if provider_id not in self.provider_registry:
-            provider_id = f"{name}_stt" if provider_type == ProviderType.STT else f"{name}_{provider_type}"
+            provider_id = f"{name}_stt" if provider_type == ProviderType.STT else f"{name}_{provider_type.value}"
 
         return self.provider_registry.get(provider_id)
 

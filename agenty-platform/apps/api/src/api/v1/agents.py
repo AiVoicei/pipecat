@@ -170,7 +170,8 @@ async def update_agent(
     agent_id: str,
     agent_data: AgentUpdate,
     current_user: dict = Depends(get_current_user),
-    agent_factory: AgentFactory = Depends(get_agent_factory)
+    agent_factory: AgentFactory = Depends(get_agent_factory),
+    db: AsyncSession = Depends(get_async_db)
 ):
     """Update an existing agent"""
     try:
@@ -190,6 +191,20 @@ async def update_agent(
                 detail="Access denied"
             )
 
+        # Update database first
+        db_service = DatabaseService(db)
+        updated_agent = await db_service.update_agent(
+            agent_id=agent_id,
+            updates={
+                "name": agent_data.name,
+                "description": agent_data.description,
+                "configuration": agent_data.configuration,
+                "deployment": agent_data.deployment,
+                "template_id": agent_data.template_id,
+                "updated_at": datetime.now()
+            }
+        )
+
         # For configuration updates, recreate the agent
         if agent_data.configuration:
             # Stop current agent
@@ -202,18 +217,17 @@ async def update_agent(
                 agent_id=agent_id
             )
 
-        # Return updated agent
-        updated_status = await agent_factory.get_agent_status(agent_id)
+        # Return updated agent from database
         return AgentResponse(
-            id=agent_id,
-            user_id=current_user["id"],
-            name=agent_data.name or f"Agent {agent_id[:8]}",
-            description=agent_data.description or "Updated agent",
-            configuration=agent_data.configuration or updated_status["session"]["metadata"]["configuration"],
-            deployment=agent_data.deployment or {"status": updated_status["status"], "endpoints": [], "custom_domain": None},
-            template_id=None,
-            created_at=updated_status["session"]["started_at"],
-            updated_at=datetime.now()
+            id=updated_agent.id,
+            user_id=str(updated_agent.user_id),
+            name=updated_agent.name,
+            description=updated_agent.description,
+            configuration=updated_agent.configuration,
+            deployment=updated_agent.deployment,
+            template_id=updated_agent.template_id,
+            created_at=updated_agent.created_at,
+            updated_at=updated_agent.updated_at
         )
 
     except HTTPException:
@@ -229,7 +243,8 @@ async def update_agent(
 async def delete_agent(
     agent_id: str,
     current_user: dict = Depends(get_current_user),
-    agent_factory: AgentFactory = Depends(get_agent_factory)
+    agent_factory: AgentFactory = Depends(get_agent_factory),
+    db: AsyncSession = Depends(get_async_db)
 ):
     """Delete an agent"""
     try:
@@ -249,8 +264,12 @@ async def delete_agent(
                 detail="Access denied"
             )
 
-        # Stop and remove agent
+        # Stop runtime agent
         await agent_factory.stop_agent(agent_id)
+
+        # Delete from database
+        db_service = DatabaseService(db)
+        await db_service.delete_agent(agent_id)
 
         return None
 
@@ -469,7 +488,8 @@ async def create_agent_from_template(
     template_id: str,
     agent_name: str,
     current_user: dict = Depends(get_current_user),
-    agent_factory: AgentFactory = Depends(get_agent_factory)
+    agent_factory: AgentFactory = Depends(get_agent_factory),
+    db: AsyncSession = Depends(get_async_db)
 ):
     """Create a new agent from a template"""
     try:
@@ -491,7 +511,7 @@ async def create_agent_from_template(
             template_id=template_id
         )
 
-        return await create_agent(agent_data, current_user, agent_factory)
+        return await create_agent(agent_data, current_user, agent_factory, db)
 
     except HTTPException:
         raise
