@@ -60,7 +60,6 @@ dependencies = [
     { name = "numpy" },
     { name = "openai" },
     { name = "pillow" },
-    { name = "pipecat-ai", extra = ["cartesia", "daily", "deepgram", "google", "silero", "webrtc"] },
     { name = "pipecat-ai-small-webrtc-prebuilt" },
     { name = "protobuf" },
     { name = "psycopg2-binary" },
@@ -337,7 +336,6 @@ requires-dist = [
     { name = "opentelemetry-sdk", marker = "extra == 'tracing'", specifier = ">=1.33.0" },
     { name = "ormsgpack", marker = "extra == 'fish'", specifier = "~=1.7.0" },
     { name = "pillow", specifier = ">=11.1.0,<12" },
-    { name = "pipecat-ai", extras = ["cartesia", "daily", "deepgram", "google", "silero", "webrtc"], specifier = ">=0.0.84" },
     { name = "pipecat-ai-krisp", marker = "extra == 'krisp'", specifier = "~=0.4.0" },
     { name = "pipecat-ai-small-webrtc-prebuilt", specifier = ">=1.0.0" },
     { name = "pipecat-ai-small-webrtc-prebuilt", marker = "extra == 'runner'", specifier = ">=1.0.0" },
@@ -4594,59 +4592,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/1a/87/1ef453f10fb0772f43549686f924460cc0a2404b828b348f72c52cb2f5bf/pip-tools-7.4.1.tar.gz", hash = "sha256:864826f5073864450e24dbeeb85ce3920cdfb09848a3d69ebf537b521f14bcc9", size = 145417, upload-time = "2024-03-06T12:13:23.533Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/0d/dc/38f4ce065e92c66f058ea7a368a9c5de4e702272b479c0992059f7693941/pip_tools-7.4.1-py3-none-any.whl", hash = "sha256:4c690e5fbae2f21e87843e89c26191f0d9454f362d8acdbd695716493ec8b3a9", size = 61235, upload-time = "2024-03-06T12:13:40.124Z" },
-]
-
-[[package]]
-name = "pipecat-ai"
-version = "0.0.84"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "aiofiles" },
-    { name = "aiohttp" },
-    { name = "audioop-lts", marker = "python_full_version >= '3.13'" },
-    { name = "docstring-parser" },
-    { name = "loguru" },
-    { name = "markdown" },
-    { name = "nltk" },
-    { name = "numba" },
-    { name = "numpy" },
-    { name = "openai" },
-    { name = "pillow" },
-    { name = "protobuf" },
-    { name = "pydantic" },
-    { name = "pyloudnorm" },
-    { name = "resampy" },
-    { name = "soxr" },
-    { name = "wait-for2", marker = "python_full_version < '3.12'" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/2b/b6/815c813c2e8a1570b8709b4dcf43015a8bc077f5b6ee338559d15c18c917/pipecat_ai-0.0.84.tar.gz", hash = "sha256:b7bf26e66bf8d3c746a2981eb0f037ddb680fb94830e56661e0e03e6d80a4098", size = 3065281, upload-time = "2025-09-06T02:37:04.892Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/4d/54/79f03ea5b968d7d08ea0ce8a5e7d475743662a96c671bdeaa7a64447a03a/pipecat_ai-0.0.84-py3-none-any.whl", hash = "sha256:4b0123d15ecb22247575aaa303ea3a986ba4ee425b6a21cbc8a0bc14facf83b8", size = 2752425, upload-time = "2025-09-06T02:37:02.867Z" },
-]
-
-[package.optional-dependencies]
-cartesia = [
-    { name = "cartesia" },
-    { name = "websockets" },
-]
-daily = [
-    { name = "daily-python" },
-]
-deepgram = [
-    { name = "deepgram-sdk" },
-]
-google = [
-    { name = "google-cloud-speech" },
-    { name = "google-cloud-texttospeech" },
-    { name = "google-genai" },
-    { name = "websockets" },
-]
-silero = [
-    { name = "onnxruntime" },
-]
-webrtc = [
-    { name = "aiortc" },
-    { name = "opencv-python" },
 ]
 
 [[package]]

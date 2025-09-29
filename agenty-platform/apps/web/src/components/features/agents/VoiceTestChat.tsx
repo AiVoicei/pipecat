@@ -5,7 +5,7 @@ import { Mic, MicOff, Phone, PhoneOff, Loader2, Video, VideoOff } from 'lucide-r
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useVoiceStore } from '@/stores/voiceStore'
-import type { Agent } from '@/stores/useAgentStore'
+import type { Agent } from '@/services/api'
 
 interface VoiceTestChatProps {
   agent: Agent

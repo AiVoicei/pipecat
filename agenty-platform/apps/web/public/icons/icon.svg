@@ -1,0 +1,32 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6"/>
+      <stop offset="100%" style="stop-color:#A855F7"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="url(#gradient)"/>
+
+  <!-- Voice wave icon -->
+  <g transform="translate(256,256)" fill="white">
+    <!-- Center circle -->
+    <circle cx="0" cy="0" r="24" fill="white"/>
+
+    <!-- Inner wave -->
+    <path d="M-48,-32 Q-48,-48 -32,-48 Q-16,-48 -16,-32 Q-16,-16 -32,-16 Q-48,-16 -48,-32 Z" fill="white" opacity="0.8"/>
+    <path d="M48,-32 Q48,-48 32,-48 Q16,-48 16,-32 Q16,-16 32,-16 Q48,-16 48,-32 Z" fill="white" opacity="0.8"/>
+
+    <!-- Middle wave -->
+    <path d="M-80,-48 Q-80,-72 -56,-72 Q-32,-72 -32,-48 Q-32,-24 -56,-24 Q-80,-24 -80,-48 Z" fill="white" opacity="0.6"/>
+    <path d="M80,-48 Q80,-72 56,-72 Q32,-72 32,-48 Q32,-24 56,-24 Q80,-24 80,-48 Z" fill="white" opacity="0.6"/>
+
+    <!-- Outer wave -->
+    <path d="M-112,-64 Q-112,-96 -80,-96 Q-48,-96 -48,-64 Q-48,-32 -80,-32 Q-112,-32 -112,-64 Z" fill="white" opacity="0.4"/>
+    <path d="M112,-64 Q112,-96 80,-96 Q48,-96 48,-64 Q48,-32 80,-32 Q112,-32 112,-64 Z" fill="white" opacity="0.4"/>
+  </g>
+
+  <!-- "A" letter for Agenty -->
+  <text x="256" y="380" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="120" font-weight="bold" fill="white">A</text>
+</svg>

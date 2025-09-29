@@ -38,7 +38,8 @@
       "Bash(python3:*)",
       "Bash(uv add:*)",
       "Bash(pip install:*)",
-      "Bash(dos2unix:*)"
+      "Bash(dos2unix:*)",
+      "WebFetch(domain:reactflow.dev)"
     ],
     "deny": [],
     "ask": []

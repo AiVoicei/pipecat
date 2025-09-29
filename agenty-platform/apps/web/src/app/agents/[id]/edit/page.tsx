@@ -231,7 +231,7 @@ export default function EditAgentPage() {
                   value={formData.deploymentConfig?.type}
                   onValueChange={(value) => setFormData(prev => ({
                     ...prev,
-                    deploymentConfig: { ...prev.deploymentConfig!, type: value }
+                    deploymentConfig: { ...prev.deploymentConfig!, type: value as 'webrtc' | 'phone' | 'whatsapp' | 'api' }
                   }))}
                 >
                   <SelectTrigger>

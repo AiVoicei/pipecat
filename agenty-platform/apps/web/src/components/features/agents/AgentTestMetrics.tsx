@@ -14,7 +14,7 @@ import {
   Bot
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
-import type { Agent } from '@/stores/useAgentStore'
+import type { Agent } from '@/services/api'
 
 interface AgentTestMetricsProps {
   agent: Agent

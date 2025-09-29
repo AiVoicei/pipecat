@@ -1,0 +1,474 @@
+/* Turbo Flow Module Styles - Scoped for Pipeline Builder */
+
+/* Node Wrapper with Gradient Border */
+.turboNodeWrapper {
+  position: relative;
+  border-radius: 12px;
+  padding: 1px;
+  background: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.2) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  min-width: 200px;
+  transition: all 0.3s ease;
+}
+
+.turboNodeWrapper.selected {
+  box-shadow:
+    0 0 30px rgba(139, 92, 246, 0.4),
+    0 0 60px rgba(139, 92, 246, 0.2);
+}
+
+.turboNodeWrapper.processing {
+  background: conic-gradient(
+    from 180deg at 50% 50%,
+    #e92a67 0deg,
+    #a853ba 120deg,
+    #2a8af6 240deg,
+    #e92a67 360deg
+  );
+  animation: turboRotate 4s linear infinite, turboGlow 2s ease-in-out infinite;
+}
+
+/* Inner Node Content - Base */
+.turboNodeInner {
+  border-radius: 11px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  position: relative;
+  overflow: visible;
+  padding: 16px;
+  color: white;
+}
+
+/* Category-specific borders instead of full backgrounds */
+.turboNodeInner {
+  background: rgba(17, 17, 17, 0.95);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.turboNodeInner.stt {
+  border-color: rgb(59, 130, 246);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+}
+
+.turboNodeInner.llm {
+  border-color: rgb(34, 197, 94);
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
+}
+
+.turboNodeInner.tts {
+  border-color: rgb(168, 85, 247);
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.2);
+}
+
+.turboNodeInner.realtime {
+  border-color: rgb(239, 68, 68);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+}
+
+.turboNodeInner.filter {
+  border-color: rgb(249, 115, 22);
+  box-shadow: 0 0 20px rgba(249, 115, 22, 0.2);
+}
+
+.turboNodeInner.aggregator {
+  border-color: rgb(245, 158, 11);
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
+}
+
+.turboNodeInner.custom {
+  border-color: rgb(107, 114, 128);
+  box-shadow: 0 0 20px rgba(107, 114, 128, 0.2);
+}
+
+.turboNodeInner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  pointer-events: none;
+}
+
+/* Node Header */
+.turboNodeHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.turboNodeIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.turboNodeIcon.processing {
+  animation: turboIconPulse 2s ease-in-out infinite;
+}
+
+/* Status Badge */
+.turboStatusBadge {
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+}
+
+.turboStatusBadge.idle {
+  color: #9ca3af;
+  border-color: rgba(156, 163, 175, 0.3);
+}
+
+.turboStatusBadge.processing {
+  color: #fbbf24;
+  border-color: rgba(251, 191, 36, 0.5);
+  box-shadow: 0 0 8px rgba(251, 191, 36, 0.3);
+  animation: turboBadgeGlow 1.5s ease-in-out infinite;
+}
+
+.turboStatusBadge.completed {
+  color: #10b981;
+  border-color: rgba(16, 185, 129, 0.5);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
+}
+
+.turboStatusBadge.error {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.5);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
+}
+
+/* Cloud Status Badge */
+.turboCloudBadge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid rgb(17, 17, 17);
+}
+
+.turboCloudBadge.active {
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+}
+
+.turboCloudBadge.processing {
+  background: #f59e0b;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+  animation: turboCloudPulse 1.5s ease-in-out infinite;
+}
+
+.turboCloudBadge.error {
+  background: #ef4444;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+}
+
+/* Node Title and Content */
+.turboNodeTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: white;
+  margin: 0 0 4px 0;
+  line-height: 1.2;
+}
+
+.turboNodeSubtitle {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0 0 12px 0;
+  line-height: 1.3;
+}
+
+/* Metrics Display */
+.turboMetrics {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  font-size: 0.75rem;
+}
+
+.turboMetricItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.turboMetricLabel {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.turboMetricValue {
+  font-weight: 500;
+  color: white;
+  font-family: ui-monospace, 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', monospace;
+}
+
+/* Edge Styles */
+.turboEdgeContainer {
+  position: relative;
+}
+
+.turboEdgePath {
+  stroke: url(#turbo-edge-gradient);
+  stroke-width: 2;
+  fill: none;
+  filter: drop-shadow(0 0 4px rgba(168, 85, 247, 0.4));
+  transition: all 0.3s ease;
+}
+
+.turboEdgePath.active {
+  stroke-width: 3;
+  filter: drop-shadow(0 0 8px rgba(168, 85, 247, 0.6));
+}
+
+/* Edge Particles */
+.turboParticle {
+  r: 3;
+  fill: #a855f7;
+  filter: drop-shadow(0 0 4px rgba(168, 85, 247, 0.6));
+}
+
+.turboParticle.animated {
+  animation: turboParticleFlow 2s linear infinite;
+}
+
+/* Edge Labels */
+.turboEdgeLabel {
+  position: absolute;
+  pointer-events: all;
+  transform: translate(-50%, -50%);
+}
+
+.turboEdgeLabelContent {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: rgba(17, 17, 17, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-size: 0.75rem;
+  color: white;
+}
+
+/* Activity Indicator */
+.turboActivityIndicator {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #a855f7;
+}
+
+.turboActivityIndicator.active {
+  animation: turboActivityPulse 1.5s ease-in-out infinite;
+}
+
+/* Processing Wave Effect */
+.turboProcessingWave {
+  position: absolute;
+  inset: -2px;
+  border-radius: 14px;
+  border: 2px solid rgba(139, 92, 246, 0.3);
+  pointer-events: none;
+  animation: turboWave 2s ease-in-out infinite;
+}
+
+/* Connection Handle Styles */
+.turboHandle {
+  width: 12px !important;
+  height: 12px !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 2px solid rgba(139, 92, 246, 0.8) !important;
+  border-radius: 50% !important;
+  transition: all 0.2s ease !important;
+  opacity: 0.8 !important;
+}
+
+.turboHandle:hover {
+  transform: scale(1.3) !important;
+  opacity: 1 !important;
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.6) !important;
+}
+
+.turboHandle.source {
+  border-color: rgba(34, 197, 94, 0.8) !important;
+}
+
+.turboHandle.target {
+  border-color: rgba(59, 130, 246, 0.8) !important;
+}
+
+.turboHandle.source:hover {
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.6) !important;
+}
+
+.turboHandle.target:hover {
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.6) !important;
+}
+
+/* Keyframe Animations */
+@keyframes turboRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes turboGlow {
+  0%, 100% {
+    box-shadow:
+      0 0 20px rgba(139, 92, 246, 0.3),
+      0 0 40px rgba(139, 92, 246, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 30px rgba(139, 92, 246, 0.5),
+      0 0 60px rgba(139, 92, 246, 0.2);
+  }
+}
+
+@keyframes turboIconPulse {
+  0%, 100% {
+    transform: scale(1);
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(196, 132, 252, 0.2));
+  }
+  50% {
+    transform: scale(1.1);
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.4), rgba(196, 132, 252, 0.4));
+  }
+}
+
+@keyframes turboBadgeGlow {
+  0%, 100% { box-shadow: 0 0 4px rgba(251, 191, 36, 0.3); }
+  50% { box-shadow: 0 0 12px rgba(251, 191, 36, 0.6); }
+}
+
+@keyframes turboCloudPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 4px rgba(245, 158, 11, 0.5);
+  }
+  50% {
+    transform: scale(1.2);
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.8);
+  }
+}
+
+@keyframes turboParticleFlow {
+  0% { offset-distance: 0%; opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { offset-distance: 100%; opacity: 0; }
+}
+
+@keyframes turboActivityPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0.6;
+  }
+}
+
+@keyframes turboWave {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.6;
+  }
+}
+
+/* Hover Effects */
+.turboNodeWrapper:hover {
+  transform: translateY(-1px);
+}
+
+.turboNodeWrapper:hover .turboNodeInner {
+  border-width: 3px;
+  box-shadow: 0 0 30px currentColor;
+}
+
+.turboNodeWrapper:hover .turboHandle {
+  opacity: 1 !important;
+  transform: scale(1.2) !important;
+}
+
+/* Focus States */
+.turboNodeWrapper:focus-within {
+  outline: 2px solid rgba(139, 92, 246, 0.6);
+  outline-offset: 2px;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 768px) {
+  .turboNodeWrapper {
+    min-width: 160px;
+  }
+
+  .turboNodeInner {
+    padding: 12px;
+  }
+
+  .turboNodeTitle {
+    font-size: 0.8rem;
+  }
+
+  .turboNodeSubtitle {
+    font-size: 0.7rem;
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .turboNodeWrapper.selected,
+  .turboNodeWrapper.processing,
+  .turboIconPulse,
+  .turboBadgeGlow,
+  .turboCloudPulse,
+  .turboParticleFlow,
+  .turboActivityPulse,
+  .turboWave {
+    animation: none !important;
+  }
+
+  .turboNodeWrapper:hover {
+    transform: none;
+  }
+}

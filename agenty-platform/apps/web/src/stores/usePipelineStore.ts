@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
-import { Node, Edge, Connection, addEdge, applyNodeChanges, applyEdgeChanges, NodeChange, EdgeChange } from 'reactflow'
+import { Node, Edge, Connection, addEdge, applyNodeChanges, applyEdgeChanges, NodeChange, EdgeChange } from '@xyflow/react'
 
 // Pipeline node types
 export type PipelineNodeType = 'stt' | 'llm' | 'tts' | 'realtime' | 'filter' | 'aggregator' | 'custom'
@@ -141,26 +141,44 @@ export const usePipelineStore = create<PipelineStore>()(
       },
 
       onConnect: (connection) => {
+        console.log('Creating connection:', connection) // Debug log
+        const newEdge = {
+          id: `${connection.source}-${connection.target}`,
+          source: connection.source,
+          target: connection.target,
+          sourceHandle: connection.sourceHandle,
+          targetHandle: connection.targetHandle,
+          type: 'turbo',
+          animated: true,
+          style: { stroke: '#8B5CF6', strokeWidth: 2 }
+        }
         set({
-          edges: addEdge(connection, get().edges)
+          edges: [...get().edges, newEdge]
         })
+        console.log('Connection created, total edges:', get().edges.length + 1) // Debug log
       },
 
       // Node management
       addNode: (type, position) => {
+        const nodeCount = get().nodes.filter(n => n.data.type === type).length + 1
         const newNode: PipelineNode = {
           id: generateId(),
-          type: 'default',
+          type: 'turbo',
           position,
           data: {
             ...nodeTemplates[type],
-            label: `${nodeTemplates[type].label} ${get().nodes.filter(n => n.data.type === type).length + 1}`
-          } as PipelineNodeData
+            title: `${nodeTemplates[type].label} ${nodeCount}`,
+            subtitle: `${type.toUpperCase()} Provider`,
+            nodeType: type,
+            status: 'idle'
+          } as any
         }
 
         set({
           nodes: [...get().nodes, newNode]
         })
+
+        console.log('Added node:', newNode) // Debug log
 
         return newNode
       },
