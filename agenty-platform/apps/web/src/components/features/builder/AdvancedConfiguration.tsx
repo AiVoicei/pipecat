@@ -164,37 +164,37 @@ export function AdvancedConfiguration({ config, onChange, onValidate }: Advanced
                     <CardContent className="pt-0">
                       {section.id === 'llm' && (
                         <LLMConfiguration
-                          config={config.llm || {}}
-                          onChange={(llmConfig) => updateConfig('llm', 'advanced', llmConfig)}
+                          config={config.llm ?? {}}
+                          onChange={(llmConfig) => updateConfig('llm', { ...config.llm, ...llmConfig })}
                         />
                       )}
                       {section.id === 'voice' && (
                         <VoiceConfiguration
-                          config={config.voice || {}}
-                          onChange={(voiceConfig) => updateConfig('voice', 'personality', voiceConfig)}
+                          config={config.tts ?? {}}
+                          onChange={(voiceConfig) => updateConfig('tts', 'personality', voiceConfig)}
                         />
                       )}
                       {section.id === 'interruption' && (
                         <InterruptionConfiguration
-                          config={config.interruption || {}}
+                          config={config.interruption ?? {}}
                           onChange={(intConfig) => updateConfig('interruption', 'settings', intConfig)}
                         />
                       )}
                       {section.id === 'context' && (
                         <ContextConfiguration
-                          config={config.context || {}}
+                          config={config.context ?? {}}
                           onChange={(ctxConfig) => updateConfig('context', 'management', ctxConfig)}
                         />
                       )}
                       {section.id === 'filters' && (
                         <FiltersConfiguration
-                          config={config.filters || {}}
+                          config={config.filters ?? {}}
                           onChange={(filterConfig) => updateConfig('filters', 'content', filterConfig)}
                         />
                       )}
                       {section.id === 'performance' && (
                         <PerformanceConfiguration
-                          config={config.performance || {}}
+                          config={config.performance ?? {}}
                           onChange={(perfConfig) => updateConfig('performance', 'tuning', perfConfig)}
                         />
                       )}
@@ -227,9 +227,9 @@ function LLMConfiguration({ config, onChange }: { config: any; onChange: (config
         <TabsContent value="generation" className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Temperature: {config.temperature || 0.7}</Label>
+              <Label>Temperature: {config.temperature ?? 0.7}</Label>
               <Slider
-                value={[config.temperature || 0.7]}
+                value={[config.temperature ?? 0.7]}
                 onValueChange={([value]) => updateValue('temperature', value)}
                 max={2}
                 min={0}
@@ -239,9 +239,9 @@ function LLMConfiguration({ config, onChange }: { config: any; onChange: (config
               <p className="text-xs text-muted-foreground">Controls randomness in responses</p>
             </div>
             <div className="space-y-2">
-              <Label>Max Tokens: {config.maxTokens || 1000}</Label>
+              <Label>Max Tokens: {config.maxTokens ?? 1000}</Label>
               <Slider
-                value={[config.maxTokens || 1000]}
+                value={[config.maxTokens ?? 1000]}
                 onValueChange={([value]) => updateValue('maxTokens', value)}
                 max={4000}
                 min={100}
@@ -255,7 +255,7 @@ function LLMConfiguration({ config, onChange }: { config: any; onChange: (config
           <div className="space-y-2">
             <Label>System Prompt</Label>
             <Textarea
-              value={config.systemPrompt || ''}
+              value={config.systemPrompt ?? ''}
               onChange={(e) => updateValue('systemPrompt', e.target.value)}
               placeholder="You are a helpful AI assistant..."
               className="min-h-[100px]"
@@ -265,9 +265,9 @@ function LLMConfiguration({ config, onChange }: { config: any; onChange: (config
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Top P: {config.topP || 0.9}</Label>
+              <Label>Top P: {config.topP ?? 0.9}</Label>
               <Slider
-                value={[config.topP || 0.9]}
+                value={[config.topP ?? 0.9]}
                 onValueChange={([value]) => updateValue('topP', value)}
                 max={1}
                 min={0}
@@ -276,9 +276,9 @@ function LLMConfiguration({ config, onChange }: { config: any; onChange: (config
               />
             </div>
             <div className="space-y-2">
-              <Label>Frequency Penalty: {config.frequencyPenalty || 0}</Label>
+              <Label>Frequency Penalty: {config.frequencyPenalty ?? 0}</Label>
               <Slider
-                value={[config.frequencyPenalty || 0]}
+                value={[config.frequencyPenalty ?? 0]}
                 onValueChange={([value]) => updateValue('frequencyPenalty', value)}
                 max={2}
                 min={-2}
@@ -296,7 +296,7 @@ function LLMConfiguration({ config, onChange }: { config: any; onChange: (config
               <p className="text-xs text-muted-foreground">Allow the AI to use external tools</p>
             </div>
             <Switch
-              checked={config.enableFunctions || false}
+              checked={config.enableFunctions ?? false}
               onCheckedChange={(checked) => updateValue('enableFunctions', checked)}
             />
           </div>
@@ -309,7 +309,7 @@ function LLMConfiguration({ config, onChange }: { config: any; onChange: (config
                   {['weather', 'calendar', 'email', 'search', 'calculator', 'time'].map((func) => (
                     <div key={func} className="flex items-center space-x-2">
                       <Switch
-                        checked={config.functions?.[func] || false}
+                        checked={config.functions?.[func] ?? false}
                         onCheckedChange={(checked) => updateValue('functions', { ...config.functions, [func]: checked })}
                       />
                       <Label className="capitalize">{func}</Label>
@@ -323,9 +323,9 @@ function LLMConfiguration({ config, onChange }: { config: any; onChange: (config
 
         <TabsContent value="context" className="space-y-4">
           <div className="space-y-2">
-            <Label>Context Window: {config.contextWindow || 4000} tokens</Label>
+            <Label>Context Window: {config.contextWindow ?? 4000} tokens</Label>
             <Slider
-              value={[config.contextWindow || 4000]}
+              value={[config.contextWindow ?? 4000]}
               onValueChange={([value]) => updateValue('contextWindow', value)}
               max={128000}
               min={1000}
@@ -341,7 +341,7 @@ function LLMConfiguration({ config, onChange }: { config: any; onChange: (config
               <p className="text-xs text-muted-foreground">Automatically manage conversation length</p>
             </div>
             <Switch
-              checked={config.smartPruning || true}
+              checked={config.smartPruning ?? true}
               onCheckedChange={(checked) => updateValue('smartPruning', checked)}
             />
           </div>
@@ -360,9 +360,9 @@ function VoiceConfiguration({ config, onChange }: { config: any; onChange: (conf
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Speed: {config.speed || 1.0}x</Label>
+          <Label>Speed: {config.speed ?? 1.0}x</Label>
           <Slider
-            value={[config.speed || 1.0]}
+            value={[config.speed ?? 1.0]}
             onValueChange={([value]) => updateValue('speed', value)}
             max={2}
             min={0.5}
@@ -371,9 +371,9 @@ function VoiceConfiguration({ config, onChange }: { config: any; onChange: (conf
           />
         </div>
         <div className="space-y-2">
-          <Label>Pitch: {config.pitch || 0}</Label>
+          <Label>Pitch: {config.pitch ?? 0}</Label>
           <Slider
-            value={[config.pitch || 0]}
+            value={[config.pitch ?? 0]}
             onValueChange={([value]) => updateValue('pitch', value)}
             max={20}
             min={-20}
@@ -385,7 +385,7 @@ function VoiceConfiguration({ config, onChange }: { config: any; onChange: (conf
 
       <div className="space-y-2">
         <Label>Voice Emotion</Label>
-        <Select value={config.emotion || 'neutral'} onValueChange={(value) => updateValue('emotion', value)}>
+        <Select value={config.emotion ?? 'neutral'} onValueChange={(value) => updateValue('emotion', value)}>
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
@@ -402,7 +402,7 @@ function VoiceConfiguration({ config, onChange }: { config: any; onChange: (conf
 
       <div className="space-y-2">
         <Label>Pause Handling</Label>
-        <Select value={config.pauseHandling || 'natural'} onValueChange={(value) => updateValue('pauseHandling', value)}>
+        <Select value={config.pauseHandling ?? 'natural'} onValueChange={(value) => updateValue('pauseHandling', value)}>
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
@@ -420,7 +420,7 @@ function VoiceConfiguration({ config, onChange }: { config: any; onChange: (conf
           <p className="text-xs text-muted-foreground">Add natural breathing to speech</p>
         </div>
         <Switch
-          checked={config.breathing || false}
+          checked={config.breathing ?? false}
           onCheckedChange={(checked) => updateValue('breathing', checked)}
         />
       </div>
@@ -437,7 +437,7 @@ function InterruptionConfiguration({ config, onChange }: { config: any; onChange
     <div className="space-y-4">
       <div className="space-y-2">
         <Label>Interruption Strategy</Label>
-        <Select value={config.strategy || 'polite'} onValueChange={(value) => updateValue('strategy', value)}>
+        <Select value={config.strategy ?? 'polite'} onValueChange={(value) => updateValue('strategy', value)}>
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
@@ -451,9 +451,9 @@ function InterruptionConfiguration({ config, onChange }: { config: any; onChange
       </div>
 
       <div className="space-y-2">
-        <Label>Minimum Words Before Interruption: {config.minWords || 3}</Label>
+        <Label>Minimum Words Before Interruption: {config.minWords ?? 3}</Label>
         <Slider
-          value={[config.minWords || 3]}
+          value={[config.minWords ?? 3]}
           onValueChange={([value]) => updateValue('minWords', value)}
           max={20}
           min={1}
@@ -463,9 +463,9 @@ function InterruptionConfiguration({ config, onChange }: { config: any; onChange
       </div>
 
       <div className="space-y-2">
-        <Label>Detection Sensitivity: {config.sensitivity || 0.7}</Label>
+        <Label>Detection Sensitivity: {config.sensitivity ?? 0.7}</Label>
         <Slider
-          value={[config.sensitivity || 0.7]}
+          value={[config.sensitivity ?? 0.7]}
           onValueChange={([value]) => updateValue('sensitivity', value)}
           max={1}
           min={0.1}
@@ -481,7 +481,7 @@ function InterruptionConfiguration({ config, onChange }: { config: any; onChange
           <p className="text-xs text-muted-foreground">Continue speaking where left off</p>
         </div>
         <Switch
-          checked={config.resume || true}
+          checked={config.resume ?? true}
           onCheckedChange={(checked) => updateValue('resume', checked)}
         />
       </div>
@@ -497,9 +497,9 @@ function ContextConfiguration({ config, onChange }: { config: any; onChange: (co
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label>Memory Duration: {config.memoryDuration || 24} hours</Label>
+        <Label>Memory Duration: {config.memoryDuration ?? 24} hours</Label>
         <Slider
-          value={[config.memoryDuration || 24]}
+          value={[config.memoryDuration ?? 24]}
           onValueChange={([value]) => updateValue('memoryDuration', value)}
           max={168}
           min={1}
@@ -510,7 +510,7 @@ function ContextConfiguration({ config, onChange }: { config: any; onChange: (co
 
       <div className="space-y-2">
         <Label>Conversation Summary</Label>
-        <Select value={config.summaryMode || 'automatic'} onValueChange={(value) => updateValue('summaryMode', value)}>
+        <Select value={config.summaryMode ?? 'automatic'} onValueChange={(value) => updateValue('summaryMode', value)}>
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
@@ -528,7 +528,7 @@ function ContextConfiguration({ config, onChange }: { config: any; onChange: (co
           <p className="text-xs text-muted-foreground">Remember user preferences across sessions</p>
         </div>
         <Switch
-          checked={config.persistent || false}
+          checked={config.persistent ?? false}
           onCheckedChange={(checked) => updateValue('persistent', checked)}
         />
       </div>
@@ -539,7 +539,7 @@ function ContextConfiguration({ config, onChange }: { config: any; onChange: (co
           <p className="text-xs text-muted-foreground">Share context between different agents</p>
         </div>
         <Switch
-          checked={config.sharing || false}
+          checked={config.sharing ?? false}
           onCheckedChange={(checked) => updateValue('sharing', checked)}
         />
       </div>
@@ -556,7 +556,7 @@ function FiltersConfiguration({ config, onChange }: { config: any; onChange: (co
     <div className="space-y-4">
       <div className="space-y-2">
         <Label>Content Safety Level</Label>
-        <Select value={config.safetyLevel || 'medium'} onValueChange={(value) => updateValue('safetyLevel', value)}>
+        <Select value={config.safetyLevel ?? 'medium'} onValueChange={(value) => updateValue('safetyLevel', value)}>
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
@@ -575,7 +575,7 @@ function FiltersConfiguration({ config, onChange }: { config: any; onChange: (co
           {['violence', 'adult', 'hate', 'harassment', 'self-harm', 'illegal'].map((category) => (
             <div key={category} className="flex items-center space-x-2">
               <Switch
-                checked={config.blockedCategories?.[category] || true}
+                checked={config.blockedCategories?.[category] ?? true}
                 onCheckedChange={(checked) => updateValue('blockedCategories', {
                   ...config.blockedCategories,
                   [category]: checked
@@ -590,7 +590,7 @@ function FiltersConfiguration({ config, onChange }: { config: any; onChange: (co
       <div className="space-y-2">
         <Label>Custom Keywords (comma separated)</Label>
         <Textarea
-          value={config.customKeywords || ''}
+          value={config.customKeywords ?? ''}
           onChange={(e) => updateValue('customKeywords', e.target.value)}
           placeholder="Enter blocked words or phrases..."
           className="min-h-[60px]"
@@ -608,9 +608,9 @@ function PerformanceConfiguration({ config, onChange }: { config: any; onChange:
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label>Response Timeout: {config.timeout || 30}s</Label>
+        <Label>Response Timeout: {config.timeout ?? 30}s</Label>
         <Slider
-          value={[config.timeout || 30]}
+          value={[config.timeout ?? 30]}
           onValueChange={([value]) => updateValue('timeout', value)}
           max={120}
           min={5}
@@ -620,9 +620,9 @@ function PerformanceConfiguration({ config, onChange }: { config: any; onChange:
       </div>
 
       <div className="space-y-2">
-        <Label>Concurrent Requests: {config.concurrency || 5}</Label>
+        <Label>Concurrent Requests: {config.concurrency ?? 5}</Label>
         <Slider
-          value={[config.concurrency || 5]}
+          value={[config.concurrency ?? 5]}
           onValueChange={([value]) => updateValue('concurrency', value)}
           max={20}
           min={1}
@@ -637,7 +637,7 @@ function PerformanceConfiguration({ config, onChange }: { config: any; onChange:
           <p className="text-xs text-muted-foreground">Automatically adjust resources based on load</p>
         </div>
         <Switch
-          checked={config.autoScaling || true}
+          checked={config.autoScaling ?? true}
           onCheckedChange={(checked) => updateValue('autoScaling', checked)}
         />
       </div>
@@ -648,14 +648,14 @@ function PerformanceConfiguration({ config, onChange }: { config: any; onChange:
           <p className="text-xs text-muted-foreground">Cache common responses for faster delivery</p>
         </div>
         <Switch
-          checked={config.caching || true}
+          checked={config.caching ?? true}
           onCheckedChange={(checked) => updateValue('caching', checked)}
         />
       </div>
 
       <div className="space-y-2">
         <Label>Quality vs Speed</Label>
-        <Select value={config.priority || 'balanced'} onValueChange={(value) => updateValue('priority', value)}>
+        <Select value={config.priority ?? 'balanced'} onValueChange={(value) => updateValue('priority', value)}>
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>

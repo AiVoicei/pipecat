@@ -4,11 +4,8 @@ const DYNAMIC_CACHE_NAME = 'agenty-dynamic-v1.0.0'
 
 // Assets to cache for offline functionality
 const STATIC_ASSETS = [
-  '/',
   '/manifest.json',
   '/offline.html',
-  '/_next/static/css/',
-  '/_next/static/chunks/',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png'
 ]
@@ -130,7 +127,21 @@ async function handleAPIRequests(request) {
 
     if (networkResponse.ok) {
       const cache = await caches.open(DYNAMIC_CACHE_NAME)
-      cache.put(request, networkResponse.clone())
+
+      // Check Cache-Control header before caching
+      const cacheControl = networkResponse.headers.get('cache-control') || ''
+      const shouldCache = !cacheControl.includes('no-store') &&
+                         !cacheControl.includes('no-cache') &&
+                         !cacheControl.includes('private') &&
+                         (!cacheControl.includes('max-age=0') || cacheControl.includes('public'))
+
+      if (shouldCache) {
+        try {
+          cache.put(request, networkResponse.clone())
+        } catch (cacheError) {
+          console.warn('[SW] Failed to cache API response:', cacheError)
+        }
+      }
     }
 
     return networkResponse
@@ -177,7 +188,8 @@ async function handlePageRequests(request) {
     }
 
     // Return offline page as fallback
-    const offlineResponse = await cache.match('/offline.html')
+    const staticCache = await caches.open(STATIC_CACHE_NAME)
+    const offlineResponse = await staticCache.match('/offline.html')
     return offlineResponse || new Response('Page not available offline', {
       status: 503,
       headers: { 'Content-Type': 'text/html' }
@@ -326,6 +338,10 @@ self.addEventListener('message', event => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting()
   } else if (event.data && event.data.type === 'GET_VERSION') {
-    event.ports[0].postMessage({ version: CACHE_NAME })
+    if (event.ports && event.ports.length > 0) {
+      event.ports[0].postMessage({ version: CACHE_NAME })
+    } else {
+      console.warn('[SW] GET_VERSION request without valid ports')
+    }
   }
 })

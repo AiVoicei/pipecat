@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -52,8 +52,8 @@ export function AnalyticsDashboard() {
     fetchAgents()
   }, [fetchAgents])
 
-  // Generate analytics data
-  const generateAnalyticsData = () => {
+  // Generate analytics data - memoized to prevent chart flicker
+  const data = useMemo(() => {
     const days = timeRange === '24h' ? 1 : timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90
     const dateRange = Array.from({ length: days }, (_, i) => {
       const date = subDays(new Date(), days - 1 - i)
@@ -110,9 +110,7 @@ export function AnalyticsDashboard() {
       providerData,
       topicsData
     }
-  }
-
-  const data = generateAnalyticsData()
+  }, [agents, timeRange])
 
   // Calculate summary metrics
   const totalConversations = agents.reduce((sum, agent) => sum + agent.analytics.totalConversations, 0)

@@ -144,7 +144,10 @@ export function ABTestingConfiguration({
 
         const newVariants = [...test.variants, newVariant]
         const equalSplit = Math.floor(100 / newVariants.length)
-        const newTrafficSplit = newVariants.map(() => equalSplit)
+        const remainder = 100 - equalSplit * newVariants.length
+        const newTrafficSplit = newVariants.map((_, index) =>
+          index < remainder ? equalSplit + 1 : equalSplit
+        )
 
         return {
           ...test,
@@ -157,38 +160,60 @@ export function ABTestingConfiguration({
   }
 
   const updateTest = (testId: string, updates: Partial<ABTest>) => {
-    setTests(tests.map(test => test.id === testId ? { ...test, ...updates } : test))
+    setTests(prev => {
+      const updatedTests = prev.map(test => test.id === testId ? { ...test, ...updates } : test)
+      // Notify parent component if callback is provided
+      if (onUpdateTest) {
+        const updatedTest = updatedTests.find(t => t.id === testId)
+        if (updatedTest) {
+          onUpdateTest(testId, updatedTest)
+        }
+      }
+      return updatedTests
+    })
   }
 
   const deleteTest = (testId: string) => {
-    setTests(tests.filter(test => test.id !== testId))
-    if (selectedTest === testId) {
-      setSelectedTest(null)
+    setTests(prev => prev.filter(test => test.id !== testId))
+    setSelectedTest(prev => prev === testId ? null : prev)
+    // Notify parent component if callback is provided
+    if (onDeleteTest) {
+      onDeleteTest(testId)
     }
   }
 
   const toggleTestStatus = (testId: string) => {
-    const test = tests.find(t => t.id === testId)
-    if (!test) return
+    setTests(prev => {
+      const test = prev.find(t => t.id === testId)
+      if (!test) return prev
 
-    let newStatus: ABTest['status']
-    switch (test.status) {
-      case 'draft':
-        newStatus = 'running'
-        break
-      case 'running':
-        newStatus = 'paused'
-        break
-      case 'paused':
-        newStatus = 'running'
-        break
-      default:
-        newStatus = test.status
-    }
+      let newStatus: ABTest['status']
+      switch (test.status) {
+        case 'draft':
+          newStatus = 'running'
+          break
+        case 'running':
+          newStatus = 'paused'
+          break
+        case 'paused':
+          newStatus = 'running'
+          break
+        default:
+          newStatus = test.status
+      }
 
-    updateTest(testId, {
-      status: newStatus,
-      startDate: newStatus === 'running' && !test.startDate ? new Date() : test.startDate
+      const updatedTest = {
+        ...test,
+        status: newStatus,
+        startDate: newStatus === 'running' && !test.startDate ? new Date() : test.startDate
+      }
+
+      // Notify parent component if callback is provided
+      if (onUpdateTest) {
+        onUpdateTest(testId, updatedTest)
+      }
+
+      return prev.map(t => t.id === testId ? updatedTest : t)
     })
   }
 
@@ -336,7 +361,11 @@ export function ABTestingConfiguration({
                       </div>
                       <div className="text-center">
                         <div className="text-2xl font-bold text-green-600">
-                          {((selectedTestData.metrics.conversions / selectedTestData.metrics.totalUsers) * 100).toFixed(1)}%
+                          {(() => {
+                            const { conversions = 0, totalUsers = 0 } = selectedTestData.metrics
+                            const rate = totalUsers > 0 ? (conversions / totalUsers) * 100 : 0
+                            return rate.toFixed(1) + '%'
+                          })()}
                         </div>
                         <div className="text-sm text-muted-foreground">Conversion Rate</div>
                       </div>

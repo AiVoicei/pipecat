@@ -15,6 +15,9 @@ interface PWAState {
   installPrompt: PWAInstallPrompt | null
 }
 
+// App-specific cache prefix
+const APP_CACHE_PREFIX = 'agenty-'
+
 export function usePWA() {
   const [pwaState, setPWAState] = useState<PWAState>({
     isInstallable: false,
@@ -198,7 +201,18 @@ export function usePWA() {
     }
 
     try {
-      await navigator.share(data)
+      // Check if file sharing is supported before including files
+      const shareData: { title?: string; text?: string; url?: string; files?: File[] } = {
+        title: data.title,
+        text: data.text,
+        url: data.url
+      }
+
+      if (data.files && navigator.canShare && navigator.canShare({ files: data.files })) {
+        shareData.files = data.files
+      }
+
+      await navigator.share(shareData)
       return true
     } catch (error) {
       if ((error as Error).name === 'AbortError') {
@@ -281,8 +295,11 @@ export function usePWA() {
 
     try {
       const cacheNames = await caches.keys()
+      const appCacheNames = cacheNames.filter(cacheName =>
+        cacheName.startsWith(APP_CACHE_PREFIX)
+      )
       await Promise.all(
-        cacheNames.map(cacheName => caches.delete(cacheName))
+        appCacheNames.map(cacheName => caches.delete(cacheName))
       )
       return true
     } catch (error) {

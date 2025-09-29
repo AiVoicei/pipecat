@@ -357,7 +357,7 @@ export function PipelineBuilder({ agentId, readonly = false, selectedProviders }
                   }))}
                   edges={edges.map(edge => ({
                     ...edge,
-                    type: 'turbo',
+                    type: edge.type || 'turbo',
                     data: {
                       ...edge.data,
                       status: isSimulating ? 'active' : 'idle',

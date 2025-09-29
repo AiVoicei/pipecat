@@ -47,11 +47,11 @@ export default function AgentConfigurePage() {
       // Update the agent with the new configuration
       await updateAgent(agentId, {
         configuration: {
-          stt: { ...agent.configuration.stt, ...config.stt },
-          llm: { ...agent.configuration.llm, ...config.llm },
-          tts: { ...agent.configuration.tts, ...config.tts }
+          stt: { ...(agent.configuration?.stt ?? {}), ...config.stt },
+          llm: { ...(agent.configuration?.llm ?? {}), ...config.llm },
+          tts: { ...(agent.configuration?.tts ?? {}), ...config.tts }
         },
-        deploymentConfig: { ...agent.deploymentConfig, ...config.deployment }
+        deploymentConfig: { ...(agent.deploymentConfig ?? {}), ...config.deployment }
       })
       // Show success toast here
     } catch (error) {

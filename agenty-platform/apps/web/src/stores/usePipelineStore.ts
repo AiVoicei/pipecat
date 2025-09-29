@@ -12,6 +12,10 @@ export interface PipelineNodeData {
   provider?: string
   configuration?: Record<string, string | number | boolean>
   isConfigured?: boolean
+  title?: string
+  subtitle?: string
+  nodeType?: PipelineNodeType
+  status?: 'idle' | 'active' | 'error' | 'processing'
 }
 
 // Pipeline node
@@ -170,8 +174,8 @@ export const usePipelineStore = create<PipelineStore>()(
             title: `${nodeTemplates[type].label} ${nodeCount}`,
             subtitle: `${type.toUpperCase()} Provider`,
             nodeType: type,
-            status: 'idle'
-          } as any
+            status: 'idle' as const
+          }
         }
 
         set({

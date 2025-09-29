@@ -124,7 +124,7 @@
   },
   "protocol_handlers": [
     {
-      "protocol": "agenty",
+      "protocol": "web+agenty",
       "url": "/agent/import?url=%s"
     }
   ]

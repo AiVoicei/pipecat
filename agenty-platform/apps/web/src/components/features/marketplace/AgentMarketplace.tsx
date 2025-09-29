@@ -210,7 +210,7 @@ export function AgentMarketplace() {
 
   // Filter and sort agents
   useEffect(() => {
-    let filtered = agents
+    let filtered = [...agents] // Create shallow clone to avoid mutation
 
     // Apply search filter
     if (searchQuery) {
@@ -245,7 +245,7 @@ export function AgentMarketplace() {
   }, [agents, searchQuery, selectedCategory, sortBy])
 
   const handleLike = (agentId: string) => {
-    setAgents(agents.map(agent =>
+    setAgents(prev => prev.map(agent =>
       agent.id === agentId
         ? { ...agent, likes: agent.likes + 1 }
         : agent
@@ -253,7 +253,7 @@ export function AgentMarketplace() {
   }
 
   const handleInstall = (agentId: string) => {
-    setAgents(agents.map(agent =>
+    setAgents(prev => prev.map(agent =>
       agent.id === agentId
         ? { ...agent, downloads: agent.downloads + 1 }
         : agent

@@ -111,23 +111,8 @@ const TurboNode = memo(({ data, selected }: TurboNodeType) => {
           position: 'relative',
         }}
       >
-        {/* Processing Animation Border - Smooth Rotating Border */}
-        {status === 'processing' && (
-          <div
-            className="absolute inset-[-3px] rounded-[15px] animate-spin"
-            style={{
-              background: `conic-gradient(from 0deg, ${categoryColor}, transparent, ${categoryColor})`,
-              zIndex: -1,
-            }}
-          >
-            <div
-              className="absolute inset-[3px] rounded-[12px]"
-              style={{
-                background: 'rgba(17, 17, 17, 0.95)',
-              }}
-            />
-          </div>
-        )}
+        {/* Processing Animation Border - Disabled */}
+        {/* Rotating border animation removed */}
 
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
