@@ -50,6 +50,17 @@ interface ImportedAgent {
   }
 }
 
+/**
+ * Render a client-side UI that provides export and import workflows for a specific agent.
+ *
+ * The component offers configurable export options (credentials, analytics, conversation history,
+ * customizations), publishing metadata (privacy, license, category, tags), and a download-based
+ * export. It also accepts pasted JSON to preview and import an agent, validating required fields
+ * and creating a new agent from the parsed data.
+ *
+ * @param agentId - The identifier of the agent to export or import into
+ * @returns The React element containing the export/import interface for the specified agent
+ */
 export function AgentExportImport({ agentId }: { agentId: string }) {
   const { agents, createAgent } = useAgentStore()
   const [activeTab, setActiveTab] = useState<'export' | 'import'>('export')

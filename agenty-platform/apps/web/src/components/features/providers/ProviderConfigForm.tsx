@@ -22,6 +22,20 @@ interface ProviderConfigFormProps {
   className?: string
 }
 
+/**
+ * Renders a form for viewing and editing a provider's configuration and credentials.
+ *
+ * The form displays an API key field with visibility toggle, categorized basic and
+ * advanced configuration fields derived from the provider's configuration schema,
+ * provider metadata (capabilities, languages, popularity), and a disabled "Test Connection" button.
+ *
+ * @param providerId - Identifier of the provider whose configuration is being edited
+ * @param type - Provider category (`'stt' | 'llm' | 'tts' | 'realtime'`) used for contextual rendering
+ * @param config - Current configuration values keyed by field name (string | number | boolean)
+ * @param onConfigChange - Callback invoked with an updated config object when any field changes
+ * @param className - Optional CSS class name applied to the root Card container
+ * @returns A React element representing the provider configuration form
+ */
 export function ProviderConfigForm({
   providerId,
   type,

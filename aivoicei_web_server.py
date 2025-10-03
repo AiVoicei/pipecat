@@ -1068,7 +1068,25 @@ async def stop_agent(agent_id: str):
 
 @app.get("/metrics")
 async def get_system_metrics():
-    """Get system-wide performance metrics"""
+    """
+    Compute aggregated system-wide performance metrics for currently active sessions.
+    
+    Returns:
+        result (dict): A dictionary containing:
+            - timestamp (float): Current Unix epoch time.
+            - metrics (dict): Aggregated metrics:
+                - active_sessions (int): Number of active sessions.
+                - optimized_sessions (int): Count of sessions marked as optimized.
+                - total_interactions (int): Total recorded response interactions across sessions.
+                - average_response_time (float, optional): Mean response time (seconds) across recorded interactions.
+                - min_response_time (float, optional): Minimum recorded response time (seconds).
+                - max_response_time (float, optional): Maximum recorded response time (seconds).
+                - sub_500ms_responses (int, optional): Number of responses with latency <= 0.5 seconds.
+                - latency_target_met_percentage (float, optional): Percentage of responses with latency <= 0.5 seconds.
+              Timing-related keys are included only when response-time data exists.
+            - target_response_time (float): The target response time threshold (0.5 seconds).
+            - performance_status (str): "optimal" if at least 80% of responses meet the target, "needs_optimization" otherwise.
+    """
     all_response_times = []
     optimized_sessions = 0
     total_interactions = 0
@@ -1104,8 +1122,71 @@ async def get_system_metrics():
     }
 
 
-# Note: Duplicate mock route removed - production route at line 923 handles /api/agents
-# Use the database-backed endpoint with authentication instead
+# Mock agents endpoint for platform testing
+@app.get("/api/agents")
+async def get_agents(user_id: str = "user_1"):
+    """
+    Return a static list of sample agent records for the given user.
+    
+    Parameters:
+        user_id (str): Owner identifier to associate with each returned agent (defaults to "user_1").
+    
+    Returns:
+        list: A list of dictionaries representing mock Agent objects with fields such as `id`, `userId`, `name`, `description`, `status`, `configuration`, `deploymentConfig`, `analytics`, `templateId`, `createdAt`, and `updatedAt`.
+    """
+    return [
+        {
+            "id": "agt_1",
+            "userId": user_id,
+            "name": "Customer Support Bot",
+            "description": "24/7 customer support assistant with Hebrew and English support",
+            "status": "active",
+            "configuration": {
+                "stt": {"provider": "deepgram", "model": "nova-2", "language": "he"},
+                "llm": {"provider": "openai", "model": "gpt-4", "temperature": 0.7, "maxTokens": 2000, "systemPrompt": "You are a helpful customer support assistant."},
+                "tts": {"provider": "elevenlabs", "voice": "alloy"}
+            },
+            "deploymentConfig": {"type": "webrtc", "settings": {}},
+            "analytics": {"totalConversations": 1247, "activeToday": 89, "averageResponseTime": 420, "satisfactionScore": 4.8},
+            "templateId": None,
+            "createdAt": "2024-01-15T10:30:00Z",
+            "updatedAt": "2024-03-20T14:22:00Z"
+        },
+        {
+            "id": "agt_2",
+            "userId": user_id,
+            "name": "Sales Assistant",
+            "description": "AI-powered sales assistant for product recommendations",
+            "status": "active",
+            "configuration": {
+                "stt": {"provider": "deepgram", "model": "nova-2", "language": "en"},
+                "llm": {"provider": "anthropic", "model": "claude-3-sonnet", "temperature": 0.8, "maxTokens": 1500, "systemPrompt": "You are a friendly sales assistant."},
+                "tts": {"provider": "cartesia", "voice": "nova"}
+            },
+            "deploymentConfig": {"type": "webrtc", "settings": {}},
+            "analytics": {"totalConversations": 834, "activeToday": 45, "averageResponseTime": 380, "satisfactionScore": 4.6},
+            "templateId": None,
+            "createdAt": "2024-02-01T09:15:00Z",
+            "updatedAt": "2024-03-19T16:40:00Z"
+        },
+        {
+            "id": "agt_3",
+            "userId": user_id,
+            "name": "Hebrew Support Bot",
+            "description": "Specialized Hebrew language support agent",
+            "status": "inactive",
+            "configuration": {
+                "stt": {"provider": "deepgram", "model": "nova-2", "language": "he"},
+                "llm": {"provider": "openai", "model": "gpt-3.5-turbo", "temperature": 0.6, "maxTokens": 1000, "systemPrompt": "אתה עוזר תמיכה בעברית."},
+                "tts": {"provider": "elevenlabs", "voice": "shimmer"}
+            },
+            "deploymentConfig": {"type": "webrtc", "settings": {}},
+            "analytics": {"totalConversations": 456, "activeToday": 0, "averageResponseTime": 450, "satisfactionScore": 4.5},
+            "templateId": None,
+            "createdAt": "2024-01-20T11:00:00Z",
+            "updatedAt": "2024-03-10T12:30:00Z"
+        }
+    ]
 
 
 if __name__ == "__main__":

@@ -29,6 +29,11 @@ interface PipelineNodeConfigProps {
   node: PipelineNode
 }
 
+/**
+ * Renders a configuration panel for a given pipeline node, allowing label editing, provider selection, provider-specific settings, and actions to save, duplicate, or delete the node.
+ *
+ * @param node - The pipeline node whose label, provider, and configuration are displayed and edited by the panel.
+ * @returns A JSX element that renders the node configuration UI.
 export function PipelineNodeConfig({ node }: PipelineNodeConfigProps) {
   const { t } = useLanguage()
   const { updateNode, removeNode, selectNode } = usePipelineStore()

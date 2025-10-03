@@ -21,7 +21,15 @@ security = HTTPBearer(auto_error=False)
 
 
 def get_provider_service() -> ProviderService:
-    """Get or create provider service instance"""
+    """
+    Return the shared ProviderService singleton, creating and caching it on first use.
+    
+    Returns:
+        ProviderService: The shared ProviderService instance.
+    
+    Raises:
+        RuntimeError: If the PROVIDER_ENCRYPTION_KEY environment variable is missing while ENVIRONMENT is set to "production".
+    """
     global _provider_service
 
     if _provider_service is None:
