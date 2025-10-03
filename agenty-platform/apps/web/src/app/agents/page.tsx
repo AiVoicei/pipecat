@@ -15,6 +15,15 @@ import { Agent } from '@/services/api'
 import { AppLayout } from '@/components/layout/AppLayout'
 import Link from 'next/link'
 
+/**
+ * Renders the agents management dashboard used to view, search, filter, sort and perform actions on agents.
+ *
+ * Displays a header with creation action, search input, status and sort controls, an error banner when present,
+ * a placeholder view when no agents match, and a responsive grid of agent cards showing status, metrics,
+ * provider info and action buttons for testing, settings, duplicating, deploying/stopping, and deleting.
+ *
+ * @returns The React element tree for the Agents management page.
+ */
 export default function AgentsPage() {
   const { t } = useLanguage()
   const router = useRouter()

@@ -16,6 +16,14 @@ import { AppLayout } from '@/components/layout/AppLayout'
 import { AdvancedConfiguration } from '@/components/features/builder/AdvancedConfiguration'
 import Link from 'next/link'
 
+/**
+ * Renders the "Edit Agent" page and manages loading, form state, validation, and submission for updating an agent.
+ *
+ * This component loads agent data from the agent store, initializes and validates an edit form (basic info, AI configuration, advanced configuration),
+ * applies configuration changes immutably, and submits updates via the store while navigating back to the agent detail page on success.
+ *
+ * @returns The rendered React element for the Edit Agent page.
+ */
 export default function EditAgentPage() {
   const { t } = useLanguage()
   const params = useParams()

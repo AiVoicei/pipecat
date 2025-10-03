@@ -65,6 +65,18 @@ interface AgentBuilderProps {
   onTest?: (agent: any) => void
 }
 
+/**
+ * Render a multi-step UI to create or edit an agent configuration.
+ *
+ * The component manages local agent configuration state (basic info, providers, transport,
+ * and system prompt), step navigation, validation, and actions to save or test the agent.
+ *
+ * @param agentId - Optional ID of an existing agent to load for editing; when provided the component populates the form from the agent data.
+ * @param templateId - Optional template ID to initialize the form (placeholder: not yet implemented).
+ * @param onSave - Optional callback invoked with the final agent data after a successful save.
+ * @param onTest - Optional callback invoked with the current configuration when starting a test.
+ * @returns The React element for the AgentBuilder UI.
+ */
 export function AgentBuilder({ agentId, templateId, onSave, onTest }: AgentBuilderProps) {
   const { t } = useLanguage()
   const router = useRouter()

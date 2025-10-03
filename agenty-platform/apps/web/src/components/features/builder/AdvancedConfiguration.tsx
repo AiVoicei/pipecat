@@ -40,6 +40,17 @@ interface AdvancedConfigurationProps {
   onValidate?: () => boolean
 }
 
+/**
+ * Renders the "Advanced Configuration" UI for tuning agent behavior and performance.
+ *
+ * Displays collapsible sections for LLM, voice, interruption handling, context, filters, and performance.
+ * Each section exposes controls for its configuration and propagates updates via the provided `onChange` handler.
+ *
+ * @param config - Current configuration object used to populate controls for each section.
+ * @param onChange - Called with the full updated configuration object when any section's settings change.
+ * @param onValidate - Optional callback invoked when the "Validate Config" button is clicked.
+ * @returns The React element for the advanced configuration panel.
+ */
 export function AdvancedConfiguration({ config, onChange, onValidate }: AdvancedConfigurationProps) {
   const { t } = useLanguage()
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['llm']))

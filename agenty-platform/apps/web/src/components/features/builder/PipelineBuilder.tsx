@@ -124,6 +124,19 @@ interface PipelineBuilderProps {
 }
 
 
+/**
+ * Render an interactive pipeline builder UI with canvas, toolbar, node/edge controls, and simulation features.
+ *
+ * The component provides drag-and-drop node creation, node selection and configuration, pipeline validation,
+ * save/export/reset actions, and an optional simulation mode that surfaces runtime metrics and animated edges.
+ *
+ * @param agentId - Optional identifier for the current agent, used for contextual naming or persistence.
+ * @param readonly - When true, hides editing controls and prevents creating or modifying nodes and connections.
+ * @param selectedProviders - Optional object describing initial providers to auto-populate the canvas.
+ *   Expected keys include `stt`, `llm`, `tts`, and `realtime`; presence of these values determines the
+ *   initial node(s) and automatic connections created on first render.
+ * @returns The PipelineBuilder React element
+ */
 export function PipelineBuilder({ agentId, readonly = false, selectedProviders }: PipelineBuilderProps) {
   const { t } = useLanguage()
   const reactFlowWrapper = useRef<HTMLDivElement>(null)

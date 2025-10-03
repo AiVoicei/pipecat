@@ -22,6 +22,13 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 
+/**
+ * Render the application's collapsible navigation sidebar with header, create button, navigation links, and a promotional block.
+ *
+ * The component manages a collapsed state that toggles the sidebar width and which UI elements are visible (logo/brand, item labels, badges, and the promotional card). Navigation items are localized via language context and the active item is determined from the current pathname.
+ *
+ * @returns The sidebar React element containing the header, create-agent button, navigation list, and optional promotional block; layout and visible content change based on the collapsed state.
+ */
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false)
   const pathname = usePathname()

@@ -1068,7 +1068,25 @@ async def stop_agent(agent_id: str):
 
 @app.get("/metrics")
 async def get_system_metrics():
-    """Get system-wide performance metrics"""
+    """
+    Compute aggregated system-wide performance metrics for currently active sessions.
+    
+    Returns:
+        result (dict): A dictionary containing:
+            - timestamp (float): Current Unix epoch time.
+            - metrics (dict): Aggregated metrics:
+                - active_sessions (int): Number of active sessions.
+                - optimized_sessions (int): Count of sessions marked as optimized.
+                - total_interactions (int): Total recorded response interactions across sessions.
+                - average_response_time (float, optional): Mean response time (seconds) across recorded interactions.
+                - min_response_time (float, optional): Minimum recorded response time (seconds).
+                - max_response_time (float, optional): Maximum recorded response time (seconds).
+                - sub_500ms_responses (int, optional): Number of responses with latency <= 0.5 seconds.
+                - latency_target_met_percentage (float, optional): Percentage of responses with latency <= 0.5 seconds.
+              Timing-related keys are included only when response-time data exists.
+            - target_response_time (float): The target response time threshold (0.5 seconds).
+            - performance_status (str): "optimal" if at least 80% of responses meet the target, "needs_optimization" otherwise.
+    """
     all_response_times = []
     optimized_sessions = 0
     total_interactions = 0
@@ -1107,7 +1125,15 @@ async def get_system_metrics():
 # Mock agents endpoint for platform testing
 @app.get("/api/agents")
 async def get_agents(user_id: str = "user_1"):
-    """Mock endpoint to return sample agents"""
+    """
+    Return a static list of sample agent records for the given user.
+    
+    Parameters:
+        user_id (str): Owner identifier to associate with each returned agent (defaults to "user_1").
+    
+    Returns:
+        list: A list of dictionaries representing mock Agent objects with fields such as `id`, `userId`, `name`, `description`, `status`, `configuration`, `deploymentConfig`, `analytics`, `templateId`, `createdAt`, and `updatedAt`.
+    """
     return [
         {
             "id": "agt_1",
