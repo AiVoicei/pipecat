@@ -23,6 +23,7 @@ import {
   X
 } from 'lucide-react'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { NodeConfiguration } from './types'
 
 interface PipelineNodeConfigProps {
   node: PipelineNode
@@ -33,12 +34,15 @@ export function PipelineNodeConfig({ node }: PipelineNodeConfigProps) {
   const { updateNode, removeNode, selectNode } = usePipelineStore()
   const { providers, getProvidersByType } = useProviderStore()
 
-  const [config, setConfig] = useState<Record<string, any>>(node.data.configuration || {})
+  const [config, setConfig] = useState<NodeConfiguration>(
+    (node.data.configuration as NodeConfiguration) || {}
+  )
   const [label, setLabel] = useState(node.data.label)
   const [selectedProvider, setSelectedProvider] = useState(node.data.provider || '')
 
   // Get available providers for this node type
-  const availableProviders = getProvidersByType(node.data.type as any)
+  const nodeType = node.data.type as 'stt' | 'llm' | 'tts' | 'realtime'
+  const availableProviders = getProvidersByType(nodeType)
 
   const handleSave = () => {
     updateNode(node.id, {

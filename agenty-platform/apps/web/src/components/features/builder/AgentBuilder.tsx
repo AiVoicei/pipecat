@@ -31,38 +31,48 @@ import { useProviderStore, Provider } from '@/stores/useProviderStore'
 import { PipelineBuilder } from './PipelineBuilder'
 import { ProviderSelector } from '../providers/ProviderSelector'
 import { ProviderConfigForm } from '../providers/ProviderConfigForm'
+import {
+  parseSTTConfig,
+  parseLLMConfig,
+  parseTTSConfig,
+  parseRealtimeConfig,
+  parseTransportConfig
+} from './types'
+import {
+  AgentConfiguration,
+  CreateAgentRequest,
+  UpdateAgentRequest,
+  DeploymentConfig
+} from '@/services/api'
 
-interface AgentConfiguration {
+interface LocalAgentConfiguration {
   name: string
   description: string
   stt: {
     provider: string
-    config: Record<string, any>
+    config: Record<string, unknown>
   } | null
   llm: {
     provider: string
-    config: Record<string, any>
+    config: Record<string, unknown>
   } | null
   tts: {
     provider: string
-    config: Record<string, any>
+    config: Record<string, unknown>
   } | null
   realtime: {
     provider: string
-    config: Record<string, any>
+    config: Record<string, unknown>
   } | null
-  transport: {
-    type: 'webrtc' | 'websocket' | 'twilio' | 'phone' | 'whatsapp' | 'api'
-    settings?: Record<string, any>
-  }
+  transport: DeploymentConfig
   systemPrompt: string
 }
 
 interface AgentBuilderProps {
   agentId?: string
   templateId?: string
-  onSave?: (agent: any) => void
-  onTest?: (agent: any) => void
+  onSave?: (agent: CreateAgentRequest | UpdateAgentRequest) => void
+  onTest?: (agent: LocalAgentConfiguration) => void
 }
 
 export function AgentBuilder({ agentId, templateId, onSave, onTest }: AgentBuilderProps) {
@@ -72,7 +82,7 @@ export function AgentBuilder({ agentId, templateId, onSave, onTest }: AgentBuild
   const { providers } = useProviderStore()
 
   const [currentStep, setCurrentStep] = useState(0)
-  const [config, setConfig] = useState<AgentConfiguration>({
+  const [config, setConfig] = useState<LocalAgentConfiguration>({
     name: '',
     description: '',
     stt: null,
@@ -95,24 +105,33 @@ export function AgentBuilder({ agentId, templateId, onSave, onTest }: AgentBuild
     if (agentId) {
       const agent = agents.find(a => a.id === agentId)
       if (agent) {
+        const sttConfig = parseSTTConfig(agent.configuration.stt)
+        const llmConfig = parseLLMConfig(agent.configuration.llm)
+        const ttsConfig = parseTTSConfig(agent.configuration.tts)
+        const realtimeConfig = parseRealtimeConfig(agent.configuration.realtime)
+        const transportConfig = parseTransportConfig(agent.deploymentConfig)
+
         setConfig({
           name: agent.name,
           description: agent.description || '',
-          stt: agent.configuration.stt ? {
-            provider: agent.configuration.stt.provider,
-            config: agent.configuration.stt as any
+          stt: sttConfig ? {
+            provider: sttConfig.provider,
+            config: sttConfig
           } : null,
-          llm: agent.configuration.llm ? {
-            provider: agent.configuration.llm.provider,
-            config: agent.configuration.llm as any
+          llm: llmConfig ? {
+            provider: llmConfig.provider,
+            config: llmConfig
           } : null,
-          tts: agent.configuration.tts ? {
-            provider: agent.configuration.tts.provider,
-            config: agent.configuration.tts as any
+          tts: ttsConfig ? {
+            provider: ttsConfig.provider,
+            config: ttsConfig
           } : null,
-          realtime: null,
-          transport: agent.deploymentConfig || { type: 'webrtc', settings: {} },
-          systemPrompt: agent.configuration.llm?.systemPrompt || ''
+          realtime: realtimeConfig ? {
+            provider: realtimeConfig.provider,
+            config: realtimeConfig
+          } : null,
+          transport: transportConfig,
+          systemPrompt: llmConfig?.systemPrompt || ''
         })
       }
     }
@@ -196,7 +215,7 @@ export function AgentBuilder({ agentId, templateId, onSave, onTest }: AgentBuild
     }, [])
 
   const handleProviderConfig = useCallback((type: 'stt' | 'llm' | 'tts' | 'realtime') =>
-    (newConfig: Record<string, any>) => {
+    (newConfig: Record<string, unknown>) => {
       setConfig(prev => ({
         ...prev,
         [type]: prev[type] ? {
@@ -243,44 +262,63 @@ export function AgentBuilder({ agentId, templateId, onSave, onTest }: AgentBuild
 
     setIsSaving(true)
     try {
-      const agentData: any = {
-        name: config.name,
-        description: config.description,
-        configuration: config.stt && config.llm && config.tts ? {
+      // Build configuration based on mode (realtime or traditional)
+      let configuration: AgentConfiguration | undefined = undefined
+
+      if (config.realtime) {
+        // Realtime mode - single provider handles everything
+        configuration = {
+          realtime: {
+            provider: config.realtime.provider,
+            apiKey: (config.realtime.config.apiKey as string) || '',
+            model: (config.realtime.config.model as string) || 'default'
+          }
+        }
+      } else if (config.stt && config.llm && config.tts) {
+        // Traditional mode - separate STT/LLM/TTS providers
+        configuration = {
           stt: {
             provider: config.stt.provider,
-            model: (config.stt.config as any).model || 'default',
-            language: (config.stt.config as any).language || 'en',
-            temperature: (config.stt.config as any).temperature
+            model: (config.stt.config.model as string) || 'default',
+            language: (config.stt.config.language as string) || 'en',
+            punctuation: (config.stt.config.punctuation as boolean) || undefined
           },
           llm: {
             provider: config.llm.provider,
-            model: (config.llm.config as any).model || 'default',
+            model: (config.llm.config.model as string) || 'default',
             systemPrompt: config.systemPrompt,
-            temperature: (config.llm.config as any).temperature || 0.7,
-            maxTokens: (config.llm.config as any).maxTokens || 1000
+            temperature: (config.llm.config.temperature as number) ?? 0.7,
+            maxTokens: (config.llm.config.maxTokens as number) ?? 1000
           },
           tts: {
             provider: config.tts.provider,
-            voice: (config.tts.config as any).voice || 'default',
-            stability: (config.tts.config as any).stability,
-            clarity: (config.tts.config as any).clarity,
-            speed: (config.tts.config as any).speed
+            voice: (config.tts.config.voice as string) || 'default',
+            stability: (config.tts.config.stability as number) || undefined,
+            clarity: (config.tts.config.clarity as number) || undefined,
+            speed: (config.tts.config.speed as number) || undefined
           }
-        } : undefined,
-        deploymentConfig: {
-          type: config.transport.type,
-          settings: config.transport.settings
         }
       }
 
       if (agentId) {
-        await updateAgent(agentId, agentData)
+        const updateData: UpdateAgentRequest = {
+          name: config.name,
+          description: config.description,
+          configuration,
+          deploymentConfig: config.transport
+        }
+        await updateAgent(agentId, updateData)
+        onSave?.(updateData)
       } else {
-        await createAgent(agentData)
+        const createData: CreateAgentRequest = {
+          name: config.name,
+          description: config.description,
+          configuration,
+          deploymentConfig: config.transport
+        }
+        await createAgent(createData)
+        onSave?.(createData)
       }
-
-      onSave?.(agentData)
     } catch (error) {
       console.error('Error saving agent:', error)
     } finally {

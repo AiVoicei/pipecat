@@ -1104,63 +1104,8 @@ async def get_system_metrics():
     }
 
 
-# Mock agents endpoint for platform testing
-@app.get("/api/agents")
-async def get_agents(user_id: str = "user_1"):
-    """Mock endpoint to return sample agents"""
-    return [
-        {
-            "id": "agt_1",
-            "userId": user_id,
-            "name": "Customer Support Bot",
-            "description": "24/7 customer support assistant with Hebrew and English support",
-            "status": "active",
-            "configuration": {
-                "stt": {"provider": "deepgram", "model": "nova-2", "language": "he"},
-                "llm": {"provider": "openai", "model": "gpt-4", "temperature": 0.7, "maxTokens": 2000, "systemPrompt": "You are a helpful customer support assistant."},
-                "tts": {"provider": "elevenlabs", "voice": "alloy"}
-            },
-            "deploymentConfig": {"type": "webrtc", "settings": {}},
-            "analytics": {"totalConversations": 1247, "activeToday": 89, "averageResponseTime": 420, "satisfactionScore": 4.8},
-            "templateId": None,
-            "createdAt": "2024-01-15T10:30:00Z",
-            "updatedAt": "2024-03-20T14:22:00Z"
-        },
-        {
-            "id": "agt_2",
-            "userId": user_id,
-            "name": "Sales Assistant",
-            "description": "AI-powered sales assistant for product recommendations",
-            "status": "active",
-            "configuration": {
-                "stt": {"provider": "deepgram", "model": "nova-2", "language": "en"},
-                "llm": {"provider": "anthropic", "model": "claude-3-sonnet", "temperature": 0.8, "maxTokens": 1500, "systemPrompt": "You are a friendly sales assistant."},
-                "tts": {"provider": "cartesia", "voice": "nova"}
-            },
-            "deploymentConfig": {"type": "webrtc", "settings": {}},
-            "analytics": {"totalConversations": 834, "activeToday": 45, "averageResponseTime": 380, "satisfactionScore": 4.6},
-            "templateId": None,
-            "createdAt": "2024-02-01T09:15:00Z",
-            "updatedAt": "2024-03-19T16:40:00Z"
-        },
-        {
-            "id": "agt_3",
-            "userId": user_id,
-            "name": "Hebrew Support Bot",
-            "description": "Specialized Hebrew language support agent",
-            "status": "inactive",
-            "configuration": {
-                "stt": {"provider": "deepgram", "model": "nova-2", "language": "he"},
-                "llm": {"provider": "openai", "model": "gpt-3.5-turbo", "temperature": 0.6, "maxTokens": 1000, "systemPrompt": "אתה עוזר תמיכה בעברית."},
-                "tts": {"provider": "elevenlabs", "voice": "shimmer"}
-            },
-            "deploymentConfig": {"type": "webrtc", "settings": {}},
-            "analytics": {"totalConversations": 456, "activeToday": 0, "averageResponseTime": 450, "satisfactionScore": 4.5},
-            "templateId": None,
-            "createdAt": "2024-01-20T11:00:00Z",
-            "updatedAt": "2024-03-10T12:30:00Z"
-        }
-    ]
+# Note: Duplicate mock route removed - production route at line 923 handles /api/agents
+# Use the database-backed endpoint with authentication instead
 
 
 if __name__ == "__main__":
