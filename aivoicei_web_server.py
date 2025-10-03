@@ -82,7 +82,12 @@ app.add_middleware(
         "http://localhost:5173",  # Vite dev server (default)
         "http://localhost:5174",  # Vite dev server (alternate port)
         "http://localhost:5175",  # Vite dev server (another port)
-        "http://localhost:3000",  # React dev server
+        "http://localhost:3000",  # React/Next.js dev server
+        "http://localhost:3001",  # Next.js alternate port
+        "http://localhost:3002",  # Next.js alternate port
+        "http://localhost:3003",  # Next.js alternate port
+        "http://localhost:3004",  # Next.js alternate port
+        "http://localhost:3005",  # Next.js alternate port
         "https://aivoicei.com",   # Production domain
         "https://*.aivoicei.com", # Subdomains
     ],
@@ -1099,7 +1104,8 @@ async def get_system_metrics():
     }
 
 
-
+# Note: Duplicate mock route removed - production route at line 923 handles /api/agents
+# Use the database-backed endpoint with authentication instead
 
 
 if __name__ == "__main__":

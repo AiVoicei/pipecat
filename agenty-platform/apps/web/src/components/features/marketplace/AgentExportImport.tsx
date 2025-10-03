@@ -172,9 +172,7 @@ export function AgentExportImport({ agentId }: { agentId: string }) {
       const newAgent = await createAgent({
         name: `${parsedImport.name} (Imported)`,
         description: parsedImport.description,
-        configuration: parsedImport.configuration,
-        status: 'inactive',
-        type: 'imported'
+        configuration: parsedImport.configuration
       })
 
       // Reset import state

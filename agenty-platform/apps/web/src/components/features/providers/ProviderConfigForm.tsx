@@ -17,8 +17,8 @@ import { Settings, Eye, EyeOff } from 'lucide-react'
 interface ProviderConfigFormProps {
   providerId: string
   type: 'stt' | 'llm' | 'tts' | 'realtime'
-  config: Record<string, string | number | boolean>
-  onConfigChange: (config: Record<string, string | number | boolean>) => void
+  config: Record<string, unknown>
+  onConfigChange: (config: Record<string, unknown>) => void
   className?: string
 }
 
@@ -66,28 +66,42 @@ export function ProviderConfigForm({
       })
     }
 
+    // Helper to safely convert value to string
+    const asString = (val: unknown, defaultVal = ''): string => {
+      if (val === null || val === undefined) return defaultVal
+      return String(val)
+    }
+
+    // Helper to safely convert value to number
+    const asNumber = (val: unknown, defaultVal = 0): number => {
+      if (val === null || val === undefined) return defaultVal
+      const num = Number(val)
+      return isNaN(num) ? defaultVal : num
+    }
+
     switch (fieldSchema.type) {
       case 'string':
-        if (fieldSchema.enum) {
+        if (fieldSchema.enum && Array.isArray(fieldSchema.enum)) {
+          const defaultStr = typeof fieldSchema.default === 'string' ? fieldSchema.default : ''
           return (
             <div key={fieldName} className="space-y-2">
               <Label htmlFor={fieldName}>
                 {fieldName}
                 {isRequired && <span className="text-red-500 ml-1">*</span>}
               </Label>
-              <Select value={value || fieldSchema.default} onValueChange={updateValue}>
+              <Select value={asString(value, defaultStr)} onValueChange={updateValue}>
                 <SelectTrigger>
                   <SelectValue placeholder={`Select ${fieldName}`} />
                 </SelectTrigger>
                 <SelectContent>
-                  {fieldSchema.enum.map((option: string) => (
-                    <SelectItem key={option} value={option}>
-                      {option}
+                  {fieldSchema.enum.map((option) => (
+                    <SelectItem key={String(option)} value={String(option)}>
+                      {String(option)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {fieldSchema.description && (
+              {fieldSchema.description && typeof fieldSchema.description === 'string' && (
                 <p className="text-xs text-muted-foreground">{fieldSchema.description}</p>
               )}
             </div>
@@ -95,6 +109,7 @@ export function ProviderConfigForm({
         }
 
         if (fieldName === 'systemPrompt') {
+          const defaultStr = typeof fieldSchema.default === 'string' ? fieldSchema.default : ''
           return (
             <div key={fieldName} className="space-y-2">
               <Label htmlFor={fieldName}>
@@ -103,18 +118,19 @@ export function ProviderConfigForm({
               </Label>
               <Textarea
                 id={fieldName}
-                value={value || fieldSchema.default || ''}
+                value={asString(value, defaultStr)}
                 onChange={(e) => updateValue(e.target.value)}
                 placeholder={t('enterSystemPrompt', 'agents')}
                 rows={4}
               />
-              {fieldSchema.description && (
+              {fieldSchema.description && typeof fieldSchema.description === 'string' && (
                 <p className="text-xs text-muted-foreground">{fieldSchema.description}</p>
               )}
             </div>
           )
         }
 
+        const defaultStrValue = typeof fieldSchema.default === 'string' ? fieldSchema.default : ''
         return (
           <div key={fieldName} className="space-y-2">
             <Label htmlFor={fieldName}>
@@ -123,37 +139,42 @@ export function ProviderConfigForm({
             </Label>
             <Input
               id={fieldName}
-              value={value || fieldSchema.default || ''}
+              value={asString(value, defaultStrValue)}
               onChange={(e) => updateValue(e.target.value)}
               placeholder={`Enter ${fieldName}`}
             />
-            {fieldSchema.description && (
+            {fieldSchema.description && typeof fieldSchema.description === 'string' && (
               <p className="text-xs text-muted-foreground">{fieldSchema.description}</p>
             )}
           </div>
         )
 
       case 'number':
-        if (fieldSchema.minimum !== undefined && fieldSchema.maximum !== undefined) {
+        const defaultNum = typeof fieldSchema.default === 'number' ? fieldSchema.default : 0
+        const minNum = typeof fieldSchema.minimum === 'number' ? fieldSchema.minimum : undefined
+        const maxNum = typeof fieldSchema.maximum === 'number' ? fieldSchema.maximum : undefined
+
+        if (minNum !== undefined && maxNum !== undefined) {
+          const currentValue = asNumber(value, defaultNum)
           return (
             <div key={fieldName} className="space-y-2">
               <Label htmlFor={fieldName}>
-                {fieldName}: {value || fieldSchema.default}
+                {fieldName}: {currentValue}
                 {isRequired && <span className="text-red-500 ml-1">*</span>}
               </Label>
               <Slider
-                value={[value || fieldSchema.default]}
+                value={[currentValue]}
                 onValueChange={(newValue) => updateValue(newValue[0])}
-                min={fieldSchema.minimum}
-                max={fieldSchema.maximum}
+                min={minNum}
+                max={maxNum}
                 step={0.1}
                 className="w-full"
               />
               <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{fieldSchema.minimum}</span>
-                <span>{fieldSchema.maximum}</span>
+                <span>{minNum}</span>
+                <span>{maxNum}</span>
               </div>
-              {fieldSchema.description && (
+              {fieldSchema.description && typeof fieldSchema.description === 'string' && (
                 <p className="text-xs text-muted-foreground">{fieldSchema.description}</p>
               )}
             </div>
@@ -169,12 +190,12 @@ export function ProviderConfigForm({
             <Input
               id={fieldName}
               type="number"
-              value={value || fieldSchema.default || ''}
+              value={asNumber(value, defaultNum)}
               onChange={(e) => updateValue(parseFloat(e.target.value) || 0)}
-              min={fieldSchema.minimum}
-              max={fieldSchema.maximum}
+              min={minNum}
+              max={maxNum}
             />
-            {fieldSchema.description && (
+            {fieldSchema.description && typeof fieldSchema.description === 'string' && (
               <p className="text-xs text-muted-foreground">{fieldSchema.description}</p>
             )}
           </div>
@@ -209,7 +230,7 @@ export function ProviderConfigForm({
                 {fieldName}
                 {isRequired && <span className="text-red-500 ml-1">*</span>}
               </Label>
-              {fieldSchema.description && (
+              {fieldSchema.description && typeof fieldSchema.description === 'string' && (
                 <p className="text-xs text-muted-foreground">{fieldSchema.description}</p>
               )}
             </div>

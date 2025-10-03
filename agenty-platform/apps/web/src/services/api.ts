@@ -12,31 +12,39 @@ interface ConnectOptions {
 // Agent Management Types
 export interface STTConfig {
   provider: string
-  model: string
-  language: string
+  model?: string
+  language?: string
   temperature?: number
+  punctuation?: boolean
 }
 
 export interface LLMConfig {
   provider: string
-  model: string
-  systemPrompt: string
-  temperature: number
-  maxTokens: number
+  model?: string
+  systemPrompt?: string
+  temperature?: number
+  maxTokens?: number
 }
 
 export interface TTSConfig {
   provider: string
-  voice: string
+  voice?: string
   stability?: number
   clarity?: number
   speed?: number
 }
 
+export interface RealtimeConfig {
+  provider: string
+  apiKey?: string
+  model?: string
+}
+
 export interface AgentConfiguration {
-  stt: STTConfig
-  llm: LLMConfig
-  tts: TTSConfig
+  stt?: STTConfig
+  llm?: LLMConfig
+  tts?: TTSConfig
+  realtime?: RealtimeConfig
 }
 
 export interface DeploymentConfig {

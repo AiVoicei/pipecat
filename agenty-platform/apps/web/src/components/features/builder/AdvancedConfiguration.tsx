@@ -165,7 +165,7 @@ export function AdvancedConfiguration({ config, onChange, onValidate }: Advanced
                       {section.id === 'llm' && (
                         <LLMConfiguration
                           config={config.llm ?? {}}
-                          onChange={(llmConfig) => updateConfig('llm', { ...config.llm, ...llmConfig })}
+                          onChange={(llmConfig) => onChange({ ...config, llm: { ...config.llm, ...llmConfig } })}
                         />
                       )}
                       {section.id === 'voice' && (

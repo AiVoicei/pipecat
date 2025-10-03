@@ -11,7 +11,7 @@ export interface TurboEdgeData {
   animated?: boolean
 }
 
-const TurboEdge: React.FC<EdgeProps<TurboEdgeData>> = ({
+const TurboEdge: React.FC<EdgeProps> = ({
   id,
   sourceX,
   sourceY,
@@ -24,6 +24,7 @@ const TurboEdge: React.FC<EdgeProps<TurboEdgeData>> = ({
   markerEnd,
   selected
 }) => {
+  const edgeData = (data || {}) as TurboEdgeData
   // Calculate edge path with memoized values for stability
   const pathData = useMemo(() => {
     // Calculate direction and choose appropriate path type
@@ -156,14 +157,14 @@ const TurboEdge: React.FC<EdgeProps<TurboEdgeData>> = ({
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.2 }}
             >
-              {data?.throughput && (
+              {edgeData.throughput && (
                 <span className="text-blue-400 font-mono">
-                  {data.throughput}/s
+                  {edgeData.throughput}/s
                 </span>
               )}
-              {data?.latency && (
+              {edgeData.latency && (
                 <span className="text-purple-400 font-mono">
-                  {data.latency}ms
+                  {edgeData.latency}ms
                 </span>
               )}
             </motion.div>

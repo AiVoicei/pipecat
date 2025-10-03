@@ -26,7 +26,7 @@ export interface TurboNodeData {
   }
 }
 
-export type TurboNodeType = NodeProps<TurboNodeData>
+export type TurboNodeType = NodeProps
 
 const getNodeIcon = (nodeType?: string) => {
   switch (nodeType) {
@@ -55,9 +55,10 @@ const getCategoryColor = (nodeType?: string) => {
 }
 
 const TurboNode = memo(({ data, selected }: TurboNodeType) => {
-  const { icon, title, subtitle, status = 'idle', nodeType, metrics } = data
-  const nodeIcon = icon || getNodeIcon(nodeType)
-  const categoryColor = getCategoryColor(nodeType)
+  const nodeData = (data || {}) as unknown as TurboNodeData
+  const { icon, title, subtitle, status = 'idle', nodeType, metrics } = nodeData
+  const nodeIcon = icon || getNodeIcon(nodeType as string)
+  const categoryColor = getCategoryColor(nodeType as string)
 
   return (
     <>
