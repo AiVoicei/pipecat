@@ -88,7 +88,7 @@ const AnimatedEdge = ({ id, sourceX, sourceY, targetX, targetY, style = {}, mark
 }
 
 // Custom node and edge types - Turbo Flow Style
-const nodeTypes: NodeTypes = {
+const nodeTypes = {
   default: TurboNode,
   turbo: TurboNode,
   stt: TurboNode,
@@ -99,12 +99,12 @@ const nodeTypes: NodeTypes = {
   custom: TurboNode,
   // Keep original for compatibility
   pipeline: PipelineNode
-}
+} as const
 
-const edgeTypes: EdgeTypes = {
+const edgeTypes = {
   turbo: TurboEdge,
   animated: AnimatedEdge
-}
+} as const
 
 // Default edge options for Turbo Flow style
 const defaultEdgeOptions = {
@@ -180,7 +180,7 @@ export function PipelineBuilder({ agentId, readonly = false, selectedProviders }
   }, [addNode])
 
   const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
-    selectNode(node)
+    selectNode(node as any)
   }, [selectNode])
 
   const onPaneClick = useCallback(() => {
@@ -371,8 +371,8 @@ export function PipelineBuilder({ agentId, readonly = false, selectedProviders }
                   onConnect={onConnect}
                   onNodeClick={onNodeClick}
                   onPaneClick={onPaneClick}
-                  nodeTypes={nodeTypes}
-                  edgeTypes={edgeTypes}
+                  nodeTypes={nodeTypes as any}
+                  edgeTypes={edgeTypes as any}
                   defaultEdgeOptions={defaultEdgeOptions}
                   connectionMode={ConnectionMode.Loose}
                   fitView

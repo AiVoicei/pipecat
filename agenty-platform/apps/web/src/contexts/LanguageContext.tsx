@@ -21,6 +21,7 @@ const translations = {
     'navigation.dashboard': 'לוח בקרה',
     'navigation.myAgents': 'הסוכנים שלי',
     'navigation.pipelineBuilder': 'בנייה Drag-Drop',
+    'navigation.agentMarketplace': 'חנות סוכנים',
     'navigation.providerMarketplace': 'ספקים',
     'navigation.analytics': 'ניתוחים',
     'navigation.templates': 'תבניות',
@@ -360,6 +361,8 @@ const translations = {
     'agents.noAgentsYet': 'עדיין אין לך סוכנים',
     'agents.tryAdjustingFilters': 'נסה לשנות את המסננים',
     'agents.createFirstAgent': 'צור את הסוכן הראשון שלך',
+    'agents.advancedConfiguration': 'הגדרות מתקדמות',
+    'agents.advancedConfigurationDesc': 'התאם אישיות קול, טיפול בהפרעות, ניהול הקשר ועוד',
 
     // Templates
     'templates.agentTemplates': 'תבניות סוכנים',
@@ -419,6 +422,7 @@ const translations = {
     'navigation.dashboard': 'Dashboard',
     'navigation.myAgents': 'My Agents',
     'navigation.pipelineBuilder': 'Drag-Drop Builder',
+    'navigation.agentMarketplace': 'Agent Marketplace',
     'navigation.providerMarketplace': 'Providers',
     'navigation.analytics': 'Analytics',
     'navigation.templates': 'Templates',
@@ -756,6 +760,8 @@ const translations = {
     'agents.noAgentsYet': 'You don\'t have any agents yet',
     'agents.tryAdjustingFilters': 'Try adjusting your filters',
     'agents.createFirstAgent': 'Create your first agent',
+    'agents.advancedConfiguration': 'Advanced Configuration',
+    'agents.advancedConfigurationDesc': 'Customize voice personality, interruption handling, context management, and more',
 
     // Templates
     'templates.agentTemplates': 'Agent Templates',

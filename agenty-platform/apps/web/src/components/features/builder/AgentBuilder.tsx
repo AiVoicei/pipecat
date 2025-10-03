@@ -52,8 +52,8 @@ interface AgentConfiguration {
     config: Record<string, any>
   } | null
   transport: {
-    type: 'webrtc' | 'websocket' | 'twilio'
-    settings: Record<string, any>
+    type: 'webrtc' | 'websocket' | 'twilio' | 'phone' | 'whatsapp' | 'api'
+    settings?: Record<string, any>
   }
   systemPrompt: string
 }
@@ -100,18 +100,19 @@ export function AgentBuilder({ agentId, templateId, onSave, onTest }: AgentBuild
           description: agent.description || '',
           stt: agent.configuration.stt ? {
             provider: agent.configuration.stt.provider,
-            config: agent.configuration.stt.settings || {}
+            config: agent.configuration.stt as any
           } : null,
           llm: agent.configuration.llm ? {
             provider: agent.configuration.llm.provider,
-            config: agent.configuration.llm.settings || {}
+            config: agent.configuration.llm as any
           } : null,
           tts: agent.configuration.tts ? {
             provider: agent.configuration.tts.provider,
-            config: agent.configuration.tts.settings || {}
+            config: agent.configuration.tts as any
           } : null,
-          transport: agent.configuration.transport || { type: 'webrtc', settings: {} },
-          systemPrompt: agent.configuration.llm?.settings?.systemPrompt || ''
+          realtime: null,
+          transport: agent.deploymentConfig || { type: 'webrtc', settings: {} },
+          systemPrompt: agent.configuration.llm?.systemPrompt || ''
         })
       }
     }
@@ -242,23 +243,34 @@ export function AgentBuilder({ agentId, templateId, onSave, onTest }: AgentBuild
 
     setIsSaving(true)
     try {
-      const agentData = {
+      const agentData: any = {
         name: config.name,
         description: config.description,
-        configuration: {
-          stt: config.stt ? {
+        configuration: config.stt && config.llm && config.tts ? {
+          stt: {
             provider: config.stt.provider,
-            settings: config.stt.config
-          } : undefined,
-          llm: config.llm ? {
+            model: (config.stt.config as any).model || 'default',
+            language: (config.stt.config as any).language || 'en',
+            temperature: (config.stt.config as any).temperature
+          },
+          llm: {
             provider: config.llm.provider,
-            settings: { ...config.llm.config, systemPrompt: config.systemPrompt }
-          } : undefined,
-          tts: config.tts ? {
+            model: (config.llm.config as any).model || 'default',
+            systemPrompt: config.systemPrompt,
+            temperature: (config.llm.config as any).temperature || 0.7,
+            maxTokens: (config.llm.config as any).maxTokens || 1000
+          },
+          tts: {
             provider: config.tts.provider,
-            settings: config.tts.config
-          } : undefined,
-          transport: config.transport
+            voice: (config.tts.config as any).voice || 'default',
+            stability: (config.tts.config as any).stability,
+            clarity: (config.tts.config as any).clarity,
+            speed: (config.tts.config as any).speed
+          }
+        } : undefined,
+        deploymentConfig: {
+          type: config.transport.type,
+          settings: config.transport.settings
         }
       }
 

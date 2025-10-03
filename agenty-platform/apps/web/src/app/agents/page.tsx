@@ -271,7 +271,7 @@ export default function AgentsPage() {
                     </Link>
                   </Button>
                   <Button variant="outline" size="sm" asChild>
-                    <Link href={`/agents/${agent.id}/edit`}>
+                    <Link href={`/agents/${agent.id}`}>
                       <Settings2 className="w-3 h-3" />
                     </Link>
                   </Button>

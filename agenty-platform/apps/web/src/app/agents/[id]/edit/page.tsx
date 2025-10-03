@@ -13,6 +13,7 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { useAgentStore } from '@/stores/useAgentStore'
 import { Agent, UpdateAgentRequest, AgentConfiguration } from '@/services/api'
 import { AppLayout } from '@/components/layout/AppLayout'
+import { AdvancedConfiguration } from '@/components/features/builder/AdvancedConfiguration'
 import Link from 'next/link'
 
 export default function EditAgentPage() {
@@ -380,6 +381,22 @@ export default function EditAgentPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Advanced Configuration */}
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('advancedConfiguration', 'agents')}</CardTitle>
+            <CardDescription>
+              {t('advancedConfigurationDesc', 'agents')}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <AdvancedConfiguration
+              config={formData.configuration || agent.configuration}
+              onChange={(newConfig) => setFormData(prev => ({ ...prev, configuration: newConfig }))}
+            />
+          </CardContent>
+        </Card>
 
         {/* Action Buttons */}
         <div className="flex justify-between">

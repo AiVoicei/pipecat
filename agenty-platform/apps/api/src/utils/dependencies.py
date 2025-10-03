@@ -28,11 +28,15 @@ def get_provider_service() -> ProviderService:
         # Initialize with data layer and encryption key from environment
         data_layer = get_data_layer()
         encryption_key = os.environ.get("PROVIDER_ENCRYPTION_KEY")
-        if not encryption_key:
+
+        # For development, allow missing encryption key (will auto-generate)
+        # In production, this should be a required environment variable
+        if not encryption_key and os.environ.get("ENVIRONMENT") == "production":
             raise RuntimeError(
-                "PROVIDER_ENCRYPTION_KEY environment variable is required but not set. "
+                "PROVIDER_ENCRYPTION_KEY environment variable is required in production. "
                 "Please set this environment variable with a secure encryption key."
             )
+
         _provider_service = ProviderService(data_layer, encryption_key=encryption_key)
 
     return _provider_service

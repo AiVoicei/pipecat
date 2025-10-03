@@ -33,12 +33,12 @@ export function PipelineNodeConfig({ node }: PipelineNodeConfigProps) {
   const { updateNode, removeNode, selectNode } = usePipelineStore()
   const { providers, getProvidersByType } = useProviderStore()
 
-  const [config, setConfig] = useState(node.data.configuration || {})
+  const [config, setConfig] = useState<Record<string, any>>(node.data.configuration || {})
   const [label, setLabel] = useState(node.data.label)
   const [selectedProvider, setSelectedProvider] = useState(node.data.provider || '')
 
   // Get available providers for this node type
-  const availableProviders = getProvidersByType(node.data.type)
+  const availableProviders = getProvidersByType(node.data.type as any)
 
   const handleSave = () => {
     updateNode(node.id, {
@@ -78,7 +78,7 @@ export function PipelineNodeConfig({ node }: PipelineNodeConfigProps) {
             <div>
               <Label htmlFor="language">{t('language', 'agents')}</Label>
               <Select
-                value={config.language || 'en'}
+                value={String(config.language || 'en')}
                 onValueChange={(value) => setConfig({ ...config, language: value })}
               >
                 <SelectTrigger>
@@ -97,7 +97,7 @@ export function PipelineNodeConfig({ node }: PipelineNodeConfigProps) {
             <div>
               <Label htmlFor="model">{t('model', 'agents')}</Label>
               <Select
-                value={config.model || ''}
+                value={String(config.model || '')}
                 onValueChange={(value) => setConfig({ ...config, model: value })}
               >
                 <SelectTrigger>
@@ -128,7 +128,7 @@ export function PipelineNodeConfig({ node }: PipelineNodeConfigProps) {
             <div>
               <Label htmlFor="model">{t('model', 'agents')}</Label>
               <Select
-                value={config.model || ''}
+                value={String(config.model || '')}
                 onValueChange={(value) => setConfig({ ...config, model: value })}
               >
                 <SelectTrigger>
@@ -162,7 +162,7 @@ export function PipelineNodeConfig({ node }: PipelineNodeConfigProps) {
               <Input
                 id="maxTokens"
                 type="number"
-                value={config.maxTokens || 500}
+                value={String(config.maxTokens || 500)}
                 onChange={(e) => setConfig({ ...config, maxTokens: parseInt(e.target.value) })}
                 min={50}
                 max={4000}
@@ -173,7 +173,7 @@ export function PipelineNodeConfig({ node }: PipelineNodeConfigProps) {
               <Label htmlFor="systemPrompt">{t('systemPrompt', 'agents')}</Label>
               <Textarea
                 id="systemPrompt"
-                value={config.systemPrompt || ''}
+                value={String(config.systemPrompt || '')}
                 onChange={(e) => setConfig({ ...config, systemPrompt: e.target.value })}
                 placeholder={t('enterSystemPrompt', 'agents')}
                 rows={4}
@@ -188,7 +188,7 @@ export function PipelineNodeConfig({ node }: PipelineNodeConfigProps) {
             <div>
               <Label htmlFor="voice">{t('voice', 'agents')}</Label>
               <Select
-                value={config.voice || ''}
+                value={String(config.voice || '')}
                 onValueChange={(value) => setConfig({ ...config, voice: value })}
               >
                 <SelectTrigger>

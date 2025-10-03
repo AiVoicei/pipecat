@@ -68,14 +68,14 @@ export function ProviderConfigForm({
 
     switch (fieldSchema.type) {
       case 'string':
-        if (fieldSchema.enum) {
+        if (fieldSchema.enum && Array.isArray(fieldSchema.enum)) {
           return (
             <div key={fieldName} className="space-y-2">
               <Label htmlFor={fieldName}>
                 {fieldName}
                 {isRequired && <span className="text-red-500 ml-1">*</span>}
               </Label>
-              <Select value={value || fieldSchema.default} onValueChange={updateValue}>
+              <Select value={String(value || fieldSchema.default || '')} onValueChange={updateValue}>
                 <SelectTrigger>
                   <SelectValue placeholder={`Select ${fieldName}`} />
                 </SelectTrigger>
@@ -87,7 +87,7 @@ export function ProviderConfigForm({
                   ))}
                 </SelectContent>
               </Select>
-              {fieldSchema.description && (
+              {fieldSchema.description && typeof fieldSchema.description === 'string' && (
                 <p className="text-xs text-muted-foreground">{fieldSchema.description}</p>
               )}
             </div>
@@ -108,7 +108,7 @@ export function ProviderConfigForm({
                 placeholder={t('enterSystemPrompt', 'agents')}
                 rows={4}
               />
-              {fieldSchema.description && (
+              {fieldSchema.description && typeof fieldSchema.description === 'string' && (
                 <p className="text-xs text-muted-foreground">{fieldSchema.description}</p>
               )}
             </div>
@@ -153,7 +153,7 @@ export function ProviderConfigForm({
                 <span>{fieldSchema.minimum}</span>
                 <span>{fieldSchema.maximum}</span>
               </div>
-              {fieldSchema.description && (
+              {fieldSchema.description && typeof fieldSchema.description === 'string' && (
                 <p className="text-xs text-muted-foreground">{fieldSchema.description}</p>
               )}
             </div>
@@ -209,7 +209,7 @@ export function ProviderConfigForm({
                 {fieldName}
                 {isRequired && <span className="text-red-500 ml-1">*</span>}
               </Label>
-              {fieldSchema.description && (
+              {fieldSchema.description && typeof fieldSchema.description === 'string' && (
                 <p className="text-xs text-muted-foreground">{fieldSchema.description}</p>
               )}
             </div>
