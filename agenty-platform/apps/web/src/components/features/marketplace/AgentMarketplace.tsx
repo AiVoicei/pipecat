@@ -309,6 +309,77 @@ export function AgentMarketplace() {
     ))
   }
 
+  // Normalize localized language labels to ISO/BCP47 codes
+  const normalizeLanguageCode = (localizedLabel: string): string => {
+    const languageMap: Record<string, string> = {
+      // English
+      'english': 'en-US',
+      'אנגלית': 'en-US',
+      // Hebrew
+      'hebrew': 'he-IL',
+      'עברית': 'he-IL',
+      // Spanish
+      'spanish': 'es-ES',
+      'ספרדית': 'es-ES',
+      'español': 'es-ES',
+      // French
+      'french': 'fr-FR',
+      'צרפתית': 'fr-FR',
+      'français': 'fr-FR',
+      // German
+      'german': 'de-DE',
+      'גרמנית': 'de-DE',
+      'deutsch': 'de-DE',
+      // Arabic
+      'arabic': 'ar-SA',
+      'ערבית': 'ar-SA',
+      'العربية': 'ar-SA',
+      // Portuguese
+      'portuguese': 'pt-BR',
+      'פורטוגזית': 'pt-BR',
+      'português': 'pt-BR',
+      // Russian
+      'russian': 'ru-RU',
+      'רוסית': 'ru-RU',
+      'русский': 'ru-RU',
+      // Chinese
+      'chinese': 'zh-CN',
+      'סינית': 'zh-CN',
+      '中文': 'zh-CN',
+      // Japanese
+      'japanese': 'ja-JP',
+      'יפנית': 'ja-JP',
+      '日本語': 'ja-JP',
+      // Korean
+      'korean': 'ko-KR',
+      'קוריאנית': 'ko-KR',
+      '한국어': 'ko-KR',
+      // Italian
+      'italian': 'it-IT',
+      'איטלקית': 'it-IT',
+      'italiano': 'it-IT',
+      // Dutch
+      'dutch': 'nl-NL',
+      'הולנדית': 'nl-NL',
+      'nederlands': 'nl-NL',
+      // Polish
+      'polish': 'pl-PL',
+      'פולנית': 'pl-PL',
+      'polski': 'pl-PL',
+      // Turkish
+      'turkish': 'tr-TR',
+      'טורקית': 'tr-TR',
+      'türkçe': 'tr-TR',
+    }
+
+    // Try case-insensitive match
+    const normalized = localizedLabel.toLowerCase().trim()
+    const code = languageMap[normalized]
+
+    // If found, return the code; otherwise default to en-US
+    return code || 'en-US'
+  }
+
   const handleInstall = async (agentId: string) => {
     const marketplaceAgent = agents.find(a => a.id === agentId)
     if (!marketplaceAgent) return
@@ -317,7 +388,9 @@ export function AgentMarketplace() {
       setAddingAgentId(agentId)
 
       // Map marketplace agent configuration to API format
-      const language = marketplaceAgent.configuration.languages[0] || 'en'
+      // Normalize localized language label to ISO/BCP47 code
+      const localizedLanguage = marketplaceAgent.configuration.languages[0] || 'English'
+      const language = normalizeLanguageCode(localizedLanguage)
 
       const createRequest: CreateAgentRequest = {
         name: marketplaceAgent.name,
