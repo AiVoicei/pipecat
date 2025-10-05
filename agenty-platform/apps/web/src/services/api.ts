@@ -34,22 +34,21 @@ export interface TTSConfig {
   speed?: number
 }
 
-export interface RealtimeConfig {
-  provider: string
-  apiKey?: string
-  model?: string
-}
-
 export interface AgentConfiguration {
   stt?: STTConfig
   llm?: LLMConfig
   tts?: TTSConfig
-  realtime?: RealtimeConfig
 }
 
 export interface DeploymentConfig {
   type: 'webrtc' | 'phone' | 'whatsapp' | 'api'
-  settings?: Record<string, string | number | boolean>
+  settings?: Record<string, any>
+  status?: 'draft' | 'active' | 'inactive' | 'deploying' | 'error'
+  endpoints?: string[]
+  custom_domain?: string
+  auto_scale?: boolean
+  max_instances?: number
+  health_check_enabled?: boolean
 }
 
 export interface AgentAnalytics {
