@@ -389,10 +389,11 @@ export function PipelineBuilder({ agentId, readonly = false, selectedProviders }
                   defaultEdgeOptions={defaultEdgeOptions}
                   connectionMode={ConnectionMode.Loose}
                   fitView
+                  fitViewOptions={{ maxZoom: 0.8, minZoom: 0.8 }}
                   snapToGrid
                   snapGrid={[20, 20]}
                   className="turbo-flow-canvas"
-                  defaultViewport={{ x: 0, y: 0, zoom: 1 }}
+                  defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
                   minZoom={0.2}
                   maxZoom={2}
                 >

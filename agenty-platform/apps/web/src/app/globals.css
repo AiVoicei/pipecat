@@ -714,21 +714,39 @@
 
   /* Turbo Flow Controls Dark Theme */
   .turbo-flow-canvas .react-flow__controls {
-    background: rgba(17, 17, 17, 0.9);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    backdrop-filter: blur(12px);
+    background: rgba(13, 13, 13, 0.95) !important;
+    border: 1px solid rgba(139, 92, 246, 0.2) !important;
+    border-radius: 8px !important;
+    backdrop-filter: blur(12px) !important;
   }
 
   .turbo-flow-canvas .react-flow__controls button {
-    background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: white;
+    background: rgba(22, 22, 22, 0.8) !important;
+    border: 1px solid rgba(139, 92, 246, 0.3) !important;
+    color: #8B5CF6 !important;
+  }
+
+  .turbo-flow-canvas .react-flow__controls button svg {
+    fill: #8B5CF6 !important;
+    color: #8B5CF6 !important;
   }
 
   .turbo-flow-canvas .react-flow__controls button:hover {
-    background: rgba(139, 92, 246, 0.2);
-    border-color: rgba(139, 92, 246, 0.4);
+    background: rgba(139, 92, 246, 0.2) !important;
+    border-color: rgba(139, 92, 246, 0.6) !important;
+  }
+
+  .turbo-flow-canvas .react-flow__controls button:hover svg {
+    fill: #A78BFA !important;
+    color: #A78BFA !important;
+  }
+
+  .turbo-flow-canvas .react-flow__controls button path {
+    fill: #8B5CF6 !important;
+  }
+
+  .turbo-flow-canvas .react-flow__controls button:hover path {
+    fill: #A78BFA !important;
   }
 
   /* Turbo Flow MiniMap Dark Theme */

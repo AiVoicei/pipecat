@@ -62,19 +62,11 @@ export function Dashboard() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">{t('title', 'dashboard')}</h1>
-          <p className="text-muted-foreground mt-1">
-            {t('monitorAgents', 'dashboard')}
-          </p>
-        </div>
-        <Button asChild className="bg-primary hover:bg-primary/90">
-          <Link href="/agents/new">
-            <Plus className="w-4 h-4 mr-2" />
-            {t('createAgent', 'navigation')}
-          </Link>
-        </Button>
+      <div>
+        <h1 className="text-3xl font-bold text-foreground">{t('title', 'dashboard')}</h1>
+        <p className="text-muted-foreground mt-1">
+          {t('monitorAgents', 'dashboard')}
+        </p>
       </div>
 
       {/* Metrics Cards */}
