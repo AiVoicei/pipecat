@@ -94,6 +94,7 @@ export function AgentBuilder({ agentId, templateId, onSave, onTest }: AgentBuild
   const { providers } = useProviderStore()
 
   const [currentStep, setCurrentStep] = useState(0)
+  const [providerMode, setProviderMode] = useState<'realtime' | 'traditional'>('traditional')
   const [config, setConfig] = useState<LocalAgentConfiguration>({
     name: '',
     description: '',
@@ -122,6 +123,13 @@ export function AgentBuilder({ agentId, templateId, onSave, onTest }: AgentBuild
         const ttsConfig = parseTTSConfig(agent.configuration.tts)
         const realtimeConfig = parseRealtimeConfig(agent.configuration.realtime)
         const transportConfig = parseTransportConfig(agent.deploymentConfig)
+
+        // Set provider mode based on configuration
+        if (realtimeConfig) {
+          setProviderMode('realtime')
+        } else {
+          setProviderMode('traditional')
+        }
 
         setConfig({
           name: agent.name,
@@ -242,7 +250,7 @@ export function AgentBuilder({ agentId, templateId, onSave, onTest }: AgentBuild
     { id: 'basic', title: t('basicInformation', 'agents'), icon: Bot },
     { id: 'providers', title: t('selectProviders', 'agents'), icon: Settings },
     { id: 'pipeline', title: t('buildPipeline', 'agents'), icon: Settings },
-    { id: 'test', title: t('testAgent', 'agents'), icon: TestTube }
+    { id: 'summary', title: 'Agent Summary', icon: TestTube }
   ]
 
   const progress = ((currentStep + 1) / steps.length) * 100
@@ -331,6 +339,9 @@ export function AgentBuilder({ agentId, templateId, onSave, onTest }: AgentBuild
         await createAgent(createData)
         onSave?.(createData)
       }
+
+      // Navigate to agents page after successful save
+      router.push('/agents')
     } catch (error) {
       console.error('Error saving agent:', error)
     } finally {
@@ -356,47 +367,31 @@ export function AgentBuilder({ agentId, templateId, onSave, onTest }: AgentBuild
   const isFormValid = config.name.trim() && (config.realtime || (config.stt && config.llm && config.tts))
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-screen flex flex-col overflow-hidden">
       {/* Fixed Header */}
-      <div className="flex-shrink-0 p-6 border-b bg-background">
-        <div className="flex items-center justify-between mb-4">
+      <div className="flex-shrink-0 p-4 border-b bg-background z-10">
+        <div className="flex items-center justify-between mb-3">
           <div>
-            <h1 className="text-2xl font-bold">
+            <h1 className="text-xl font-bold">
               {agentId ? t('editAgent', 'agents') : t('createNewAgent', 'agents')}
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               {t('buildAgentDesc', 'agents')}
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={handleTest}
-              disabled={!isFormValid || isTesting}
-            >
-              <Play className="w-4 h-4 mr-2" />
-              {isTesting ? t('testing', 'agents') : t('testAgent', 'agents')}
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={!isFormValid || isSaving}
-            >
-              <Save className="w-4 h-4 mr-2" />
-              {isSaving ? t('saving', 'agents') : t('saveAgent', 'agents')}
-            </Button>
-          </div>
+          {/* No buttons in header on step 4 */}
         </div>
 
         {/* Progress */}
         <div className="space-y-2">
-          <div className="flex justify-between text-sm">
+          <div className="flex justify-between text-xs">
             <span>{t('progress', 'agents')}</span>
             <span>{Math.round(progress)}%</span>
           </div>
-          <Progress value={progress} className="w-full" />
+          <Progress value={progress} className="w-full h-1" />
 
           {/* Steps */}
-          <div className="flex items-center justify-between mt-4">
+          <div className="flex items-center justify-between mt-3">
             {steps.map((step, index) => {
               const StepIcon = step.icon
               const isActive = index === currentStep
@@ -404,7 +399,7 @@ export function AgentBuilder({ agentId, templateId, onSave, onTest }: AgentBuild
 
               return (
                 <div key={step.id} className="flex items-center">
-                  <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors ${
+                  <div className={`flex items-center justify-center w-8 h-8 rounded-full border-2 transition-colors ${
                     isActive
                       ? 'border-primary bg-primary text-primary-foreground'
                       : isCompleted
@@ -412,16 +407,16 @@ export function AgentBuilder({ agentId, templateId, onSave, onTest }: AgentBuild
                         : 'border-muted-foreground bg-background'
                   }`}>
                     {isCompleted ? (
-                      <CheckCircle className="w-5 h-5" />
+                      <CheckCircle className="w-4 h-4" />
                     ) : (
-                      <StepIcon className="w-5 h-5" />
+                      <StepIcon className="w-4 h-4" />
                     )}
                   </div>
-                  <span className={`ml-2 text-sm ${isActive ? 'font-medium' : 'text-muted-foreground'}`}>
+                  <span className={`ml-2 text-xs ${isActive ? 'font-medium' : 'text-muted-foreground'}`}>
                     {step.title}
                   </span>
                   {index < steps.length - 1 && (
-                    <ArrowRight className="w-4 h-4 text-muted-foreground mx-4" />
+                    <ArrowRight className="w-3 h-3 text-muted-foreground mx-3" />
                   )}
                 </div>
               )
@@ -432,11 +427,11 @@ export function AgentBuilder({ agentId, templateId, onSave, onTest }: AgentBuild
 
       {/* Validation Errors */}
       {validationErrors.length > 0 && (
-        <div className="flex-shrink-0 px-6 pt-4">
+        <div className="flex-shrink-0 px-4 pt-3">
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              <ul className="list-disc list-inside space-y-1">
+              <ul className="list-disc list-inside space-y-1 text-sm">
                 {validationErrors.map((error, index) => (
                   <li key={index}>{error}</li>
                 ))}
@@ -447,51 +442,57 @@ export function AgentBuilder({ agentId, templateId, onSave, onTest }: AgentBuild
       )}
 
       {/* Scrollable Step Content */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="p-6">
+      <div className="flex-1 overflow-hidden flex flex-col">
+        {/* Steps that need padding */}
+        {(currentStep === 0 || currentStep === 1 || currentStep === 3) && (
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-4">
         {/* Step 1: Basic Information */}
         {currentStep === 0 && (
-          <div className="max-w-2xl space-y-6">
+          <div className="max-w-2xl space-y-3">
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Bot className="w-5 h-5" />
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Bot className="w-4 h-4" />
                   {t('basicInformation', 'agents')}
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-xs">
                   {t('basicInfoDesc', 'agents')}
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="agent-name">{t('agentName', 'agents')}</Label>
+              <CardContent className="space-y-3">
+                <div className="space-y-1">
+                  <Label htmlFor="agent-name" className="text-sm">{t('agentName', 'agents')}</Label>
                   <Input
                     id="agent-name"
+                    className="h-8"
                     value={config.name}
                     onChange={(e) => setConfig(prev => ({ ...prev, name: e.target.value }))}
                     placeholder={t('enterAgentName', 'agents')}
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="agent-description">{t('description', 'agents')}</Label>
+                <div className="space-y-1">
+                  <Label htmlFor="agent-description" className="text-sm">{t('description', 'agents')}</Label>
                   <Textarea
                     id="agent-description"
+                    className="min-h-[60px]"
                     value={config.description}
                     onChange={(e) => setConfig(prev => ({ ...prev, description: e.target.value }))}
                     placeholder={t('enterDescription', 'agents')}
-                    rows={3}
+                    rows={2}
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="system-prompt">{t('systemPrompt', 'agents')}</Label>
+                <div className="space-y-1">
+                  <Label htmlFor="system-prompt" className="text-sm">{t('systemPrompt', 'agents')}</Label>
                   <Textarea
                     id="system-prompt"
+                    className="min-h-[80px]"
                     value={config.systemPrompt}
                     onChange={(e) => setConfig(prev => ({ ...prev, systemPrompt: e.target.value }))}
                     placeholder={t('enterSystemPrompt', 'agents')}
-                    rows={4}
+                    rows={3}
                   />
                   <p className="text-xs text-muted-foreground">
                     {t('systemPromptDesc', 'agents')}
@@ -504,91 +505,115 @@ export function AgentBuilder({ agentId, templateId, onSave, onTest }: AgentBuild
 
         {/* Step 2: Provider Selection */}
         {currentStep === 1 && (
-          <div className="space-y-6">
-            {/* Realtime Provider Option */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Zap className="w-5 h-5" />
+          <div className="space-y-3">
+            {/* Mode Selection Tabs */}
+            <Tabs
+              value={providerMode}
+              onValueChange={(value) => {
+                const newMode = value as 'realtime' | 'traditional'
+                setProviderMode(newMode)
+
+                if (newMode === 'realtime') {
+                  // Clear traditional providers when switching to realtime
+                  setConfig(prev => ({
+                    ...prev,
+                    stt: null,
+                    llm: null,
+                    tts: null
+                  }))
+                } else {
+                  // Clear realtime provider when switching to traditional
+                  setConfig(prev => ({
+                    ...prev,
+                    realtime: null
+                  }))
+                }
+              }}
+            >
+              <TabsList className="grid w-full grid-cols-2 mb-2">
+                <TabsTrigger value="realtime" className="flex items-center gap-2 text-sm h-8">
+                  <Zap className="w-3 h-3" />
                   {t('realtimeSpeech', 'agents')}
-                </CardTitle>
-                <CardDescription>{t('selectRealtimeProvider', 'agents')}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ProviderSelector
-                  type="realtime"
-                  selectedProvider={config.realtime?.provider}
-                  onProviderChange={handleProviderSelect('realtime')}
-                />
-              </CardContent>
-            </Card>
+                </TabsTrigger>
+                <TabsTrigger value="traditional" className="flex items-center gap-2 text-sm h-8">
+                  <Settings className="w-3 h-3" />
+                  Individual Providers
+                </TabsTrigger>
+              </TabsList>
 
-            {/* Separator */}
-            {!config.realtime && (
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
+              {/* Realtime Provider Tab */}
+              <TabsContent value="realtime" className="space-y-3 mt-2">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Zap className="w-4 h-4" />
+                      {t('realtimeSpeech', 'agents')}
+                    </CardTitle>
+                    <CardDescription className="text-xs">{t('selectRealtimeProvider', 'agents')}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ProviderSelector
+                      type="realtime"
+                      selectedProvider={config.realtime?.provider}
+                      onProviderChange={handleProviderSelect('realtime')}
+                    />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Traditional Providers Tab */}
+              <TabsContent value="traditional" className="space-y-3 mt-2">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                  {/* STT Provider */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm">{t('speechToText', 'agents')}</CardTitle>
+                      <CardDescription className="text-xs">{t('selectSTTProvider', 'agents')}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <ProviderSelector
+                        type="stt"
+                        selectedProvider={config.stt?.provider}
+                        onProviderChange={handleProviderSelect('stt')}
+                      />
+                    </CardContent>
+                  </Card>
+
+                  {/* LLM Provider */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm">{t('languageModel', 'agents')}</CardTitle>
+                      <CardDescription className="text-xs">{t('selectLLMProvider', 'agents')}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <ProviderSelector
+                        type="llm"
+                        selectedProvider={config.llm?.provider}
+                        onProviderChange={handleProviderSelect('llm')}
+                      />
+                    </CardContent>
+                  </Card>
+
+                  {/* TTS Provider */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm">{t('textToSpeech', 'agents')}</CardTitle>
+                      <CardDescription className="text-xs">{t('selectTTSProvider', 'agents')}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <ProviderSelector
+                        type="tts"
+                        selectedProvider={config.tts?.provider}
+                        onProviderChange={handleProviderSelect('tts')}
+                      />
+                    </CardContent>
+                  </Card>
                 </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">
-                    Or choose individual providers
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* Traditional Providers - Only show if realtime not selected */}
-            {!config.realtime && (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* STT Provider */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">{t('speechToText', 'agents')}</CardTitle>
-                    <CardDescription>{t('selectSTTProvider', 'agents')}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ProviderSelector
-                      type="stt"
-                      selectedProvider={config.stt?.provider}
-                      onProviderChange={handleProviderSelect('stt')}
-                    />
-                  </CardContent>
-                </Card>
-
-                {/* LLM Provider */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">{t('languageModel', 'agents')}</CardTitle>
-                    <CardDescription>{t('selectLLMProvider', 'agents')}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ProviderSelector
-                      type="llm"
-                      selectedProvider={config.llm?.provider}
-                      onProviderChange={handleProviderSelect('llm')}
-                    />
-                  </CardContent>
-                </Card>
-
-                {/* TTS Provider */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">{t('textToSpeech', 'agents')}</CardTitle>
-                    <CardDescription>{t('selectTTSProvider', 'agents')}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ProviderSelector
-                      type="tts"
-                      selectedProvider={config.tts?.provider}
-                      onProviderChange={handleProviderSelect('tts')}
-                    />
-                  </CardContent>
-                </Card>
-              </div>
-            )}
+              </TabsContent>
+            </Tabs>
 
             {/* Provider Configuration */}
-            <div className="space-y-6">
+            <div className="space-y-3">
               {config.realtime && (
                 <ProviderConfigForm
                   providerId={config.realtime.provider}
@@ -628,32 +653,17 @@ export function AgentBuilder({ agentId, templateId, onSave, onTest }: AgentBuild
           </div>
         )}
 
-        {/* Step 3: Pipeline Builder */}
-        {currentStep === 2 && (
-          <div className="min-h-[600px]">
-            <PipelineBuilder
-              agentId={agentId}
-              selectedProviders={{
-                stt: config.stt?.provider,
-                llm: config.llm?.provider,
-                tts: config.tts?.provider,
-                realtime: config.realtime?.provider
-              }}
-            />
-          </div>
-        )}
-
-        {/* Step 4: Test Agent */}
+        {/* Step 4: Agent Summary */}
         {currentStep === 3 && (
           <div className="max-w-2xl space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <TestTube className="w-5 h-5" />
-                  {t('testYourAgent', 'agents')}
+                  <CheckCircle className="w-5 h-5" />
+                  Agent Summary
                 </CardTitle>
                 <CardDescription>
-                  {t('testAgentDesc', 'agents')}
+                  Review your agent configuration and choose an action
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -662,27 +672,42 @@ export function AgentBuilder({ agentId, templateId, onSave, onTest }: AgentBuild
                   <h4 className="font-medium">{t('configuration', 'agents')}</h4>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <span className="font-medium">{t('speechToText', 'agents')}:</span>
-                      <div className="text-muted-foreground">
-                        {config.stt ? providers.find(p => p.id === config.stt?.provider)?.name : t('notSelected', 'agents')}
-                      </div>
-                    </div>
-                    <div>
-                      <span className="font-medium">{t('languageModel', 'agents')}:</span>
-                      <div className="text-muted-foreground">
-                        {config.llm ? providers.find(p => p.id === config.llm?.provider)?.name : t('notSelected', 'agents')}
-                      </div>
-                    </div>
-                    <div>
-                      <span className="font-medium">{t('textToSpeech', 'agents')}:</span>
-                      <div className="text-muted-foreground">
-                        {config.tts ? providers.find(p => p.id === config.tts?.provider)?.name : t('notSelected', 'agents')}
-                      </div>
+                      <span className="font-medium">{t('agentName', 'agents')}:</span>
+                      <div className="text-muted-foreground">{config.name}</div>
                     </div>
                     <div>
                       <span className="font-medium">{t('transport', 'agents')}:</span>
                       <div className="text-muted-foreground">{config.transport.type}</div>
                     </div>
+                    {config.realtime ? (
+                      <div className="col-span-2">
+                        <span className="font-medium">Realtime Provider:</span>
+                        <div className="text-muted-foreground">
+                          {providers.find(p => p.id === config.realtime?.provider)?.name}
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div>
+                          <span className="font-medium">{t('speechToText', 'agents')}:</span>
+                          <div className="text-muted-foreground">
+                            {config.stt ? providers.find(p => p.id === config.stt?.provider)?.name : t('notSelected', 'agents')}
+                          </div>
+                        </div>
+                        <div>
+                          <span className="font-medium">{t('languageModel', 'agents')}:</span>
+                          <div className="text-muted-foreground">
+                            {config.llm ? providers.find(p => p.id === config.llm?.provider)?.name : t('notSelected', 'agents')}
+                          </div>
+                        </div>
+                        <div>
+                          <span className="font-medium">{t('textToSpeech', 'agents')}:</span>
+                          <div className="text-muted-foreground">
+                            {config.tts ? providers.find(p => p.id === config.tts?.provider)?.name : t('notSelected', 'agents')}
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -693,39 +718,52 @@ export function AgentBuilder({ agentId, templateId, onSave, onTest }: AgentBuild
                     <Play className="w-4 h-4 mr-2" />
                     {isTesting ? t('startingTest', 'agents') : t('startTest', 'agents')}
                   </Button>
-                  <Button variant="outline" onClick={() => router.push('/agents')}>
-                    {t('backToAgents', 'agents')}
+                  <Button onClick={handleSave} disabled={!isFormValid || isSaving}>
+                    <Save className="w-4 h-4 mr-2" />
+                    {isSaving ? t('saving', 'agents') : t('saveAgent', 'agents')}
                   </Button>
                 </div>
               </CardContent>
             </Card>
           </div>
         )}
-        </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Pipeline Builder - Full height without padding */}
+        {currentStep === 2 && (
+          <div className="flex-1 min-h-0 mb-[20vh]">
+            <PipelineBuilder
+              agentId={agentId}
+              hideActions={true}
+              selectedProviders={{
+                stt: config.stt?.provider,
+                llm: config.llm?.provider,
+                tts: config.tts?.provider,
+                realtime: config.realtime?.provider
+              }}
+            />
+          </div>
+        )}
       </div>
 
       {/* Fixed Navigation Footer */}
-      <div className="flex-shrink-0 flex items-center justify-between p-6 border-t bg-background">
+      <div className="fixed bottom-0 left-0 right-0 flex items-center justify-between p-3 border-t bg-background z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
         <Button
           variant="outline"
+          size="sm"
           onClick={handlePrevious}
           disabled={currentStep === 0}
         >
-          <ArrowLeft className="w-4 h-4 mr-2" />
+          <ArrowLeft className="w-3 h-3 mr-2" />
           {t('previous', 'agents')}
         </Button>
 
-        {currentStep < steps.length - 1 ? (
-          <Button onClick={handleNext}>
-            {t('next', 'agents')}
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
-        ) : (
-          <Button onClick={handleSave} disabled={!isFormValid || isSaving}>
-            <Save className="w-4 h-4 mr-2" />
-            {isSaving ? t('saving', 'agents') : t('saveAgent', 'agents')}
-          </Button>
-        )}
+        <Button size="sm" onClick={handleNext} disabled={currentStep === steps.length - 1}>
+          {t('next', 'agents')}
+          <ArrowRight className="w-3 h-3 ml-2" />
+        </Button>
       </div>
     </div>
   )

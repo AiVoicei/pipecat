@@ -128,7 +128,7 @@ export function Sidebar() {
 
       {/* Build with Agenty */}
       {!collapsed && (
-        <div className="p-4 border-t border-sidebar-border">
+        <div className="p-4 mb-[12vh] border-t border-sidebar-border">
           <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-lg p-3 border border-primary/20">
             <div className="flex items-center space-x-2 mb-2">
               <Sparkles className="w-4 h-4 text-primary" />

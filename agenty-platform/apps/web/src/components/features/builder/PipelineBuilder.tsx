@@ -115,6 +115,7 @@ const defaultEdgeOptions = {
 interface PipelineBuilderProps {
   agentId?: string
   readonly?: boolean
+  hideActions?: boolean // Hide Save and Reset buttons when embedded in agent builder
   selectedProviders?: {
     stt?: string
     llm?: string
@@ -132,12 +133,13 @@ interface PipelineBuilderProps {
  *
  * @param agentId - Optional identifier for the current agent, used for contextual naming or persistence.
  * @param readonly - When true, hides editing controls and prevents creating or modifying nodes and connections.
+ * @param hideActions - When true, hides Save and Reset buttons (useful when embedded in agent builder).
  * @param selectedProviders - Optional object describing initial providers to auto-populate the canvas.
  *   Expected keys include `stt`, `llm`, `tts`, and `realtime`; presence of these values determines the
  *   initial node(s) and automatic connections created on first render.
  * @returns The PipelineBuilder React element
  */
-export function PipelineBuilder({ agentId, readonly = false, selectedProviders }: PipelineBuilderProps) {
+export function PipelineBuilder({ agentId, readonly = false, hideActions = false, selectedProviders }: PipelineBuilderProps) {
   const { t } = useLanguage()
   const reactFlowWrapper = useRef<HTMLDivElement>(null)
 
@@ -200,14 +202,27 @@ export function PipelineBuilder({ agentId, readonly = false, selectedProviders }
     selectNode(null)
   }, [selectNode])
 
-  // Pre-populate pipeline with selected providers
+  // Pre-populate pipeline with selected providers - use ref to track initialization
+  const initializedProvidersRef = useRef<string>('')
+
   useEffect(() => {
-    if (selectedProviders && nodes.length === 0) {
+    // Only initialize when selectedProviders change AND we haven't initialized this combo yet
+    if (selectedProviders) {
       const { stt, llm, tts, realtime } = selectedProviders
+      const providersKey = `${realtime || ''}-${stt || ''}-${llm || ''}-${tts || ''}`
+
+      // Skip if we've already initialized with these exact providers
+      if (initializedProvidersRef.current === providersKey) {
+        return
+      }
+
+      // Clear any existing nodes first
+      resetPipeline()
 
       if (realtime) {
         // For realtime providers, create a single node
         addNode('realtime', { x: 300, y: 200 })
+        initializedProvidersRef.current = providersKey
       } else if (stt && llm && tts) {
         // For traditional pipeline, create STT -> LLM -> TTS chain
         const sttNode = addNode('stt', { x: 100, y: 200 })
@@ -229,9 +244,10 @@ export function PipelineBuilder({ agentId, readonly = false, selectedProviders }
             targetHandle: null
           })
         }, 200)
+        initializedProvidersRef.current = providersKey
       }
     }
-  }, [selectedProviders, nodes.length, addNode, onConnect])
+  }, [selectedProviders?.stt, selectedProviders?.llm, selectedProviders?.tts, selectedProviders?.realtime, addNode, onConnect, resetPipeline])
 
   const handleSave = () => {
     savePipeline()
@@ -269,23 +285,23 @@ export function PipelineBuilder({ agentId, readonly = false, selectedProviders }
   return (
     <div className="h-full flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b">
-          <div className="flex items-center gap-4">
-            <h2 className="text-xl font-semibold">
+        <div className="flex items-center justify-between p-2 border-b">
+          <div className="flex items-center gap-2">
+            <h2 className="text-base font-semibold">
               {currentPipeline?.name || t('pipelineBuilder', 'builder')}
             </h2>
-            <Badge variant={isValid ? 'default' : 'destructive'} className="flex items-center gap-1">
+            <Badge variant={isValid ? 'default' : 'destructive'} className="flex items-center gap-1 text-xs">
               {isValid ? (
-                <CheckCircle className="w-3 h-3" />
+                <CheckCircle className="w-2.5 h-2.5" />
               ) : (
-                <AlertCircle className="w-3 h-3" />
+                <AlertCircle className="w-2.5 h-2.5" />
               )}
               {isValid ? t('valid', 'builder') : t('invalid', 'builder')}
             </Badge>
           </div>
 
           {!readonly && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -294,49 +310,53 @@ export function PipelineBuilder({ agentId, readonly = false, selectedProviders }
                   variant="outline"
                   size="sm"
                   onClick={handleSimulate}
-                  className={isSimulating ? "bg-green-100 border-green-300" : ""}
+                  className={`h-7 text-xs ${isSimulating ? "bg-green-100 border-green-300" : ""}`}
                 >
                   {isSimulating ? (
-                    <Pause className="w-4 h-4 mr-2" />
+                    <Pause className="w-3 h-3 mr-1" />
                   ) : (
-                    <Play className="w-4 h-4 mr-2" />
+                    <Play className="w-3 h-3 mr-1" />
                   )}
-                  {isSimulating ? 'Stop Simulation' : 'Simulate Pipeline'}
+                  {isSimulating ? 'Stop' : 'Simulate'}
                 </Button>
               </motion.div>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShowMetrics(!showMetrics)}
-                className={showMetrics ? "bg-blue-100 border-blue-300" : ""}
+                className={`h-7 text-xs ${showMetrics ? "bg-blue-100 border-blue-300" : ""}`}
               >
-                <Activity className="w-4 h-4 mr-2" />
+                <Activity className="w-3 h-3 mr-1" />
                 Metrics
               </Button>
-              <Button variant="outline" size="sm" onClick={handleValidate}>
-                <CheckCircle className="w-4 h-4 mr-2" />
-                {t('validate', 'builder')}
+              <Button variant="outline" size="sm" onClick={handleValidate} className="h-7 text-xs">
+                <CheckCircle className="w-3 h-3 mr-1" />
+                Validate
               </Button>
-              <Button variant="outline" size="sm" onClick={handleExport}>
-                <Download className="w-4 h-4 mr-2" />
-                {t('export', 'builder')}
+              <Button variant="outline" size="sm" onClick={handleExport} className="h-7 text-xs">
+                <Download className="w-3 h-3 mr-1" />
+                Export
               </Button>
-              <Button variant="outline" size="sm" onClick={handleReset}>
-                <Trash2 className="w-4 h-4 mr-2" />
-                {t('reset', 'builder')}
-              </Button>
-              <Button onClick={handleSave}>
-                <Save className="w-4 h-4 mr-2" />
-                {t('save', 'builder')}
-              </Button>
+              {!hideActions && (
+                <>
+                  <Button variant="outline" size="sm" onClick={handleReset} className="h-7 text-xs">
+                    <Trash2 className="w-3 h-3 mr-1" />
+                    Reset
+                  </Button>
+                  <Button onClick={handleSave} size="sm" className="h-7 text-xs">
+                    <Save className="w-3 h-3 mr-1" />
+                    Save
+                  </Button>
+                </>
+              )}
             </div>
           )}
         </div>
 
-        <div className="flex flex-1">
+        <div className="flex flex-1 overflow-hidden">
           {/* Toolbar */}
           {!readonly && (
-            <div className="w-64 border-r bg-muted/30">
+            <div className="w-64 border-r bg-muted/30 overflow-y-auto">
               <PipelineToolbar />
             </div>
           )}

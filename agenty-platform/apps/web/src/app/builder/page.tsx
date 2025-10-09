@@ -8,8 +8,8 @@ export default function BuilderPage() {
   const { t } = useLanguage()
 
   return (
-    <AppLayout>
-      <div className="h-[calc(100vh-4rem)]">
+    <AppLayout className="p-0 overflow-hidden">
+      <div className="h-full">
         <PipelineBuilder />
       </div>
     </AppLayout>
