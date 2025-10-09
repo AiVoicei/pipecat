@@ -250,7 +250,7 @@ export function AgentBuilder({ agentId, templateId, onSave, onTest }: AgentBuild
     { id: 'basic', title: t('basicInformation', 'agents'), icon: Bot },
     { id: 'providers', title: t('selectProviders', 'agents'), icon: Settings },
     { id: 'pipeline', title: t('buildPipeline', 'agents'), icon: Settings },
-    { id: 'summary', title: 'Agent Summary', icon: TestTube }
+     { id: 'summary', title: t('agentSummary', 'agents'), icon: TestTube }
   ]
 
   const progress = ((currentStep + 1) / steps.length) * 100
@@ -537,7 +537,7 @@ export function AgentBuilder({ agentId, templateId, onSave, onTest }: AgentBuild
                 </TabsTrigger>
                 <TabsTrigger value="traditional" className="flex items-center gap-2 text-sm h-8">
                   <Settings className="w-3 h-3" />
-                  Individual Providers
+                  {t('individualProviders', 'agents')}
                 </TabsTrigger>
               </TabsList>
 
