@@ -38,6 +38,7 @@ export class DirectWebRTCService implements WebRTCService {
   private sessionId: string | null = null
   private websocket: WebSocket | null = null
   private isDisconnecting: boolean = false
+  private agentId: string | null = null
 
   // Event callbacks
   private events: Partial<WebRTCEvents> = {}
@@ -51,8 +52,10 @@ export class DirectWebRTCService implements WebRTCService {
     { urls: 'stun:stun1.l.google.com:19302' }
   ]
 
-  constructor() {
-    console.log('[WebRTC] DirectWebRTCService initialized - HTTP API SIGNALING - SmallWebRTC Transport - Port 7860')
+  constructor(agentId?: string) {
+    this.agentId = agentId || null
+    const endpointType = agentId ? `Agent-specific (${agentId})` : 'Default Gemini Live'
+    console.log(`[WebRTC] DirectWebRTCService initialized - ${endpointType} - HTTP API SIGNALING - SmallWebRTC Transport - Port 7860`)
   }
 
   /**
@@ -259,10 +262,18 @@ export class DirectWebRTCService implements WebRTCService {
 
   /**
    * Send WebRTC offer to backend via HTTP API
+   * Uses dynamic agent endpoint if agentId is provided, otherwise uses default Gemini endpoint
    */
   private async sendOfferToBackend(offer: RTCSessionDescriptionInit): Promise<void> {
     try {
-      const response = await fetch(`${this.BACKEND_URL}/api/offer`, {
+      // Determine endpoint based on whether we have an agentId
+      const endpoint = this.agentId
+        ? `${this.BACKEND_URL}/api/agents/${this.agentId}/offer`
+        : `${this.BACKEND_URL}/api/offer`
+
+      console.log(`[WebRTC] Sending offer to endpoint: ${endpoint}`)
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -275,7 +286,8 @@ export class DirectWebRTCService implements WebRTCService {
       })
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        const errorText = await response.text()
+        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`)
       }
 
       const answer = await response.json()
@@ -284,6 +296,11 @@ export class DirectWebRTCService implements WebRTCService {
       // Store session ID from response
       if (answer.session_id) {
         this.sessionId = answer.session_id
+      }
+
+      // Log agent name if testing specific agent
+      if (answer.agent_name) {
+        console.log(`[WebRTC] Testing agent: ${answer.agent_name}`)
       }
 
       // Apply answer to peer connection
@@ -516,18 +533,33 @@ export class DirectWebRTCService implements WebRTCService {
 /**
  * Create WebRTC service instance
  */
-export function createWebRTCService(): WebRTCService {
-  return new DirectWebRTCService()
+export function createWebRTCService(agentId?: string): WebRTCService {
+  return new DirectWebRTCService(agentId)
 }
 
 /**
- * WebRTC service singleton
+ * WebRTC service singleton (per agent)
  */
-let webrtcServiceInstance: WebRTCService | null = null
+const webrtcServiceInstances: Map<string, WebRTCService> = new Map()
 
-export function getWebRTCService(): WebRTCService {
-  if (!webrtcServiceInstance) {
-    webrtcServiceInstance = createWebRTCService()
+export function getWebRTCService(agentId?: string): WebRTCService {
+  const key = agentId || 'default'
+
+  if (!webrtcServiceInstances.has(key)) {
+    webrtcServiceInstances.set(key, createWebRTCService(agentId))
   }
-  return webrtcServiceInstance
+  return webrtcServiceInstances.get(key)!
+}
+
+/**
+ * Clear WebRTC service instance (useful when switching agents)
+ */
+export function clearWebRTCService(agentId?: string): void {
+  const key = agentId || 'default'
+  const service = webrtcServiceInstances.get(key)
+
+  if (service) {
+    service.disconnect()
+    webrtcServiceInstances.delete(key)
+  }
 }

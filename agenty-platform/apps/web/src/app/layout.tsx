@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { ThemeProvider } from '@/components/providers/theme-provider';
 import { PWAInstallBanner } from '@/components/features/pwa/PWAInstallBanner';
+import { Toaster } from '@/components/ui/sonner';
 import "./globals.css";
 
 const geistSans = Geist({
@@ -113,6 +114,7 @@ export default function RootLayout({
           <LanguageProvider>
             {children}
             <PWAInstallBanner />
+            <Toaster />
           </LanguageProvider>
         </ThemeProvider>
       </body>

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { PipelineNode, usePipelineStore } from '@/stores/usePipelineStore'
 import { useProviderStore } from '@/stores/useProviderStore'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -20,81 +20,69 @@ import {
   Copy,
   CheckCircle,
   AlertCircle,
-  X
 } from 'lucide-react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { NodeConfiguration } from './types'
 
-interface PipelineNodeConfigProps {
-  node: PipelineNode
+interface PipelineNodeConfigDialogProps {
+  node: PipelineNode | null
+  open: boolean
+  onClose: () => void
 }
 
 /**
- * Renders a configuration panel for a given pipeline node, allowing label editing, provider selection, provider-specific settings, and actions to save, duplicate, or delete the node.
+ * Dialog component for configuring a pipeline node with provider selection and node-specific settings.
  *
- * @param node - The pipeline node whose label, provider, and configuration are displayed and edited by the panel.
- * @returns A JSX element that renders the node configuration UI.
+ * @param node - The pipeline node to configure (null if no node selected)
+ * @param open - Whether the dialog is open
+ * @param onClose - Callback when dialog should close
+ * @returns A JSX element that renders the node configuration dialog
  */
-export function PipelineNodeConfig({ node }: PipelineNodeConfigProps) {
+export function PipelineNodeConfigDialog({ node, open, onClose }: PipelineNodeConfigDialogProps) {
   const { t } = useLanguage()
   const { updateNode, removeNode, selectNode } = usePipelineStore()
-  const { providers, getProvidersByType, fetchProviders } = useProviderStore()
+  const { providers, getProvidersByType } = useProviderStore()
 
-  const [config, setConfig] = useState<NodeConfiguration>(
-    (node.data.configuration as NodeConfiguration) || {}
-  )
-  const [label, setLabel] = useState(node.data.label)
-  const [selectedProvider, setSelectedProvider] = useState(node.data.provider || '')
+  const [config, setConfig] = useState<NodeConfiguration>({})
+  const [label, setLabel] = useState('')
+  const [selectedProvider, setSelectedProvider] = useState('')
 
-  // Sync state when node changes (e.g., when loading a template)
+  // Update state when node changes
   useEffect(() => {
-    console.log('[PipelineNodeConfig] Syncing state from node:', {
-      nodeId: node.id,
-      nodeProvider: node.data.provider,
-      nodeLabel: node.data.label,
-      nodeConfig: node.data.configuration
-    })
-    setLabel(node.data.label)
-    setSelectedProvider(node.data.provider || '')
-    setConfig((node.data.configuration as NodeConfiguration) || {})
-  }, [node.id, node.data.label, node.data.provider, node.data.configuration])
+    if (node) {
+      setConfig((node.data.configuration as NodeConfiguration) || {})
+      setLabel(node.data.label)
+      setSelectedProvider(node.data.provider || '')
+    }
+  }, [node])
+
+  if (!node) return null
 
   // Get available providers for this node type
   const nodeType = node.data.type as 'stt' | 'llm' | 'tts' | 'realtime'
   const availableProviders = getProvidersByType(nodeType)
 
-  // Debug logging to help troubleshoot provider loading
-  useEffect(() => {
-    console.log(`[PipelineNodeConfig] Node type: ${nodeType}`)
-    console.log(`[PipelineNodeConfig] Selected provider: "${selectedProvider}"`)
-    console.log(`[PipelineNodeConfig] Available providers for ${nodeType}:`, availableProviders.map(p => p.name))
-    console.log(`[PipelineNodeConfig] Total providers in store:`, providers.length)
-
-    // Check if selected provider exists in available providers
-    const providerExists = availableProviders.find(p => p.name === selectedProvider)
-    if (selectedProvider && !providerExists) {
-      console.warn(`[PipelineNodeConfig] WARNING: Selected provider "${selectedProvider}" not found in available providers!`)
-    }
-  }, [nodeType, selectedProvider, availableProviders, providers.length])
-
   const handleSave = () => {
-    // Check if provider has valid credentials
-    const provider = providers.find(p => p.name === selectedProvider)
-    const hasValidCredentials = provider?.status === 'active' && provider?.credentials?.apiKey
-
     updateNode(node.id, {
       label,
       provider: selectedProvider,
       configuration: config,
-      // Only mark as configured if provider is selected, config exists, AND provider has API key
-      isConfigured: selectedProvider !== '' && Object.keys(config).length > 0 && hasValidCredentials
+      isConfigured: selectedProvider !== '' && Object.keys(config).length > 0 && config.apiKey !== undefined && config.apiKey !== ''
     })
+    onClose()
+  }
+
+  // Update node label in real-time as user types
+  const handleLabelChange = (newLabel: string) => {
+    setLabel(newLabel)
+    updateNode(node.id, { label: newLabel })
   }
 
   const handleDelete = () => {
     if (confirm(t('confirmDeleteNode', 'builder'))) {
       removeNode(node.id)
       selectNode(null)
+      onClose()
     }
   }
 
@@ -103,33 +91,23 @@ export function PipelineNodeConfig({ node }: PipelineNodeConfigProps) {
     console.log('Duplicate node:', node.id)
   }
 
-  const handleClose = () => {
-    selectNode(null)
-  }
-
   const renderProviderConfig = () => {
     if (!selectedProvider) return null
 
     const provider = providers.find(p => p.name === selectedProvider)
     if (!provider) return null
 
-    // Check for missing required fields
-    const isLanguageMissing = !config.language
-    const isModelMissing = !config.model
-
     switch (node.data.type) {
       case 'stt':
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="language" className={isLanguageMissing ? 'text-red-500' : ''}>
-                {t('language', 'agents')} {isLanguageMissing && <span className="text-red-500">*</span>}
-              </Label>
+              <Label htmlFor="language">{t('language', 'agents')}</Label>
               <Select
                 value={String(config.language || 'en')}
                 onValueChange={(value) => setConfig({ ...config, language: value })}
               >
-                <SelectTrigger className={isLanguageMissing ? 'border-red-500' : ''}>
+                <SelectTrigger>
                   <SelectValue placeholder={t('selectLanguage', 'agents')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -143,14 +121,12 @@ export function PipelineNodeConfig({ node }: PipelineNodeConfigProps) {
             </div>
 
             <div>
-              <Label htmlFor="model" className={isModelMissing ? 'text-red-500' : ''}>
-                {t('model', 'agents')} {isModelMissing && <span className="text-red-500">*</span>}
-              </Label>
+              <Label htmlFor="model">{t('model', 'agents')}</Label>
               <Select
                 value={String(config.model || '')}
                 onValueChange={(value) => setConfig({ ...config, model: value })}
               >
-                <SelectTrigger className={isModelMissing ? 'border-red-500' : ''}>
+                <SelectTrigger>
                   <SelectValue placeholder={t('selectModel', 'agents')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -173,20 +149,15 @@ export function PipelineNodeConfig({ node }: PipelineNodeConfigProps) {
         )
 
       case 'llm':
-        const isLlmModelMissing = !config.model
-        const isSystemPromptMissing = !config.systemPrompt
-
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="model" className={isLlmModelMissing ? 'text-red-500' : ''}>
-                {t('model', 'agents')} {isLlmModelMissing && <span className="text-red-500">*</span>}
-              </Label>
+              <Label htmlFor="model">{t('model', 'agents')}</Label>
               <Select
                 value={String(config.model || '')}
                 onValueChange={(value) => setConfig({ ...config, model: value })}
               >
-                <SelectTrigger className={isLlmModelMissing ? 'border-red-500' : ''}>
+                <SelectTrigger>
                   <SelectValue placeholder={t('selectModel', 'agents')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -225,35 +196,28 @@ export function PipelineNodeConfig({ node }: PipelineNodeConfigProps) {
             </div>
 
             <div>
-              <Label htmlFor="systemPrompt" className={isSystemPromptMissing ? 'text-red-500' : ''}>
-                {t('systemPrompt', 'agents')} {isSystemPromptMissing && <span className="text-red-500">*</span>}
-              </Label>
+              <Label htmlFor="systemPrompt">{t('systemPrompt', 'agents')}</Label>
               <Textarea
                 id="systemPrompt"
                 value={String(config.systemPrompt || '')}
                 onChange={(e) => setConfig({ ...config, systemPrompt: e.target.value })}
                 placeholder={t('enterSystemPrompt', 'agents')}
                 rows={4}
-                className={isSystemPromptMissing ? 'border-red-500' : ''}
               />
             </div>
           </div>
         )
 
       case 'tts':
-        const isVoiceMissing = !config.voice
-
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="voice" className={isVoiceMissing ? 'text-red-500' : ''}>
-                {t('voice', 'agents')} {isVoiceMissing && <span className="text-red-500">*</span>}
-              </Label>
+              <Label htmlFor="voice">{t('voice', 'agents')}</Label>
               <Select
                 value={String(config.voice || '')}
                 onValueChange={(value) => setConfig({ ...config, voice: value })}
               >
-                <SelectTrigger className={isVoiceMissing ? 'border-red-500' : ''}>
+                <SelectTrigger>
                   <SelectValue placeholder={t('selectVoice', 'agents')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -307,32 +271,26 @@ export function PipelineNodeConfig({ node }: PipelineNodeConfigProps) {
   }
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b">
-        <div className="flex items-center gap-2">
-          <Settings className="w-4 h-4" />
-          <span className="font-medium">{t('nodeConfiguration', 'builder')}</span>
-        </div>
-        <Button variant="ghost" size="sm" onClick={handleClose}>
-          <X className="w-4 h-4" />
-        </Button>
-      </div>
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Settings className="w-5 h-5" />
+            {t('nodeConfiguration', 'builder')}
+          </DialogTitle>
+        </DialogHeader>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        {/* Basic Info */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">{t('basicInformation', 'builder')}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <div className="space-y-6">
+          {/* Basic Information */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium">{t('basicInformation', 'builder')}</h3>
+
             <div>
               <Label htmlFor="nodeLabel">{t('nodeLabel', 'builder')}</Label>
               <Input
                 id="nodeLabel"
                 value={label}
-                onChange={(e) => setLabel(e.target.value)}
+                onChange={(e) => handleLabelChange(e.target.value)}
                 placeholder={t('enterNodeLabel', 'builder')}
               />
             </div>
@@ -343,26 +301,18 @@ export function PipelineNodeConfig({ node }: PipelineNodeConfigProps) {
                 <Badge variant="secondary">{node.data.type.toUpperCase()}</Badge>
               </div>
             </div>
+          </div>
+
+          <Separator />
+
+          {/* Provider Selection */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium">{t('providerSelection', 'builder')}</h3>
 
             <div>
-              <Label htmlFor="nodeId">{t('nodeId', 'builder')}</Label>
-              <Input id="nodeId" value={node.id} readOnly className="bg-muted" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Provider Selection */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">{t('providerSelection', 'builder')}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="provider" className={!selectedProvider ? 'text-red-500' : ''}>
-                {t('provider', 'agents')} {!selectedProvider && <span className="text-red-500">*</span>}
-              </Label>
+              <Label htmlFor="provider">{t('provider', 'agents')}</Label>
               <Select value={selectedProvider} onValueChange={setSelectedProvider}>
-                <SelectTrigger className={!selectedProvider ? 'border-red-500' : ''}>
+                <SelectTrigger>
                   <SelectValue placeholder={t('selectProvider', 'agents')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -375,92 +325,55 @@ export function PipelineNodeConfig({ node }: PipelineNodeConfigProps) {
               </Select>
             </div>
 
-            {/* API Key Status Indicator */}
-            {selectedProvider && (() => {
-              const provider = providers.find(p => p.name === selectedProvider)
+            {/* API Key Field */}
+            {selectedProvider && (
+              <div>
+                <Label htmlFor="apiKey">API Key</Label>
+                <Input
+                  id="apiKey"
+                  type="password"
+                  value={String(config.apiKey || '')}
+                  onChange={(e) => setConfig({ ...config, apiKey: e.target.value })}
+                  placeholder="Enter your API key"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Your API key is stored securely and used for authentication
+                </p>
+              </div>
+            )}
+          </div>
 
-              // Debug logging
-              console.log('[API Key Check] Provider:', provider?.name)
-              console.log('[API Key Check] Provider object:', provider)
-              console.log('[API Key Check] Status:', provider?.status)
-              console.log('[API Key Check] Credentials:', provider?.credentials)
+          {/* Provider Configuration */}
+          {selectedProvider && (
+            <>
+              <Separator />
+              <div className="space-y-4">
+                <h3 className="text-sm font-medium">{t('providerConfiguration', 'builder')}</h3>
+                {renderProviderConfig()}
+              </div>
+            </>
+          )}
 
-              // Check multiple possible structures for API key
-              const hasApiKey = !!(
-                provider?.credentials?.apiKey ||
-                provider?.credentials?.api_key ||
-                (provider as any)?.apiKey ||
-                (provider?.status === 'active' && provider?.credentials)
-              )
+          <Separator />
 
-              console.log('[API Key Check] Has API key:', hasApiKey)
-
-              return (
-                <div className={`flex items-center gap-2 p-3 rounded-lg border-2 ${
-                  hasApiKey
-                    ? 'bg-green-500/10 border-green-500'
-                    : 'bg-red-500/10 border-red-500'
-                }`}>
-                  {hasApiKey ? (
-                    <>
-                      <CheckCircle className="w-4 h-4 text-green-500" />
-                      <span className="text-sm text-green-600 dark:text-green-400 font-medium">
-                        ✓ API key configured
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <AlertCircle className="w-4 h-4 text-red-500" />
-                      <span className="text-sm text-red-600 dark:text-red-400 font-bold">
-                        ⚠️ API key required * - Go to Provider Settings to add
-                      </span>
-                    </>
-                  )}
-                </div>
-              )
-            })()}
-          </CardContent>
-        </Card>
-
-        {/* Provider Configuration */}
-        {selectedProvider && (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">{t('providerConfiguration', 'builder')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {renderProviderConfig()}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Configuration Status */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2">
-              {node.data.isConfigured ? (
+          {/* Configuration Status */}
+          <div className="flex items-center gap-2">
+            {node.data.isConfigured ? (
+              <>
                 <CheckCircle className="w-4 h-4 text-green-500" />
-              ) : (
+                <span className="text-sm text-green-600">{t('fullyConfigured', 'builder')}</span>
+              </>
+            ) : (
+              <>
                 <AlertCircle className="w-4 h-4 text-yellow-500" />
-              )}
-              {t('configurationStatus', 'builder')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-sm">
-              {node.data.isConfigured ? (
-                <span className="text-green-600">{t('fullyConfigured', 'builder')}</span>
-              ) : (
-                <span className="text-yellow-600">{t('requiresConfiguration', 'builder')}</span>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+                <span className="text-sm text-yellow-600">{t('requiresConfiguration', 'builder')}</span>
+              </>
+            )}
+          </div>
+        </div>
 
-      {/* Actions */}
-      <div className="border-t p-4">
-        <div className="flex gap-2">
+        {/* Actions */}
+        <div className="flex gap-2 pt-4">
           <Button onClick={handleSave} className="flex-1">
             <Save className="w-4 h-4 mr-2" />
             {t('saveConfiguration', 'builder')}
@@ -472,7 +385,7 @@ export function PipelineNodeConfig({ node }: PipelineNodeConfigProps) {
             <Trash2 className="w-4 h-4" />
           </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

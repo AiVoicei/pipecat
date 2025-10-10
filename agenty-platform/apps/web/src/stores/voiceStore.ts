@@ -13,6 +13,7 @@ interface VoiceState {
   sessionId: string | null;
   botUrl: string;
   error: string | null;
+  agentId: string | null; // Track which agent is being tested
 
   // Call type selection
   callType: CallType;
@@ -42,7 +43,8 @@ interface VoiceState {
   setBotUrl: (url: string) => void;
   setError: (error: string | null) => void;
   setCallType: (type: CallType) => void;
-  connect: () => Promise<void>;
+  setAgentId: (agentId: string | null) => void;
+  connect: (agentId?: string) => Promise<void>;
   disconnect: () => Promise<void>;
   testConnection: () => Promise<boolean>;
   startRecording: () => Promise<void>;
@@ -124,6 +126,7 @@ export const useVoiceStore = create<VoiceState>((set, get) => ({
   sessionId: null,
   botUrl: process.env.NEXT_PUBLIC_BOT_URL || 'http://localhost:7860',
   error: null,
+  agentId: null, // No agent selected initially (default Gemini Live)
 
   // Call type initial state
   callType: 'audio',
@@ -166,9 +169,19 @@ export const useVoiceStore = create<VoiceState>((set, get) => ({
     isVideoEnabled: type === 'video'
   }),
 
-  connect: async () => {
+  setAgentId: (agentId) => set({ agentId }),
+
+  connect: async (agentId?: string) => {
     try {
-      const { callType, isCallTypeSelected } = get();
+      // Store agentId if provided
+      if (agentId !== undefined) {
+        set({ agentId });
+      }
+
+      const { callType, isCallTypeSelected, agentId: currentAgentId } = get();
+      const effectiveAgentId = agentId || currentAgentId;
+
+      console.log(`[VoiceStore] Connecting to ${effectiveAgentId ? `agent: ${effectiveAgentId}` : 'default Gemini Live'}`)
 
       // Ensure call type is selected
       if (!isCallTypeSelected) {
@@ -231,8 +244,8 @@ export const useVoiceStore = create<VoiceState>((set, get) => ({
       // Create a new session
       const sessionResponse = await apiService.createSession();
 
-      // Initialize WebRTC service
-      const webrtcService = getWebRTCService();
+      // Initialize WebRTC service with agentId (if provided)
+      const webrtcService = getWebRTCService(effectiveAgentId || undefined);
 
       // Set up WebRTC event handlers
       webrtcService.onConnectionStateChange((state: RTCPeerConnectionState) => {

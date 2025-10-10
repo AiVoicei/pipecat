@@ -7,9 +7,10 @@ import { useEffect, useRef, useState } from 'react';
 
 interface VoiceChatProps {
   botUrl?: string;
+  agentId?: string;
 }
 
-export function VoiceChat({}: VoiceChatProps) {
+export function VoiceChat({ agentId }: VoiceChatProps) {
   const { t, isHebrew, getLanguageClasses } = useLanguage();
   const {
     isConnected,
@@ -119,7 +120,7 @@ export function VoiceChat({}: VoiceChatProps) {
     try {
       // First connect to the session
       if (!isConnected) {
-        await connect();
+        await connect(agentId);  // Pass agentId to connect to specific agent
       }
 
       // Start recording immediately after connection attempt

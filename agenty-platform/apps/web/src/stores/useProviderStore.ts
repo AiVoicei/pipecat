@@ -452,8 +452,8 @@ async function fetchProvidersFromAPI(): Promise<Provider[]> {
 export const useProviderStore = create<ProviderStore>()(
   devtools(
     (set, get) => ({
-      // Initial state
-      providers: [],
+      // Initial state - Start with fallback providers for immediate availability
+      providers: fallbackProviders,
       isLoading: false,
       error: null,
 

@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useCallback, useRef, useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   ReactFlow,
   Background,
@@ -29,15 +30,22 @@ import TurboEdge from './TurboEdge'
 import FunctionIcon from './FunctionIcon'
 
 // Removed DnD Kit import - using native HTML5 drag and drop
-import { usePipelineStore } from '@/stores/usePipelineStore'
+import { usePipelineStore, validatePipelineDetailed } from '@/stores/usePipelineStore'
 import { PipelineToolbar } from './PipelineToolbar'
 import { PipelineNode } from './PipelineNode'
-import { PipelineNodeConfig } from './PipelineNodeConfig'
+import { PipelineNodeConfigDialog } from './PipelineNodeConfigDialog'
+import { PipelineValidationPanel } from './PipelineValidationPanel'
+import { PipelineTemplateSelector } from './PipelineTemplateSelector'
+import { SmartSuggestionsPanel } from './SmartSuggestionsPanel'
+import { PipelineBuilderHelp } from './PipelineBuilderHelp'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Save, Play, Pause, Download, Upload, Trash2, CheckCircle, AlertCircle, Activity, Zap } from 'lucide-react'
+import { Save, Play, Pause, Download, Upload, Trash2, CheckCircle, AlertCircle, Activity, Zap, Undo2, Bot } from 'lucide-react'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { toast } from 'sonner'
+import { convertPipelineToAgentConfig, validatePipelineForBackend, generatePipelineSummary } from '@/utils/pipelineConverter'
+import { useAgentStore } from '@/stores/useAgentStore'
 
 // Animated Edge Component
 const AnimatedEdge = ({ id, sourceX, sourceY, targetX, targetY, style = {}, markerEnd, ...props }: any) => {
@@ -141,19 +149,31 @@ interface PipelineBuilderProps {
  */
 export function PipelineBuilder({ agentId, readonly = false, hideActions = false, selectedProviders }: PipelineBuilderProps) {
   const { t } = useLanguage()
+  const router = useRouter()
   const reactFlowWrapper = useRef<HTMLDivElement>(null)
+  const { createAgent } = useAgentStore()
+  const [isSavingAgent, setIsSavingAgent] = useState(false)
 
   // Pipeline simulation state
   const [isSimulating, setIsSimulating] = useState(false)
   const [simulationSpeed, setSimulationSpeed] = useState(1)
   const [showMetrics, setShowMetrics] = useState(false)
 
+  // Node configuration dialog state
+  const [isConfigDialogOpen, setIsConfigDialogOpen] = useState(false)
+
+  // Undo/Redo history
+  const [history, setHistory] = useState<Array<{ nodes: PipelineNode[], edges: Edge[] }>>([])
+  const [historyIndex, setHistoryIndex] = useState(-1)
+
   const {
     nodes,
     edges,
     selectedNode,
     currentPipeline,
+    error,
     addNode,
+    removeNode,
     onNodesChange,
     onEdgesChange,
     onConnect,
@@ -163,6 +183,108 @@ export function PipelineBuilder({ agentId, readonly = false, hideActions = false
     exportPipeline,
     resetPipeline,
   } = usePipelineStore()
+
+  // Save state to history whenever nodes or edges change
+  useEffect(() => {
+    const saveToHistory = () => {
+      const newHistory = history.slice(0, historyIndex + 1)
+      newHistory.push({ nodes: JSON.parse(JSON.stringify(nodes)), edges: JSON.parse(JSON.stringify(edges)) })
+
+      // Keep only last 50 states
+      if (newHistory.length > 50) {
+        newHistory.shift()
+      } else {
+        setHistoryIndex(historyIndex + 1)
+      }
+
+      setHistory(newHistory)
+    }
+
+    // Debounce to avoid saving too frequently
+    const timeout = setTimeout(saveToHistory, 300)
+    return () => clearTimeout(timeout)
+  }, [nodes, edges])
+
+  // Undo function
+  const handleUndo = () => {
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1
+      const previousState = history[newIndex]
+
+      usePipelineStore.setState({
+        nodes: previousState.nodes,
+        edges: previousState.edges
+      })
+
+      setHistoryIndex(newIndex)
+      toast.success('Undone', { duration: 1500 })
+    }
+  }
+
+  // Show toast when connection validation fails
+  useEffect(() => {
+    if (error) {
+      // Parse error message (remove timestamp if present)
+      const errorMessage = error.includes('|') ? error.split('|')[0] : error
+
+      toast.error('Invalid Connection', {
+        description: errorMessage,
+        duration: 4000,
+        style: {
+          background: '#991b1b',
+          color: '#ffffff',
+          border: '1px solid #dc2626',
+        },
+        className: 'border-red-600',
+      })
+    }
+  }, [error])
+
+  // Keyboard shortcuts handler
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Delete key - remove selected nodes or edges
+      if (e.key === 'Delete') {
+        const selectedNodes = nodes.filter(n => n.selected)
+        const selectedEdges = edges.filter(e => e.selected)
+
+        if (selectedNodes.length > 0) {
+          selectedNodes.forEach(node => removeNode(node.id))
+          selectNode(null)
+          toast.success(`Deleted ${selectedNodes.length} node${selectedNodes.length > 1 ? 's' : ''}`, { duration: 2000 })
+        } else if (selectedEdges.length > 0) {
+          const newEdges = edges.filter(e => !e.selected)
+          onEdgesChange([{ type: 'remove', id: selectedEdges[0].id }])
+          toast.success(`Deleted ${selectedEdges.length} connection${selectedEdges.length > 1 ? 's' : ''}`, { duration: 2000 })
+        } else if (selectedNode) {
+          removeNode(selectedNode.id)
+          selectNode(null)
+          toast.success('Node deleted', { duration: 2000 })
+        }
+      }
+
+      // Escape - deselect node
+      if (e.key === 'Escape') {
+        selectNode(null)
+      }
+
+      // Ctrl/Cmd + S - Save pipeline
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault()
+        handleSave()
+        toast.success('Pipeline saved', { duration: 2000 })
+      }
+
+      // Ctrl/Cmd + Z - Undo
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault()
+        handleUndo()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [selectedNode, removeNode, selectNode, nodes, edges, onEdgesChange, handleUndo])
 
   // Handle native drag and drop
   const onDragOver = useCallback((event: React.DragEvent) => {
@@ -196,6 +318,7 @@ export function PipelineBuilder({ agentId, readonly = false, hideActions = false
 
   const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
     selectNode(node as any)
+    setIsConfigDialogOpen(true)
   }, [selectNode])
 
   const onPaneClick = useCallback(() => {
@@ -253,6 +376,89 @@ export function PipelineBuilder({ agentId, readonly = false, hideActions = false
     savePipeline()
   }
 
+  const handleSaveAsAgent = async () => {
+    const currentNodes = nodes
+    const currentEdges = edges
+
+    // Validate pipeline structure
+    const pipelineValidation = validatePipelineDetailed(currentNodes, currentEdges)
+    if (!pipelineValidation.valid) {
+      toast.error('Pipeline Validation Failed', {
+        description: pipelineValidation.errors.join(', ')
+      })
+      return
+    }
+
+    // Validate backend readiness
+    const backendValidation = validatePipelineForBackend(currentNodes)
+    if (!backendValidation.valid) {
+      toast.error('Configuration Incomplete', {
+        description: backendValidation.errors.join(', ')
+      })
+      return
+    }
+
+    // Show warnings if any
+    if (backendValidation.warnings.length > 0) {
+      toast.warning('Configuration Warnings', {
+        description: backendValidation.warnings.join(', ')
+      })
+    }
+
+    setIsSavingAgent(true)
+    try {
+      // Generate pipeline summary
+      const summary = generatePipelineSummary(currentNodes, currentEdges)
+
+      // Prompt for agent name
+      const agentName = prompt('Enter agent name:', `Agent - ${summary}`)
+      if (!agentName) {
+        setIsSavingAgent(false)
+        return
+      }
+
+      const agentDescription = prompt('Enter agent description (optional):', summary) || summary
+
+      // Convert pipeline to agent configuration
+      const agentConfig = convertPipelineToAgentConfig(
+        currentNodes,
+        currentEdges,
+        agentName,
+        agentDescription,
+        'user_1' // TODO: Get from auth context
+      )
+
+      // Send to backend to create agent
+      const response = await fetch('http://localhost:7860/api/agents', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(agentConfig)
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.detail || 'Failed to create agent')
+      }
+
+      const createdAgent = await response.json()
+
+      toast.success('Agent Created Successfully!', {
+        description: `${agentName} is ready for testing`
+      })
+
+      // Navigate to agent test page
+      router.push(`/agents/${createdAgent.id}/test`)
+
+    } catch (error: any) {
+      console.error('Error creating agent:', error)
+      toast.error('Failed to Create Agent', {
+        description: error.message || 'An unexpected error occurred'
+      })
+    } finally {
+      setIsSavingAgent(false)
+    }
+  }
+
   const handleValidate = () => {
     const isValid = validatePipeline()
     // Could show a toast or notification here
@@ -302,6 +508,11 @@ export function PipelineBuilder({ agentId, readonly = false, hideActions = false
 
           {!readonly && (
             <div className="flex items-center gap-1">
+              {/* Quick Start Template Button */}
+              <PipelineTemplateSelector />
+
+              <div className="h-6 w-px bg-border mx-1" />
+
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -343,12 +554,26 @@ export function PipelineBuilder({ agentId, readonly = false, hideActions = false
                     <Trash2 className="w-3 h-3 mr-1" />
                     Reset
                   </Button>
-                  <Button onClick={handleSave} size="sm" className="h-7 text-xs">
+                  <Button onClick={handleSave} size="sm" variant="outline" className="h-7 text-xs">
                     <Save className="w-3 h-3 mr-1" />
                     Save
                   </Button>
+                  <Button
+                    onClick={handleSaveAsAgent}
+                    size="sm"
+                    className="h-7 text-xs bg-primary hover:bg-primary/90"
+                    disabled={isSavingAgent || !isValid}
+                  >
+                    <Bot className="w-3 h-3 mr-1" />
+                    {isSavingAgent ? 'Creating...' : 'Save as Agent'}
+                  </Button>
                 </>
               )}
+
+              <div className="h-6 w-px bg-border mx-1" />
+
+              {/* Help Button */}
+              <PipelineBuilderHelp />
             </div>
           )}
         </div>
@@ -379,6 +604,7 @@ export function PipelineBuilder({ agentId, readonly = false, hideActions = false
                     type: node.type || 'turbo',
                     data: {
                       ...node.data,
+                      title: node.data.label, // Map label to title for TurboNode display
                       nodeType: node.data.type,
                       status: isSimulating ? 'processing' : 'idle',
                       metrics: isSimulating ? {
@@ -469,6 +695,49 @@ export function PipelineBuilder({ agentId, readonly = false, hideActions = false
                     nodeColor="rgba(139, 92, 246, 0.6)"
                   />
 
+                  {/* Undo and Delete Buttons - Center Bottom */}
+                  <Panel position="bottom-center" style={{ marginBottom: '10px' }}>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="w-10 h-10 rounded-lg shadow-lg bg-white/10 hover:bg-white/20 border-white/20"
+                        onClick={handleUndo}
+                        disabled={historyIndex <= 0}
+                        title="Undo (Ctrl+Z)"
+                      >
+                        <Undo2 className="w-5 h-5" />
+                      </Button>
+
+                      {/* Delete Button - Shows when nodes or edges are selected */}
+                      {(nodes.some(n => n.selected) || edges.some(e => e.selected)) && (
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          className="w-10 h-10 rounded-lg shadow-lg bg-red-600 hover:bg-red-700"
+                          onClick={() => {
+                            const selectedNodes = nodes.filter(n => n.selected)
+                            const selectedEdges = edges.filter(e => e.selected)
+
+                            if (selectedNodes.length > 0) {
+                              selectedNodes.forEach(node => removeNode(node.id))
+                              selectNode(null)
+                              toast.success(`Deleted ${selectedNodes.length} node${selectedNodes.length > 1 ? 's' : ''}`, { duration: 2000 })
+                            } else if (selectedEdges.length > 0) {
+                              selectedEdges.forEach(edge => {
+                                onEdgesChange([{ type: 'remove', id: edge.id }])
+                              })
+                              toast.success(`Deleted ${selectedEdges.length} connection${selectedEdges.length > 1 ? 's' : ''}`, { duration: 2000 })
+                            }
+                          }}
+                          title="Delete selected (Delete key)"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </Button>
+                      )}
+                    </div>
+                  </Panel>
+
                   <Panel position="top-left">
                     <motion.div
                       initial={{ x: -300, opacity: 0 }}
@@ -556,13 +825,29 @@ export function PipelineBuilder({ agentId, readonly = false, hideActions = false
             </ReactFlowProvider>
           </div>
 
-          {/* Node Configuration Panel */}
-          {selectedNode && !readonly && (
-            <div className="w-80 border-l bg-background">
-              <PipelineNodeConfig node={selectedNode} />
+          {/* Right Sidebar - Validation Panel and Smart Suggestions */}
+          {!readonly && (
+            <div className="w-96 border-l bg-background overflow-y-auto">
+              <div className="p-4 space-y-4">
+                {/* Always show validation panel */}
+                <PipelineValidationPanel />
+
+                {/* Smart Suggestions Panel */}
+                <SmartSuggestionsPanel />
+              </div>
             </div>
           )}
         </div>
+
+        {/* Node Configuration Dialog */}
+        <PipelineNodeConfigDialog
+          node={selectedNode}
+          open={isConfigDialogOpen}
+          onClose={() => {
+            setIsConfigDialogOpen(false)
+            selectNode(null)
+          }}
+        />
       </div>
   )
 }

@@ -4,22 +4,33 @@ import { Logo } from '@/components/ui/Logo';
 import { VoiceChat, ConnectionStatus, ConversationHistory } from '@/components/voice';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useEffect, useState } from 'react';
-import { Menu, X, MessageSquare, Settings, BarChart3 } from 'lucide-react';
+import { Menu, X, MessageSquare, Settings, BarChart3, Mic, Brain, Volume2, Zap } from 'lucide-react';
 import { useVoiceStore } from '@/stores/voiceStore';
+import { useAgentStore } from '@/stores/useAgentStore';
 
 interface AiVoiceiInterfaceProps {
-  agentId: string;
+  agentId?: string;
 }
 
-export function AiVoiceiInterface({}: AiVoiceiInterfaceProps) {
+export function AiVoiceiInterface({ agentId }: AiVoiceiInterfaceProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'chat' | 'history' | 'settings'>('chat');
   const { isHebrew } = useLanguage();
 
   // Get real conversation messages from voice store
   const { messages: conversationMessages, isAssistantSpeaking } = useVoiceStore();
+
+  // Get agent configuration to display provider info
+  const { agents } = useAgentStore();
+  const agent = agentId ? agents.find(a => a.id === agentId) : null;
+  const config = agent?.configuration;
+
+  // Determine pipeline type
+  const isRealtimePipeline = !config?.stt && !config?.llm && !config?.tts;
+  const pipelineType = isRealtimePipeline ? 'realtime' : 'traditional';
 
   // Enable dark mode and language support
   useEffect(() => {
@@ -39,7 +50,7 @@ export function AiVoiceiInterface({}: AiVoiceiInterfaceProps) {
                   {isHebrew ? 'שיחה קולית' : 'Voice Chat'}
                 </h2>
               </div>
-              <VoiceChat />
+              <VoiceChat agentId={agentId} />
             </Card>
           </div>
         );
@@ -54,27 +65,79 @@ export function AiVoiceiInterface({}: AiVoiceiInterfaceProps) {
         );
       case 'settings':
         return (
-          <Card className="ai-card p-6">
-            <h2 className="text-lg font-semibold text-card-foreground mb-6">{isHebrew ? 'הגדרות' : 'Settings'}</h2>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between py-3 border-b border-border">
-                <span className="text-sm font-medium">{isHebrew ? 'מצב כהה' : 'Dark Mode'}</span>
-                <div className="w-10 h-6 bg-primary rounded-full relative">
-                  <div className="w-4 h-4 bg-white rounded-full absolute top-1 left-1"></div>
+          <div className="space-y-6">
+            {/* Provider Information Card (Mobile) */}
+            <Card className="ai-card p-6">
+              <h2 className="text-lg font-semibold text-card-foreground mb-4 flex items-center gap-2">
+                <Settings className="w-5 h-5" />
+                {isHebrew ? 'ספקי AI בשימוש' : 'AI Providers in Use'}
+              </h2>
+              <div className="space-y-3">
+                {isRealtimePipeline ? (
+                  // Realtime Pipeline Display
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-purple-500/10 border border-purple-500/30">
+                    <Zap className="w-5 h-5 text-purple-400" />
+                    <div className="flex-1">
+                      <div className="text-xs text-muted-foreground">{isHebrew ? 'צינור זמן-אמת' : 'Realtime Pipeline'}</div>
+                      <div className="font-medium text-purple-400">
+                        {config?.llm?.provider === 'gemini-live' && 'Gemini 2.0 Flash Live'}
+                        {config?.llm?.provider === 'openai-realtime' && 'OpenAI Realtime'}
+                        {!config?.llm?.provider && (isHebrew ? 'לא מוגדר' : 'Not configured')}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  // Traditional Pipeline Display
+                  <>
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
+                      <Mic className="w-5 h-5 text-blue-400" />
+                      <div className="flex-1">
+                        <div className="text-xs text-muted-foreground">{isHebrew ? 'זיהוי דיבור (STT)' : 'Speech-to-Text (STT)'}</div>
+                        <div className="font-medium text-blue-400">{config?.stt?.provider || (isHebrew ? 'לא מוגדר' : 'Not set')}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-green-500/10 border border-green-500/30">
+                      <Brain className="w-5 h-5 text-green-400" />
+                      <div className="flex-1">
+                        <div className="text-xs text-muted-foreground">{isHebrew ? 'מודל AI (LLM)' : 'AI Model (LLM)'}</div>
+                        <div className="font-medium text-green-400">{config?.llm?.provider || (isHebrew ? 'לא מוגדר' : 'Not set')}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-purple-500/10 border border-purple-500/30">
+                      <Volume2 className="w-5 h-5 text-purple-400" />
+                      <div className="flex-1">
+                        <div className="text-xs text-muted-foreground">{isHebrew ? 'סינתזת קול (TTS)' : 'Text-to-Speech (TTS)'}</div>
+                        <div className="font-medium text-purple-400">{config?.tts?.provider || (isHebrew ? 'לא מוגדר' : 'Not set')}</div>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </Card>
+
+            {/* Other Settings */}
+            <Card className="ai-card p-6">
+              <h2 className="text-lg font-semibold text-card-foreground mb-6">{isHebrew ? 'הגדרות' : 'Settings'}</h2>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between py-3 border-b border-border">
+                  <span className="text-sm font-medium">{isHebrew ? 'מצב כהה' : 'Dark Mode'}</span>
+                  <div className="w-10 h-6 bg-primary rounded-full relative">
+                    <div className="w-4 h-4 bg-white rounded-full absolute top-1 left-1"></div>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between py-3 border-b border-border">
+                  <span className="text-sm font-medium">{isHebrew ? 'התראות קוליות' : 'Voice Notifications'}</span>
+                  <div className="w-10 h-6 bg-muted rounded-full relative">
+                    <div className="w-4 h-4 bg-white rounded-full absolute top-1 right-1"></div>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between py-3">
+                  <span className="text-sm font-medium">{isHebrew ? 'איכות שמע' : 'Audio Quality'}</span>
+                  <span className="text-sm text-muted-foreground">{isHebrew ? 'גבוהה' : 'High'}</span>
                 </div>
               </div>
-              <div className="flex items-center justify-between py-3 border-b border-border">
-                <span className="text-sm font-medium">{isHebrew ? 'התראות קוליות' : 'Voice Notifications'}</span>
-                <div className="w-10 h-6 bg-muted rounded-full relative">
-                  <div className="w-4 h-4 bg-white rounded-full absolute top-1 right-1"></div>
-                </div>
-              </div>
-              <div className="flex items-center justify-between py-3">
-                <span className="text-sm font-medium">{isHebrew ? 'איכות שמע' : 'Audio Quality'}</span>
-                <span className="text-sm text-muted-foreground">{isHebrew ? 'גבוהה' : 'High'}</span>
-              </div>
-            </div>
-          </Card>
+            </Card>
+          </div>
         );
       default:
         return null;
@@ -193,7 +256,7 @@ export function AiVoiceiInterface({}: AiVoiceiInterfaceProps) {
                     </div>
                   </div>
                   <div className="flex-1">
-                    <VoiceChat />
+                    <VoiceChat agentId={agentId} />
                   </div>
                 </div>
               </Card>
@@ -348,21 +411,54 @@ export function AiVoiceiInterface({}: AiVoiceiInterfaceProps) {
 
           {/* Info Cards Row */}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
+            {/* Provider Information Card */}
             <Card className="ai-card p-4">
-              <h3 className="text-sm font-medium text-card-foreground mb-3">{isHebrew ? 'מידע מהיר' : 'Quick Info'}</h3>
+              <h3 className="text-sm font-medium text-card-foreground mb-3 flex items-center gap-2">
+                <Settings className="w-4 h-4" />
+                {isHebrew ? 'ספקי AI בשימוש' : 'AI Providers in Use'}
+              </h3>
               <div className="space-y-3 text-sm">
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">{isHebrew ? 'מצב שרת' : 'Server Status'}</span>
-                  <span className="status-connected px-2 py-1 rounded text-xs">{isHebrew ? 'פעיל' : 'Active'}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">{isHebrew ? 'שפה' : 'Language'}</span>
-                  <span className="text-card-foreground">{isHebrew ? 'עברית' : 'Hebrew'}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">{isHebrew ? 'AI מודל' : 'AI Model'}</span>
-                  <span className="text-card-foreground">Gemini</span>
-                </div>
+                {isRealtimePipeline ? (
+                  // Realtime Pipeline Display
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 p-2 rounded-lg bg-purple-500/10 border border-purple-500/30">
+                      <Zap className="w-4 h-4 text-purple-400" />
+                      <div className="flex-1">
+                        <div className="text-xs text-muted-foreground">{isHebrew ? 'צינור זמן-אמת' : 'Realtime Pipeline'}</div>
+                        <div className="font-medium text-purple-400">
+                          {config?.llm?.provider === 'gemini-live' && 'Gemini 2.0 Flash Live'}
+                          {config?.llm?.provider === 'openai-realtime' && 'OpenAI Realtime'}
+                          {!config?.llm?.provider && (isHebrew ? 'לא מוגדר' : 'Not configured')}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  // Traditional Pipeline Display
+                  <>
+                    <div className="flex items-center gap-2 p-2 rounded-lg bg-blue-500/10 border border-blue-500/30">
+                      <Mic className="w-4 h-4 text-blue-400" />
+                      <div className="flex-1">
+                        <div className="text-xs text-muted-foreground">{isHebrew ? 'זיהוי דיבור' : 'STT'}</div>
+                        <div className="font-medium text-blue-400">{config?.stt?.provider || (isHebrew ? 'לא מוגדר' : 'Not set')}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 rounded-lg bg-green-500/10 border border-green-500/30">
+                      <Brain className="w-4 h-4 text-green-400" />
+                      <div className="flex-1">
+                        <div className="text-xs text-muted-foreground">{isHebrew ? 'מודל AI' : 'LLM'}</div>
+                        <div className="font-medium text-green-400">{config?.llm?.provider || (isHebrew ? 'לא מוגדר' : 'Not set')}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 rounded-lg bg-purple-500/10 border border-purple-500/30">
+                      <Volume2 className="w-4 h-4 text-purple-400" />
+                      <div className="flex-1">
+                        <div className="text-xs text-muted-foreground">{isHebrew ? 'סינתזת קול' : 'TTS'}</div>
+                        <div className="font-medium text-purple-400">{config?.tts?.provider || (isHebrew ? 'לא מוגדר' : 'Not set')}</div>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </Card>
 

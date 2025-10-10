@@ -634,6 +634,264 @@ async def webrtc_offer(request: dict, background_tasks: BackgroundTasks):
         raise HTTPException(status_code=500, detail=f"Failed to process WebRTC offer: {str(e)}")
 
 
+# Dynamic Agent Testing Endpoint
+@app.post("/api/agents/{agent_id}/offer")
+async def agent_webrtc_offer(agent_id: str, request: dict, background_tasks: BackgroundTasks):
+    """
+    Handle WebRTC offer for testing a specific agent created from pipeline builder
+
+    This endpoint creates a dynamic Pipecat pipeline based on the saved agent configuration
+    and connects it to a WebRTC session for real-time testing.
+    """
+    logger.info(f"Received WebRTC offer for agent testing: {agent_id}")
+
+    try:
+        # Get agent configuration from storage
+        if agent_id not in agents_storage:
+            raise HTTPException(status_code=404, detail=f"Agent {agent_id} not found")
+
+        agent = agents_storage[agent_id]
+
+        # Get session info
+        session_id = request.get("session_id")
+        if not session_id:
+            session_id = str(uuid.uuid4())
+            logger.info(f"Generated new session ID: {session_id}")
+
+        pc_id = request.get("pc_id", session_id)
+
+        # Check if we have an existing connection
+        if pc_id in webrtc_connections:
+            webrtc_connection = webrtc_connections[pc_id]
+            logger.info(f"Reusing existing WebRTC connection for pc_id: {pc_id}")
+            await webrtc_connection.renegotiate(
+                sdp=request["sdp"],
+                type=request["type"],
+                restart_pc=request.get("restart_pc", False),
+            )
+        else:
+            # Create new WebRTC connection
+            webrtc_connection = SmallWebRTCConnection(ice_servers)
+            await webrtc_connection.initialize(
+                sdp=request["sdp"],
+                type=request["type"]
+            )
+
+            @webrtc_connection.event_handler("closed")
+            async def handle_disconnected(connection: SmallWebRTCConnection):
+                logger.info(f"WebRTC connection closed for agent {agent_id}, pc_id: {connection.pc_id}")
+                webrtc_connections.pop(connection.pc_id, None)
+                if session_id in active_sessions:
+                    try:
+                        session = active_sessions[session_id]
+                        await session['task'].cancel()
+                        del active_sessions[session_id]
+                    except Exception as e:
+                        logger.error(f"Error cleaning up session {session_id}: {e}")
+
+            # Convert agent configuration to runtime format
+            agent_config = {
+                'id': agent.id,
+                'name': agent.name,
+                'userId': agent.userId,
+                'pipeline_type': 'traditional',  # Default to traditional for now
+                'stt': agent.configuration.stt.model_dump(),
+                'llm': agent.configuration.llm.model_dump(),
+                'tts': agent.configuration.tts.model_dump(),
+                'system_prompt': agent.configuration.llm.systemPrompt
+            }
+
+            # Start the dynamic agent pipeline
+            background_tasks.add_task(run_dynamic_agent, agent_config, webrtc_connection, session_id)
+
+        # Get answer and store connection
+        answer = webrtc_connection.get_answer()
+        webrtc_connections[answer["pc_id"]] = webrtc_connection
+
+        # Add session and agent ID to response
+        answer["session_id"] = session_id
+        answer["agent_id"] = agent_id
+        answer["agent_name"] = agent.name
+
+        logger.info(f"WebRTC offer processed successfully for agent {agent_id}, session: {session_id}")
+        return answer
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error processing agent WebRTC offer: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to process agent WebRTC offer: {str(e)}")
+
+
+async def run_dynamic_agent(agent_config: Dict[str, Any], webrtc_connection: SmallWebRTCConnection, session_id: str):
+    """
+    Run a dynamic agent pipeline based on saved configuration
+
+    This function creates a Pipecat pipeline on the fly based on the agent's
+    configuration and runs it for testing purposes.
+    """
+    logger.info(f"Starting dynamic agent: {agent_config.get('name', 'Unknown')} (session: {session_id})")
+
+    # Extract configuration
+    stt_config = agent_config.get('stt', {})
+    llm_config = agent_config.get('llm', {})
+    tts_config = agent_config.get('tts', {})
+    system_prompt = agent_config.get('system_prompt', 'You are a helpful AI assistant.')
+
+    # Create transport with VAD
+    transport = SmallWebRTCTransport(
+        webrtc_connection=webrtc_connection,
+        params=TransportParams(
+            audio_in_enabled=True,
+            audio_out_enabled=True,
+            video_in_enabled=False,
+            vad_analyzer=SileroVADAnalyzer(params=VADParams(
+                stop_secs=0.5,
+                min_volume=0.6,
+                start_secs=0.2
+            )),
+        ),
+    )
+
+    # Create services based on configuration
+    # STT Service
+    stt_provider = stt_config.get('provider', 'openai').lower()
+    if stt_provider == 'deepgram':
+        from pipecat.services.deepgram.stt import DeepgramSTTService
+        stt = DeepgramSTTService(
+            api_key=os.getenv("DEEPGRAM_API_KEY"),
+            model=stt_config.get('model', 'nova-2'),
+            language=stt_config.get('language', 'en')
+        )
+    else:  # Default to OpenAI Whisper
+        from pipecat.services.openai.stt import OpenAISTTService
+        stt = OpenAISTTService(
+            api_key=os.getenv("OPENAI_API_KEY"),
+            model=stt_config.get('model', 'whisper-1'),
+            language=stt_config.get('language', 'en')
+        )
+
+    # LLM Service
+    llm_provider = llm_config.get('provider', 'openai').lower()
+    if llm_provider == 'anthropic':
+        from pipecat.services.anthropic.llm import AnthropicLLMService
+        llm = AnthropicLLMService(
+            api_key=os.getenv("ANTHROPIC_API_KEY"),
+            model=llm_config.get('model', 'claude-3-sonnet-20240229'),
+            max_tokens=llm_config.get('maxTokens', 1000)
+        )
+    else:  # Default to OpenAI
+        from pipecat.services.openai.llm import OpenAILLMService
+        llm = OpenAILLMService(
+            api_key=os.getenv("OPENAI_API_KEY"),
+            model=llm_config.get('model', 'gpt-4'),
+            temperature=llm_config.get('temperature', 0.7),
+            max_tokens=llm_config.get('maxTokens', 1000)
+        )
+
+    # TTS Service
+    tts_provider = tts_config.get('provider', 'openai').lower()
+    if tts_provider == 'elevenlabs':
+        from pipecat.services.elevenlabs.tts import ElevenLabsTTSService
+        tts = ElevenLabsTTSService(
+            api_key=os.getenv("ELEVENLABS_API_KEY"),
+            voice_id=tts_config.get('voice', '21m00Tcm4TlvDq8ikWAM')
+        )
+    elif tts_provider == 'cartesia':
+        from pipecat.services.cartesia.tts import CartesiaTTSService
+        tts = CartesiaTTSService(
+            api_key=os.getenv("CARTESIA_API_KEY"),
+            voice_id=tts_config.get('voice', 'a0e99841-438c-4a64-b679-ae501e7d6091')
+        )
+    else:  # Default to OpenAI TTS
+        from pipecat.services.openai.tts import OpenAITTSService
+        tts = OpenAITTSService(
+            api_key=os.getenv("OPENAI_API_KEY"),
+            voice=tts_config.get('voice', 'alloy')
+        )
+
+    # Create context
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "system", "content": "Please introduce yourself briefly."}
+    ]
+    context = OpenAILLMContext(messages)
+    context_aggregator = llm.create_context_aggregator(context)
+
+    # Create RTVI processor for UI integration
+    from pipecat.processors.frameworks.rtvi import RTVIProcessor, RTVIConfig, RTVIObserver
+    rtvi = RTVIProcessor(
+        config=RTVIConfig(config=[]),
+        transcription_events=True,
+        performance_metrics=True
+    )
+
+    # Create transcript processor
+    transcript = TranscriptProcessor()
+
+    # Build pipeline
+    pipeline = Pipeline([
+        transport.input(),
+        stt,
+        rtvi,
+        transcript.user(),
+        context_aggregator.user(),
+        llm,
+        tts,
+        transcript.assistant(),
+        transport.output(),
+        context_aggregator.assistant(),
+    ])
+
+    # Create task
+    task = PipelineTask(
+        pipeline,
+        params=PipelineParams(
+            enable_metrics=True,
+            enable_usage_metrics=True,
+        ),
+        observers=[RTVIObserver(rtvi)],
+    )
+
+    # Store session
+    active_sessions[session_id] = {
+        'agent_id': agent_config.get('id'),
+        'agent_name': agent_config.get('name'),
+        'task': task,
+        'transport': transport,
+        'stt': stt,
+        'llm': llm,
+        'tts': tts,
+        'rtvi': rtvi,
+        'transcript': transcript,
+        'pipeline_type': 'traditional',
+        'providers': {
+            'stt': stt_provider,
+            'llm': llm_provider,
+            'tts': tts_provider,
+        },
+        'created_at': time.time()
+    }
+
+    # Setup event handlers
+    @transport.event_handler("on_client_connected")
+    async def on_client_connected(transport, client):
+        logger.info(f"Client connected to dynamic agent {agent_config.get('name')} (session: {session_id})")
+        # Start conversation
+        await task.queue_frames([LLMRunFrame()])
+
+    @transport.event_handler("on_client_disconnected")
+    async def on_client_disconnected(transport, client):
+        logger.info(f"Client disconnected from dynamic agent session {session_id}")
+        if session_id in active_sessions:
+            del active_sessions[session_id]
+        await task.cancel()
+
+    # Run pipeline
+    runner = PipelineRunner(handle_sigint=False)
+    await runner.run(task)
+
+
 # WebSocket signaling endpoint for WebRTC negotiation
 @app.websocket("/websocket")
 async def websocket_signaling_endpoint(websocket: WebSocket):
