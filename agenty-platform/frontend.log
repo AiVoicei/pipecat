@@ -1,0 +1,36 @@
+
+> web@0.1.0 dev
+> next dev --turbopack
+
+   ▲ Next.js 15.5.3 (Turbopack)
+   - Local:        http://localhost:3000
+   - Network:      http://10.255.255.254:3000
+
+ ✓ Starting...
+ ✓ Ready in 10.7s
+ ○ Compiling / ...
+ ✓ Compiled / in 7.4s
+ GET / 200 in 8856ms
+ ○ Compiling /_not-found/page ...
+ ✓ Compiled /_not-found/page in 729ms
+ GET /avatars/user.png 404 in 1189ms
+ GET /icons/icon-144x144.png 404 in 1096ms
+ GET / 200 in 399ms
+ GET /avatars/user.png 404 in 464ms
+ ✓ Compiled /favicon.ico in 476ms
+ GET /favicon.ico?favicon.0b3bf435.ico 200 in 1089ms
+ ○ Compiling /build ...
+ ✓ Compiled /build in 927ms
+ GET /build 200 in 1163ms
+ GET /icons/icon-144x144.png 404 in 340ms
+ ○ Compiling /agents/[id] ...
+ ✓ Compiled /agents/[id] in 1109ms
+ GET /agents/agt_3 200 in 5627ms
+ GET /agents/agt_3 200 in 361ms
+ GET /avatars/user.png 404 in 369ms
+ GET /icons/icon-144x144.png 404 in 321ms
+ ○ Compiling /agents ...
+ ✓ Compiled /agents in 1034ms
+ GET /agents 200 in 1290ms
+ GET /avatars/user.png 404 in 368ms
+ GET /icons/icon-144x144.png 404 in 392ms

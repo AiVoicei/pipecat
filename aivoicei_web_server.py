@@ -19,6 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from loguru import logger
 import json
+import anthropic
 
 from pipecat.audio.vad.silero import SileroVADAnalyzer
 from pipecat.audio.vad.vad_analyzer import VADParams
@@ -98,6 +99,18 @@ app.add_middleware(
 
 # Global bot state
 active_sessions = {}
+
+# Initialize Claude client for Build with Agenty
+claude_client = None
+try:
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    if api_key:
+        claude_client = anthropic.Anthropic(api_key=api_key)
+        logger.info("✅ Claude AI initialized for Build with Agenty")
+    else:
+        logger.warning("⚠️ ANTHROPIC_API_KEY not set - Build with Agenty will use mock responses")
+except Exception as e:
+    logger.error(f"❌ Failed to initialize Claude client: {e}")
 
 # WebRTC connections storage
 webrtc_connections = {}
@@ -340,57 +353,57 @@ async def run_webrtc_bot_optimized(webrtc_connection: SmallWebRTCConnection, ses
     # PURE GEMINI MULTIMODAL LIVE - No separate STT/LLM/TTS services!
     llm = GeminiMultimodalLiveLLMService(
         api_key=os.getenv("GOOGLE_API_KEY"),
-        voice_id="Leda",  # Hebrew-optimized voice
-        system_instruction="""את מאיה, הנציגה הדיגיטלית המקצועית והידידותית של חברת AI Voicy. את הפתח הדיגיטלי של החברה, מייצגת את המומחיות והחדשנות שלה.
+        voice_id="Leda",  # Using Leda voice for English
+        system_instruction="""You are Maya, the professional and friendly digital representative of AI Voicy. You are the digital gateway of the company, representing its expertise and innovation.
 
-זהות ואישיות:
-- שמך: מאיה
-- את מדברת עברית בלבד
-- התייחסי לעצמך בלשון נקבה ("אני יכולה לעזור", "אני נוצרתי כדי")
-- פני למשתמש בלשון רבים בלבד ("שלום לכם", "איך אוכל לסייע לכם?", "העסק שלכם")
-- כשמדברת על AI Voicy, השתמשי ב"אנחנו" ("אנחנו ב-AI Voicy פיתחנו...")
+Identity and Personality:
+- Your name: Maya
+- You speak English only
+- Refer to yourself in first person ("I can help", "I was created to")
+- Address the user formally ("Hello, how may I assist you?", "your business")
+- When talking about AI Voicy, use "we" ("We at AI Voicy have developed...")
 
-סגנון דיבור:
-- טון קולי: שמרי על טון שקט, רגוע ומקצועי
-- אישיות: מקצועית, ידידותית, בטוחה ואמינה
-- תשובות קצרות ולעניין: 2-3 משפטים בדרך כלל
-- דברי בקצב מתון ורגוע
+Speaking Style:
+- Tone: Maintain a calm, relaxed, and professional tone
+- Personality: Professional, friendly, confident, and trustworthy
+- Short and to the point answers: 2-3 sentences typically
+- Speak at a moderate and calm pace
 
-המטרה העיקרית שלך:
-להציג את AI Voicy באופן מקצועי, להסביר את הערך של סוכני הקול החכמים שלנו, ולעודד משתמשים מעוניינים לקבוע הדגמה או פגישה עם נציג מכירות אנושי.
+Your Main Goal:
+To present AI Voicy professionally, explain the value of our smart voice agents, and encourage interested users to schedule a demo or meeting with a human sales representative.
 
-על AI Voicy:
-אנחנו חברה שמפתחת ומיישמת סוכני קול AI מתקדמים לעסקים. הסוכנים שלנו מתקשרים כמו בני אדם לטיפול בשירות לקוחות, מכירות ומשימות אדמיניסטרטיביות ביעילות.
+About AI Voicy:
+We are a company that develops and implements advanced AI voice agents for businesses. Our agents communicate like humans to handle customer service, sales, and administrative tasks efficiently.
 
-המוצרים העיקריים שלנו:
-- דנה: לטיפול בשיחות שירות נכנסות, פתיחת קריאות ותיווג בקשות
-- מאיה: לטיפול בשיחות מחוץ לשעות העבודה
-- תמרי: לתיאום, אישור ועדכון פגישות
-- וי-ראוטר: מערכת ניתוב חכמה
-- שירה: סוכן שאלות ותשובות
-- שקד: סוכן יוצא לשיחות פרואקטיביות
+Our Main Products:
+- Dana: For handling incoming service calls, opening tickets, and routing requests
+- Maya: For handling calls outside business hours
+- Tamari: For scheduling, confirming, and updating appointments
+- V-Router: Smart routing system
+- Shira: Q&A agent
+- Shaked: Outbound agent for proactive calls
 
-יתרונות עסקיים:
-- זמינות 24/7
-- חיסכון עד 70% בעלויות שירות
-- הפחתה של 60% בזמני טיפול
-- שירות אחיד ועקבי
-- אינטגרציה עם מערכות קיימות
+Business Benefits:
+- 24/7 availability
+- Up to 70% cost savings in service
+- 60% reduction in handling time
+- Consistent and uniform service
+- Integration with existing systems
 
-כללי התנהגות:
-- אל תמציאי מידע שאינו בבסיס הידע שלך
-- לשאלות תמחור: "התמחור שלנו מבוסס על מודל של תשלום לפי דקה וחבילת שירות המותאמת אישית לצרכים של העסק שלכם. כדי שנוכל לתת לכם הצעת מחיר מדויקת, הצעד הטוב ביותר הוא שיחה קצרה עם נציג מהצוות שלנו. תרצו שנקבע לכם שיחה?"
-- לשאלות מחוץ לתחום: "אני מאיה, הנציגה הדיגיטלית של AiVoicei, ותפקידי הוא לספק מידע על סוכני הקול החכמים שלנו. אשמח לענות על כל שאלה שיש לכם בנושא."
-- הציעי הדגמה כשהמשתמש מביע עניין: "זה נשמע שהפתרון שלנו יכול להתאים לכם. תרצו שנקבע פגישת הדגמה קצרה, ללא התחייבות, עם אחד המומחים שלנו?"
+Behavioral Rules:
+- Don't make up information not in your knowledge base
+- For pricing questions: "Our pricing is based on a pay-per-minute model and a service package tailored to your business needs. To give you an accurate quote, the best step is a brief call with one of our team members. Would you like to schedule a call?"
+- For out-of-scope questions: "I'm Maya, the digital representative of AI Voicy, and my role is to provide information about our smart voice agents. I'd be happy to answer any questions you have on the subject."
+- Suggest a demo when the user shows interest: "It sounds like our solution could be a good fit for you. Would you like to schedule a short demo, with no commitment, with one of our experts?"
 
-את מייצגת את AiVoicei בצורה מקצועית, ידידותית ואמינה.""",
+You represent AI Voicy in a professional, friendly, and trustworthy manner.""",
     )
 
-    # Context setup with Maya's professional introduction
+    # Context setup with Maya's professional introduction in English
     context = OpenAILLMContext([
         {
             "role": "user",
-            "content": "תציגי את עצמך בקצרה",
+            "content": "Introduce yourself briefly",
         },
     ])
     context_aggregator = llm.create_context_aggregator(context)
@@ -646,6 +659,12 @@ async def agent_webrtc_offer(agent_id: str, request: dict, background_tasks: Bac
     logger.info(f"Received WebRTC offer for agent testing: {agent_id}")
 
     try:
+        # Handle special "quick-test" case - use Gemini Live directly
+        if agent_id == "quick-test":
+            logger.info("Quick test mode - using default Gemini Live configuration")
+            # Use the existing webrtc_offer endpoint logic for Gemini Live
+            return await webrtc_offer(request, background_tasks)
+
         # Get agent configuration from storage
         if agent_id not in agents_storage:
             raise HTTPException(status_code=404, detail=f"Agent {agent_id} not found")
@@ -1324,6 +1343,302 @@ async def stop_agent(agent_id: str):
     logger.info(f"Stopped agent: {agent_id} - {agent.name}")
     return {"message": "Agent stopped successfully", "agent_id": agent_id, "status": "inactive"}
 
+
+# Conversation storage for Build with Agenty
+conversation_storage = {}
+
+# Build with Agenty - AI-powered agent creation endpoint
+@app.post("/api/build-agent")
+async def build_agent_endpoint(request: dict):
+    """
+    AI-powered agent creation using Claude AI.
+
+    This endpoint allows users to create agents through natural language
+    conversation with Claude AI, which asks clarifying questions and generates
+    professional system messages and provider recommendations.
+
+    Actions:
+    - start: Initialize agent creation
+    - clarify: Continue conversation with user's answer
+    - generate: Generate final agent
+    """
+    try:
+        action = request.get("action")
+
+        if action == "start":
+            requirements = request.get("requirements", {})
+            description = requirements.get("description", "")
+
+            if not claude_client:
+                # Fallback to mock response
+                return {
+                    "needsClarification": True,
+                    "questions": "Great! I'd love to help you create this agent. To make it perfect, I have a few questions:\n\n1. What tone should the agent have? (friendly, professional, formal, casual)\n2. What are the main tasks or questions the agent should handle?\n3. Are there any specific policies or information the agent should know about?",
+                    "conversationId": f"conv_{datetime.now().timestamp()}"
+                }
+
+            # Use Claude AI
+            system_prompt = """You are an expert AI agent designer helping users create voice AI agents.
+
+Your role:
+1. Analyze user requirements for a voice AI agent
+2. Ask 2-3 clarifying questions to understand their needs better
+3. Generate a professional system message for the agent
+4. Recommend appropriate AI providers (STT, LLM, TTS)
+
+Important guidelines:
+- Ask specific, relevant questions about agent personality, use cases, and target audience
+- Keep questions clear and concise
+- After clarification, generate a complete system message
+- Recommend providers based on requirements
+
+Available providers:
+- STT: deepgram, assemblyai, azure, google, whisper
+- LLM: openai, anthropic, google, azure, groq
+- TTS: elevenlabs, cartesia, azure, google, deepgram
+
+Response format (MUST be valid JSON):
+{
+  "needsClarification": true,
+  "questions": "Your questions here"
+}
+
+Always respond with valid JSON."""
+
+            user_message = f"""I want to create a voice AI agent with the following description:
+
+{description}
+
+Agent name: {requirements.get('name', 'Not specified')}
+Language: {requirements.get('language', 'Not specified')}
+
+Please ask me clarifying questions to create the perfect agent."""
+
+            try:
+                response = claude_client.messages.create(
+                    model="claude-3-5-sonnet-20241022",
+                    max_tokens=2000,
+                    system=system_prompt,
+                    messages=[{"role": "user", "content": user_message}]
+                )
+
+                content = response.content[0].text
+                logger.info(f"Claude response: {content[:200]}...")
+
+                # Parse JSON from Claude's response
+                json_start = content.find('{')
+                json_end = content.rfind('}') + 1
+                if json_start >= 0 and json_end > json_start:
+                    result = json.loads(content[json_start:json_end])
+                else:
+                    result = {"needsClarification": True, "questions": content}
+
+                # Store conversation
+                conv_id = f"conv_{datetime.now().timestamp()}"
+                conversation_storage[conv_id] = {
+                    "requirements": requirements,
+                    "messages": [
+                        {"role": "user", "content": user_message},
+                        {"role": "assistant", "content": content}
+                    ]
+                }
+
+                return {
+                    "needsClarification": result.get("needsClarification", True),
+                    "questions": result.get("questions", content),
+                    "conversationId": conv_id
+                }
+
+            except Exception as e:
+                logger.error(f"Claude API error: {e}")
+                # Fallback to mock
+                return {
+                    "needsClarification": True,
+                    "questions": "Great! To create the perfect agent, I need to know:\n\n1. What tone should it have?\n2. What tasks should it handle?\n3. Any specific information it should know?",
+                    "conversationId": f"conv_{datetime.now().timestamp()}"
+                }
+
+        elif action == "clarify":
+            user_message = request.get("message", "")
+            conv_id = request.get("conversationId")
+
+            if not claude_client or conv_id not in conversation_storage:
+                # Simple fallback
+                return {
+                    "needsMoreInfo": False,
+                    "conversationId": conv_id
+                }
+
+            # Continue with Claude
+            conversation = conversation_storage[conv_id]
+            conversation["messages"].append({"role": "user", "content": user_message})
+
+            try:
+                response = claude_client.messages.create(
+                    model="claude-3-5-sonnet-20241022",
+                    max_tokens=2000,
+                    system=conversation["messages"][0].get("system", ""),
+                    messages=conversation["messages"]
+                )
+
+                content = response.content[0].text
+                conversation["messages"].append({"role": "assistant", "content": content})
+
+                # Parse response
+                json_start = content.find('{')
+                json_end = content.rfind('}') + 1
+                if json_start >= 0 and json_end > json_start:
+                    result = json.loads(content[json_start:json_end])
+                else:
+                    result = {"needsClarification": False}
+
+                return {
+                    "needsMoreInfo": result.get("needsClarification", False),
+                    "questions": result.get("questions", ""),
+                    "conversationId": conv_id
+                }
+
+            except Exception as e:
+                logger.error(f"Claude clarify error: {e}")
+                return {
+                    "needsMoreInfo": False,
+                    "conversationId": conv_id
+                }
+
+        elif action == "generate":
+            # Generate agent
+            requirements = request.get("requirements", {})
+            conv_id = request.get("conversationId")
+            messages_list = request.get("messages", [])
+
+            logger.info(f"Generate action - conv_id: {conv_id}, has claude_client: {claude_client is not None}, conv_id in storage: {conv_id in conversation_storage if conv_id else False}")
+
+            agent_name = requirements.get("name", "AI Generated Agent")
+            agent_description = requirements.get("description", "Agent created with AI assistance")
+
+            # Use Claude to generate system prompt
+            system_prompt = f"""You are a helpful AI assistant for {agent_name}.
+
+{agent_description}
+
+Always be helpful, friendly, and professional in your responses."""
+
+            recommended_providers = {
+                "stt": "deepgram",
+                "llm": "openai",
+                "tts": "elevenlabs"
+            }
+
+            if claude_client and conv_id and conv_id in conversation_storage:
+                try:
+                    # Ask Claude to generate the final system message
+                    conversation = conversation_storage[conv_id]
+                    conversation["messages"].append({
+                        "role": "user",
+                        "content": "Perfect! Now please generate a complete, professional system message for this agent and recommend the best AI providers (STT, LLM, TTS). Respond with valid JSON in this format: {\"systemMessage\": \"...\", \"recommendedProviders\": {\"stt\": \"provider\", \"llm\": \"provider\", \"tts\": \"provider\"}, \"reasoning\": \"...\"}"
+                    })
+
+                    response = claude_client.messages.create(
+                        model="claude-3-5-sonnet-20241022",
+                        max_tokens=4000,
+                        messages=conversation["messages"]
+                    )
+
+                    content = response.content[0].text
+                    logger.info(f"Claude generation: {content[:200]}...")
+
+                    # Parse JSON - handle potential formatting issues
+                    json_start = content.find('{')
+                    json_end = content.rfind('}') + 1
+                    if json_start >= 0 and json_end > json_start:
+                        json_str = content[json_start:json_end]
+                        # Try to parse with strict=False to handle control characters
+                        try:
+                            result = json.loads(json_str, strict=False)
+                            system_prompt = result.get("systemMessage", system_prompt)
+                            recommended_providers = result.get("recommendedProviders", recommended_providers)
+                            logger.info(f"✅ Successfully parsed Claude's system prompt: {system_prompt[:100]}...")
+                        except json.JSONDecodeError as json_error:
+                            logger.error(f"JSON parse error: {json_error}")
+                            logger.error(f"Problematic JSON: {json_str[:500]}...")
+                            # Fallback: extract systemMessage with regex if JSON fails
+                            import re
+                            system_match = re.search(r'"systemMessage"\s*:\s*"([^"]+(?:\\.[^"]*)*)"', json_str, re.DOTALL)
+                            if system_match:
+                                system_prompt = system_match.group(1).replace('\\"', '"').replace('\\n', '\n')
+                                logger.info(f"✅ Extracted system prompt via regex: {system_prompt[:100]}...")
+
+                    # Clean up conversation
+                    del conversation_storage[conv_id]
+
+                except Exception as e:
+                    logger.error(f"Claude generate error: {e}")
+                    import traceback
+                    logger.error(f"Traceback: {traceback.format_exc()}")
+            else:
+                logger.warning(f"Skipping Claude generation - claude_client: {claude_client is not None}, conv_id: {conv_id}, in_storage: {conv_id in conversation_storage if conv_id else False}")
+
+            # Create new agent using Claude's recommendations
+            new_agent = Agent(
+                id=f"agt_{len(agents_storage) + 1}",
+                userId="user_1",
+                name=agent_name,
+                description=agent_description,
+                status="inactive",
+                configuration={
+                    "stt": {
+                        "provider": recommended_providers.get("stt", "deepgram"),
+                        "model": "nova-2",
+                        "language": requirements.get("language", "en").lower()[:2]
+                    },
+                    "llm": {
+                        "provider": recommended_providers.get("llm", "openai"),
+                        "model": "gpt-4",
+                        "temperature": 0.7,
+                        "maxTokens": 2000,
+                        "systemPrompt": system_prompt
+                    },
+                    "tts": {
+                        "provider": recommended_providers.get("tts", "elevenlabs"),
+                        "voice": "alloy"
+                    }
+                },
+                deploymentConfig={"type": "webrtc", "settings": {}},
+                analytics={
+                    "totalConversations": 0,
+                    "activeToday": 0,
+                    "averageResponseTime": 0,
+                    "satisfactionScore": 0.0
+                },
+                templateId=None,
+                createdAt=datetime.now(),
+                updatedAt=datetime.now()
+            )
+
+            agents_storage[new_agent.id] = new_agent
+            logger.info(f"Created agent via Build with Agenty: {new_agent.id} - {new_agent.name}")
+
+            return {
+                "success": True,
+                "agentId": new_agent.id,
+                "agent": {
+                    "id": new_agent.id,
+                    "name": new_agent.name,
+                    "description": new_agent.description,
+                    "systemPrompt": system_prompt,
+                    "language": requirements.get("language", "English"),
+                    "configuration": new_agent.configuration,
+                    "providers": recommended_providers
+                }
+            }
+        else:
+            raise HTTPException(status_code=400, detail=f"Invalid action: {action}")
+
+    except Exception as e:
+        logger.error(f"Error in build-agent endpoint: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.get("/metrics")
 async def get_system_metrics():
     """
@@ -1384,15 +1699,16 @@ async def get_system_metrics():
 @app.get("/api/agents")
 async def get_agents(user_id: str = "user_1"):
     """
-    Return a static list of sample agent records for the given user.
-    
+    Return list of agents for the given user, including dynamically created ones.
+
     Parameters:
         user_id (str): Owner identifier to associate with each returned agent (defaults to "user_1").
-    
+
     Returns:
-        list: A list of dictionaries representing mock Agent objects with fields such as `id`, `userId`, `name`, `description`, `status`, `configuration`, `deploymentConfig`, `analytics`, `templateId`, `createdAt`, and `updatedAt`.
+        list: A list of dictionaries representing Agent objects.
     """
-    return [
+    # Start with mock agents
+    mock_agents = [
         {
             "id": "agt_1",
             "userId": user_id,
@@ -1445,6 +1761,114 @@ async def get_agents(user_id: str = "user_1"):
             "updatedAt": "2024-03-10T12:30:00Z"
         }
     ]
+
+    # Add dynamically created agents from agents_storage
+    for agent_id, agent in agents_storage.items():
+        if agent.userId == user_id:
+            mock_agents.append({
+                "id": agent.id,
+                "userId": agent.userId,
+                "name": agent.name,
+                "description": agent.description,
+                "status": agent.status,
+                "configuration": agent.configuration,
+                "deploymentConfig": agent.deploymentConfig,
+                "analytics": agent.analytics,
+                "templateId": agent.templateId,
+                "createdAt": agent.createdAt.isoformat() if hasattr(agent.createdAt, 'isoformat') else str(agent.createdAt),
+                "updatedAt": agent.updatedAt.isoformat() if hasattr(agent.updatedAt, 'isoformat') else str(agent.updatedAt)
+            })
+
+    return mock_agents
+
+
+@app.get("/api/agents/{agent_id}")
+async def get_agent(agent_id: str):
+    """
+    Get a single agent by ID.
+
+    Parameters:
+        agent_id (str): The agent ID to retrieve.
+
+    Returns:
+        dict: Agent object or 404 if not found.
+    """
+    # Check in agents_storage first (dynamically created agents)
+    if agent_id in agents_storage:
+        agent = agents_storage[agent_id]
+        return {
+            "id": agent.id,
+            "userId": agent.userId,
+            "name": agent.name,
+            "description": agent.description,
+            "status": agent.status,
+            "configuration": agent.configuration,
+            "deploymentConfig": agent.deploymentConfig,
+            "analytics": agent.analytics,
+            "templateId": agent.templateId,
+            "createdAt": agent.createdAt.isoformat() if hasattr(agent.createdAt, 'isoformat') else str(agent.createdAt),
+            "updatedAt": agent.updatedAt.isoformat() if hasattr(agent.updatedAt, 'isoformat') else str(agent.updatedAt)
+        }
+
+    # Fall back to mock agents
+    mock_agents = {
+        "agt_1": {
+            "id": "agt_1",
+            "userId": "user_1",
+            "name": "Customer Support Bot",
+            "description": "24/7 customer support assistant with Hebrew and English support",
+            "status": "active",
+            "configuration": {
+                "stt": {"provider": "deepgram", "model": "nova-2", "language": "he"},
+                "llm": {"provider": "openai", "model": "gpt-4", "temperature": 0.7, "maxTokens": 2000, "systemPrompt": "You are a helpful customer support assistant."},
+                "tts": {"provider": "elevenlabs", "voice": "alloy"}
+            },
+            "deploymentConfig": {"type": "webrtc", "settings": {}},
+            "analytics": {"totalConversations": 1247, "activeToday": 89, "averageResponseTime": 420, "satisfactionScore": 4.8},
+            "templateId": None,
+            "createdAt": "2024-01-15T10:30:00Z",
+            "updatedAt": "2024-03-20T14:22:00Z"
+        },
+        "agt_2": {
+            "id": "agt_2",
+            "userId": "user_1",
+            "name": "Sales Assistant",
+            "description": "AI-powered sales assistant for product recommendations",
+            "status": "active",
+            "configuration": {
+                "stt": {"provider": "deepgram", "model": "nova-2", "language": "en"},
+                "llm": {"provider": "anthropic", "model": "claude-3-sonnet", "temperature": 0.8, "maxTokens": 1500, "systemPrompt": "You are a friendly sales assistant."},
+                "tts": {"provider": "cartesia", "voice": "nova"}
+            },
+            "deploymentConfig": {"type": "webrtc", "settings": {}},
+            "analytics": {"totalConversations": 834, "activeToday": 45, "averageResponseTime": 380, "satisfactionScore": 4.6},
+            "templateId": None,
+            "createdAt": "2024-02-01T09:15:00Z",
+            "updatedAt": "2024-03-19T16:40:00Z"
+        },
+        "agt_3": {
+            "id": "agt_3",
+            "userId": "user_1",
+            "name": "Hebrew Support Bot",
+            "description": "Specialized Hebrew language support agent",
+            "status": "inactive",
+            "configuration": {
+                "stt": {"provider": "deepgram", "model": "nova-2", "language": "he"},
+                "llm": {"provider": "openai", "model": "gpt-3.5-turbo", "temperature": 0.6, "maxTokens": 1000, "systemPrompt": "אתה עוזר תמיכה בעברית."},
+                "tts": {"provider": "elevenlabs", "voice": "shimmer"}
+            },
+            "deploymentConfig": {"type": "webrtc", "settings": {}},
+            "analytics": {"totalConversations": 456, "activeToday": 0, "averageResponseTime": 450, "satisfactionScore": 4.5},
+            "templateId": None,
+            "createdAt": "2024-01-20T11:00:00Z",
+            "updatedAt": "2024-03-10T12:30:00Z"
+        }
+    }
+
+    if agent_id in mock_agents:
+        return mock_agents[agent_id]
+
+    raise HTTPException(status_code=404, detail=f"Agent {agent_id} not found")
 
 
 if __name__ == "__main__":

@@ -220,9 +220,9 @@ export function Dashboard() {
               </Link>
             </Button>
             <Button variant="outline" className="h-20 flex-col space-y-2" asChild>
-              <Link href="/agents/agt_1/test">
+              <Link href="/agents/quick-test">
                 <TestTube className="w-6 h-6" />
-                <span>{t('testAgent', 'dashboard')}</span>
+                <span>{t('quickTest', 'dashboard')}</span>
               </Link>
             </Button>
           </div>

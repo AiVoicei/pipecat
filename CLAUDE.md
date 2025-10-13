@@ -298,9 +298,28 @@ See `AI_VOICEI_PROJECT_PLAN.md` for the comprehensive new platform roadmap:
 - ✅ **Hebrew RTL Excellence**: Full right-to-left language support with theme switching
 - ✅ **Mobile Responsive**: Works perfectly on all device sizes
 - ✅ **Accessibility Complete**: ARIA labels, screen reader support, keyboard navigation
+- ✅ **"Build with Agenty"**: AI-powered agent generation with Claude 3.5 Sonnet
 
-**🎯 Current Platform Capabilities (Phase 3 Complete):**
+**🤖 "Build with Agenty" - AI-Powered Agent Creation (October 13, 2025):**
+- ✅ **Claude AI Integration**: Claude 3.5 Sonnet (`claude-3-5-sonnet-20241022`) for intelligent agent generation
+- ✅ **Natural Language Processing**: Users describe agents in plain text, Claude asks clarifying questions
+- ✅ **Custom System Prompt Generation**: Claude creates tailored, detailed system prompts based on requirements
+- ✅ **Multi-turn Conversation**: Interactive clarification flow ensures agent meets exact specifications
+- ✅ **JSON Parsing Robustness**: Handles control characters and formatting variations in Claude responses
+- ✅ **Conversation State Management**: Tracks conversation IDs across frontend and backend
+- ✅ **Provider Recommendations**: Claude suggests optimal STT/LLM/TTS providers for each use case
+- ✅ **Automatic Agent Creation**: Seamless end-to-end flow from description to deployed agent
+
+**Technical Implementation:**
+- **Backend**: `/api/build-agent` endpoint with three actions (start, clarify, generate)
+- **Frontend**: `/build` page with 4-step wizard (input, clarification, generating, complete)
+- **AI Service**: Anthropic Claude API with robust JSON parsing (`strict=False` + regex fallback)
+- **Storage**: In-memory conversation storage with automatic cleanup after generation
+- **Logging**: Comprehensive success/failure tracking for Claude interactions
+
+**🎯 Current Platform Capabilities (Phase 3 Complete + Build with Agenty):**
 - **Fully Functional Agent Creation**: End-to-end visual agent builder with Turbo Flow
+- **AI-Powered Agent Generation**: Natural language agent creation with Claude AI
 - **Provider Integration**: 19 major providers complete (OpenAI, Deepgram, Azure, Anthropic, ElevenLabs, Cartesia, and 13 others)
 - **Multi-language Platform**: Professional Hebrew RTL ↔ English switching
 - **Real-time Testing**: AI Voicei integration for immediate agent testing
@@ -310,6 +329,7 @@ See `AI_VOICEI_PROJECT_PLAN.md` for the comprehensive new platform roadmap:
 - **Secure Credentials**: Encrypted API key storage and validation
 - **Advanced Configuration**: Personality, voice settings, interruption handling, context management
 - **Analytics Dashboard**: Conversation tracking, transcripts, performance metrics
+- **Custom System Prompts**: Claude-generated, context-aware prompts for each agent
 
 **📞 PHASE 4: Starting Deployment & Integration Options (October 3, 2025):**
 **Status:** Ready to begin implementation
@@ -322,6 +342,7 @@ See `AI_VOICEI_PROJECT_PLAN.md` for the comprehensive new platform roadmap:
 - **`src/components/features/builder/AgentBuilder.tsx`** - ✅ Complete 4-step agent creation wizard
 - **`src/components/features/providers/ProviderMarketplace.tsx`** - ✅ Full provider marketplace UI
 - **`src/components/features/builder/PipelineBuilder.tsx`** - ✅ Visual drag-drop pipeline builder
+- **`src/app/build/page.tsx`** - ✅ "Build with Agenty" AI-powered agent creation interface
 - **`src/contexts/LanguageContext.tsx`** - ✅ Complete translation system (800+ keys)
 
 **Backend (FastAPI Engine):**
@@ -331,7 +352,11 @@ See `AI_VOICEI_PROJECT_PLAN.md` for the comprehensive new platform roadmap:
 - **`src/services/database_service.py`** - ✅ Complete database CRUD operations
 - **`src/models/`** - ✅ Complete PostgreSQL database models
 - **`src/core/database.py`** - ✅ Database configuration and session management
-- **`aivoicei_web_server.py`** - ✅ Working AI Voicei reference implementation
+- **`aivoicei_web_server.py`** - ✅ AI Voicei reference implementation with Claude AI integration (lines 1400-1650)
+  - `/api/build-agent` endpoint for AI-powered agent generation
+  - Claude 3.5 Sonnet integration for custom system prompt generation
+  - Multi-turn conversation management with clarification flow
+  - Robust JSON parsing with control character handling
 
 **Documentation:**
 - **`AI_VOICEI_PROJECT_PLAN.md`** - ✅ Updated platform roadmap with Phase 2 complete

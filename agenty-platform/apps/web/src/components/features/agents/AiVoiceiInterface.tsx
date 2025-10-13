@@ -13,9 +13,10 @@ import { useAgentStore } from '@/stores/useAgentStore';
 
 interface AiVoiceiInterfaceProps {
   agentId?: string;
+  isQuickTest?: boolean;
 }
 
-export function AiVoiceiInterface({ agentId }: AiVoiceiInterfaceProps) {
+export function AiVoiceiInterface({ agentId, isQuickTest = false }: AiVoiceiInterfaceProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'chat' | 'history' | 'settings'>('chat');
   const { isHebrew } = useLanguage();
@@ -26,10 +27,14 @@ export function AiVoiceiInterface({ agentId }: AiVoiceiInterfaceProps) {
   // Get agent configuration to display provider info
   const { agents } = useAgentStore();
   const agent = agentId ? agents.find(a => a.id === agentId) : null;
-  const config = agent?.configuration;
+
+  // Quick test mode always uses Gemini Live
+  const config = isQuickTest
+    ? { llm: { provider: 'gemini-live' } }
+    : agent?.configuration;
 
   // Determine pipeline type
-  const isRealtimePipeline = !config?.stt && !config?.llm && !config?.tts;
+  const isRealtimePipeline = isQuickTest || (!config?.stt && !config?.llm && !config?.tts);
   const pipelineType = isRealtimePipeline ? 'realtime' : 'traditional';
 
   // Enable dark mode and language support

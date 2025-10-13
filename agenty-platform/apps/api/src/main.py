@@ -14,6 +14,7 @@ from fastapi.openapi.utils import get_openapi
 
 from api.v1.agents import router as agents_router
 from api.v1.providers import router as providers_router
+from api.v1.build_agent import router as build_agent_router
 from utils.dependencies import get_app_config
 from core.database import init_database
 
@@ -68,6 +69,7 @@ async def startup_event():
 # Include API routers
 app.include_router(agents_router, prefix="/api/v1")
 app.include_router(providers_router, prefix="/api/v1")
+app.include_router(build_agent_router, prefix="/api/v1", tags=["build-agent"])
 
 # Health check endpoint
 @app.get("/health")
@@ -94,6 +96,7 @@ async def root():
         "endpoints": {
             "agents": "/api/v1/agents",
             "providers": "/api/v1/providers",
+            "build_agent": "/api/v1/build-agent",
             "health": "/health"
         }
     }

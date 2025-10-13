@@ -1,0 +1,28 @@
+2025-10-13 17:42:54.943 | INFO     | pipecat:<module>:14 - ᓚᘏᗢ Pipecat 0.0.84 (Python 3.12.3 (main, Aug 14 2025, 17:47:21) [GCC 13.3.0]) ᓚᘏᗢ
+2025-10-13 17:43:10.876 | INFO     | __main__:<module>:109 - ✅ Claude AI initialized for Build with Agenty
+2025-10-13 17:43:11.019 | INFO     | __main__:<module>:1881 - Starting AI Voicei Web Server on localhost:7860
+INFO:     Started server process [21215]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://localhost:7860 (Press CTRL+C to quit)
+INFO:     127.0.0.1:57292 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57292 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57294 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+2025-10-13 17:46:11.307 | INFO     | __main__:build_agent_endpoint:1426 - Claude response: {
+  "needsClarification": true,
+  "questions": [
+    "1. What specific aspects of the resume would you like the agent to focus on? (e.g., professional experience, skills, education, or providing feedb...
+INFO:     127.0.0.1:44582 - "POST /api/build-agent HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44590 - "POST /api/build-agent HTTP/1.1" 200 OK
+2025-10-13 17:46:54.601 | INFO     | __main__:build_agent_endpoint:1514 - Generate action - conv_id: conv_1760366771.308161, has claude_client: True, conv_id in storage: True
+2025-10-13 17:47:01.018 | INFO     | __main__:build_agent_endpoint:1548 - Claude generation: {
+    "systemMessage": "You are a professional resume advocate specializing in development roles. Your purpose is to analyze and articulate why the candidate in the provided resume is qualified for de...
+2025-10-13 17:47:01.019 | INFO     | __main__:build_agent_endpoint:1560 - ✅ Successfully parsed Claude's system prompt: You are a professional resume advocate specializing in development roles. Your purpose is to analyze...
+2025-10-13 17:47:01.020 | INFO     | __main__:build_agent_endpoint:1619 - Created agent via Build with Agenty: agt_3 - dadad
+INFO:     127.0.0.1:44590 - "POST /api/build-agent HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41914 - "GET /api/agents/agt_3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41914 - "GET /api/agents/agt_3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41914 - "GET /api/agents/agt_3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41914 - "GET /api/agents/agt_3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41926 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41926 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK

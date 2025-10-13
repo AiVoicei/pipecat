@@ -21,6 +21,7 @@ import {
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { PricingDialog } from '@/components/features/pricing/PricingDialog'
 
 /**
  * Render the application's collapsible navigation sidebar with header, create button, navigation links, and a promotional block.
@@ -31,6 +32,7 @@ import { Badge } from '@/components/ui/badge'
  */
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false)
+  const [pricingDialogOpen, setPricingDialogOpen] = useState(false)
   const pathname = usePathname()
   const { t } = useLanguage()
 
@@ -42,7 +44,7 @@ export function Sidebar() {
     { name: t('providerMarketplace', 'navigation'), href: '/providers', icon: Sparkles },
     { name: t('analytics', 'navigation'), href: '/analytics', icon: BarChart3 },
     { name: t('templates', 'navigation'), href: '/templates', icon: Palette },
-    { name: t('whiteLabel', 'navigation'), href: '/white-label', icon: Users, badge: 'Pro' },
+    { name: t('whiteLabel', 'navigation'), href: '#', icon: Users, badge: 'Pro', onClick: () => setPricingDialogOpen(true) },
     { name: t('settings', 'navigation'), href: '/settings', icon: Settings },
   ]
 
@@ -98,12 +100,17 @@ export function Sidebar() {
       <nav className="flex-1 px-4 pb-4 space-y-1">
         {navigation.map((item) => {
           const isActive = pathname === item.href
+          const Component = item.onClick ? 'button' : Link
+          const props = item.onClick
+            ? { onClick: item.onClick, type: 'button' as const }
+            : { href: item.href }
+
           return (
-            <Link
+            <Component
               key={item.name}
-              href={item.href}
+              {...props}
               className={cn(
-                "flex items-center px-3 py-2 text-sm rounded-lg transition-colors",
+                "flex items-center px-3 py-2 text-sm rounded-lg transition-colors w-full text-left",
                 isActive
                   ? "bg-sidebar-primary text-sidebar-primary-foreground"
                   : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
@@ -121,7 +128,7 @@ export function Sidebar() {
                   )}
                 </>
               )}
-            </Link>
+            </Component>
           )
         })}
       </nav>
@@ -152,6 +159,9 @@ export function Sidebar() {
           </div>
         </div>
       )}
+
+      {/* Pricing Dialog */}
+      <PricingDialog open={pricingDialogOpen} onOpenChange={setPricingDialogOpen} />
     </div>
   )
 }

@@ -95,19 +95,19 @@ transport_params = {
 async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
     logger.info("Starting Gemini Multimodal Live with basic RTVI")
 
-    # Gemini setup configured for Hebrew
+    # Gemini setup configured for English
     llm = GeminiMultimodalLiveLLMService(
         api_key=os.getenv("GOOGLE_API_KEY"),
-        voice_id="Puck",  # Using Puck voice (may work better with Hebrew)
-        system_instruction="אתה עוזר מועיל שמדבר עברית בלבד. תמיד תענה בעברית ותהיה ידידותי ומועיל. אם מישהו מדבר איתך בשפה אחרת, תבקש ממנו לדבר עברית ותענה בעברית.",
+        voice_id="Leda",  # Using Leda voice for English
+        system_instruction="You are a helpful assistant that speaks English. Always respond in English and be friendly and helpful. Provide clear, concise, and accurate responses to user queries.",
         # inference_on_context_initialization=False,
     )
 
-    # Context setup with Hebrew greeting
+    # Context setup with English greeting
     context = OpenAILLMContext([
         {
             "role": "user",
-            "content": "אמור שלום.",
+            "content": "Say hello.",
         },
     ])
     context_aggregator = llm.create_context_aggregator(context)

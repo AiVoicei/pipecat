@@ -33,22 +33,49 @@ export default function AgentDetailPage() {
   } = useAgentStore()
 
   const [agent, setAgent] = useState<Agent | null>(null)
+  const [isFetchingAgent, setIsFetchingAgent] = useState(false)
 
   useEffect(() => {
-    if (agents.length === 0) {
-      fetchAgents()
-    } else {
+    const loadAgent = async () => {
+      // First try to find in store
       const foundAgent = agents.find(a => a.id === agentId)
-      setAgent(foundAgent || null)
+
+      if (foundAgent) {
+        setAgent(foundAgent)
+      } else if (!isFetchingAgent) {
+        // If not in store, fetch from API directly
+        setIsFetchingAgent(true)
+        try {
+          const response = await fetch(`http://localhost:7860/api/agents/${agentId}`)
+          if (response.ok) {
+            const agentData = await response.json()
+            setAgent(agentData)
+          } else {
+            // If agent not found in API, refresh store
+            await fetchAgents()
+          }
+        } catch (error) {
+          console.error('Failed to fetch agent:', error)
+          // Try refreshing store as fallback
+          await fetchAgents()
+        } finally {
+          setIsFetchingAgent(false)
+        }
+      }
     }
-  }, [agentId, agents, fetchAgents])
+
+    loadAgent()
+  }, [agentId, agents, fetchAgents, isFetchingAgent])
 
   useEffect(() => {
-    if (agents.length > 0) {
+    // When agents list updates, check if our agent is now available
+    if (agents.length > 0 && !agent) {
       const foundAgent = agents.find(a => a.id === agentId)
-      setAgent(foundAgent || null)
+      if (foundAgent) {
+        setAgent(foundAgent)
+      }
     }
-  }, [agentId, agents])
+  }, [agentId, agents, agent])
 
   const handleDelete = async () => {
     if (confirm(t('confirmDelete', 'agents'))) {
@@ -99,7 +126,7 @@ export default function AgentDetailPage() {
     }
   }
 
-  if (isLoading) {
+  if (isLoading || isFetchingAgent) {
     return (
       <AppLayout>
         <div className="space-y-6">
