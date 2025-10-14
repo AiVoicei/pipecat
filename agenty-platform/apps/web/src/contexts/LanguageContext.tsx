@@ -242,6 +242,41 @@ const translations = {
     'buildWithAgenty.agentCreatedDesc': 'הסוכן שלך מוכן. אתה יכול לערוך אותו, להוסיף מפתחות API ולבדוק אותו',
     'buildWithAgenty.viewAgent': 'צפה בסוכן',
 
+    // Build with Agenty - New Magical Flow
+    'buildWithAgenty.welcome': 'שלום!',
+    'buildWithAgenty.welcomeIntro': 'אני Agenty, בואו ניצור את הסוכן המושלם שלכם!',
+    'buildWithAgenty.welcomeSubtitle': 'אספר לי מה אתה רוצה, ואני אבנה עבורך סוכן AI מותאם אישית תוך דקות',
+    'buildWithAgenty.letsGetStarted': 'בואו נתחיל!',
+    'buildWithAgenty.whatShouldAgentDo': 'מה הסוכן שלך צריך לעשות?',
+    'buildWithAgenty.whatsAgentName': 'איך נקרא לסוכן שלך?',
+    'buildWithAgenty.whatLanguage': 'באיזו שפה הסוכן צריך לדבר?',
+    'buildWithAgenty.whichVoice': 'איזה קול לסוכן?',
+    'buildWithAgenty.anyDocuments': 'יש לך מסמכים לסוכן?',
+    'buildWithAgenty.femaleVoice': 'נקבה',
+    'buildWithAgenty.maleVoice': 'זכר',
+    'buildWithAgenty.voiceAffects': 'בחירה זו משפיעה על הקול בזמן אמת של הסוכן',
+    'buildWithAgenty.uploadDoc': 'העלה מסמך',
+    'buildWithAgenty.pdfTxtDoc': 'PDF, TXT, DOC, או MD',
+    'buildWithAgenty.optionalDocs': '(אופציונלי - הסוכן יוכל ללמוד ממסמכים אלה)',
+    'buildWithAgenty.optionalName': '(אופציונלי - נוכל להמליץ על שם מתאים)',
+    'buildWithAgenty.optionalLanguage': '(אופציונלי - ברירת המחדל היא אנגלית)',
+    'buildWithAgenty.createAgent': 'צור סוכן!',
+    'buildWithAgenty.continue': 'המשך',
+    'buildWithAgenty.back': 'חזור',
+    'buildWithAgenty.characters': 'תווים',
+    'buildWithAgenty.beDetailed': 'תאר בפירוט ככל האפשר',
+    'buildWithAgenty.fewQuestions': 'יש לי כמה שאלות...',
+    'buildWithAgenty.craftingPersonality': 'יוצר אישיות',
+    'buildWithAgenty.connectingServices': 'מתחבר לשירותי AI',
+    'buildWithAgenty.agentReady': 'הסוכן מוכן',
+    'buildWithAgenty.yourAgentBorn': 'הסוכן שלך נולד!',
+    'buildWithAgenty.meet': 'פגוש את',
+    'buildWithAgenty.readyToGo': 'הסוכן שלך מוכן לפעולה! בוא נראה מה הוא יכול לעשות.',
+    'buildWithAgenty.agents': 'סוכנים',
+    'buildWithAgenty.ready': 'מוכן',
+    'buildWithAgenty.power': 'עוצמה',
+    'buildWithAgenty.max': 'Max',
+
     // Dashboard
     'dashboard.title': 'לוח בקרה',
     'dashboard.welcome': 'ברוכים הבאים לאגנטי',
@@ -562,7 +597,8 @@ const translations = {
     'common.cancel': 'בטל',
     'common.save': 'שמור',
     'common.edit': 'ערוך',
-    'common.delete': 'מחק'
+    'common.delete': 'מחק',
+    'common.optional': 'אופציונלי'
   },
   en: {
     // Navigation
@@ -789,6 +825,41 @@ const translations = {
     'buildWithAgenty.agentCreated': 'Agent Created Successfully!',
     'buildWithAgenty.agentCreatedDesc': 'Your agent is ready. You can edit it, add API keys, and test it',
     'buildWithAgenty.viewAgent': 'View Agent',
+
+    // Build with Agenty - New Magical Flow
+    'buildWithAgenty.welcome': 'Hello!',
+    'buildWithAgenty.welcomeIntro': "I'm Agenty, let's create your perfect agent!",
+    'buildWithAgenty.welcomeSubtitle': "Tell me what you want, and I'll build you a custom AI agent in minutes",
+    'buildWithAgenty.letsGetStarted': "Let's Get Started!",
+    'buildWithAgenty.whatShouldAgentDo': 'What should your agent do?',
+    'buildWithAgenty.whatsAgentName': "What's your agent's name?",
+    'buildWithAgenty.whatLanguage': 'What language should your agent speak?',
+    'buildWithAgenty.whichVoice': 'Which voice for your agent?',
+    'buildWithAgenty.anyDocuments': 'Any documents for your agent?',
+    'buildWithAgenty.femaleVoice': 'Female',
+    'buildWithAgenty.maleVoice': 'Male',
+    'buildWithAgenty.voiceAffects': "This affects your agent's real-time voice",
+    'buildWithAgenty.uploadDoc': 'Upload a document',
+    'buildWithAgenty.pdfTxtDoc': 'PDF, TXT, DOC, or MD',
+    'buildWithAgenty.optionalDocs': '(Optional - agent will learn from these documents)',
+    'buildWithAgenty.optionalName': '(Optional - we can suggest a name)',
+    'buildWithAgenty.optionalLanguage': '(Optional - defaults to English)',
+    'buildWithAgenty.createAgent': 'Create Agent!',
+    'buildWithAgenty.continue': 'Continue',
+    'buildWithAgenty.back': 'Back',
+    'buildWithAgenty.characters': 'characters',
+    'buildWithAgenty.beDetailed': 'Be as detailed as possible',
+    'buildWithAgenty.fewQuestions': 'I have a few questions...',
+    'buildWithAgenty.craftingPersonality': 'Crafting personality',
+    'buildWithAgenty.connectingServices': 'Connecting AI services',
+    'buildWithAgenty.agentReady': 'Agent ready',
+    'buildWithAgenty.yourAgentBorn': 'Your agent is born!',
+    'buildWithAgenty.meet': 'Meet',
+    'buildWithAgenty.readyToGo': "Your agent is ready to go! Let's see what it can do.",
+    'buildWithAgenty.agents': 'Agents',
+    'buildWithAgenty.ready': 'Ready',
+    'buildWithAgenty.power': 'Power',
+    'buildWithAgenty.max': 'Max',
 
     // Dashboard
     'dashboard.title': 'Dashboard',
@@ -1110,7 +1181,8 @@ const translations = {
     'common.cancel': 'Cancel',
     'common.save': 'Save',
     'common.edit': 'Edit',
-    'common.delete': 'Delete'
+    'common.delete': 'Delete',
+    'common.optional': 'Optional'
   }
 }
 

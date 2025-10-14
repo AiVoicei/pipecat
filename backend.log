@@ -1,0 +1,110 @@
+2025-10-15 02:07:16.555 | INFO     | pipecat:<module>:14 - ᓚᘏᗢ Pipecat 0.0.84 (Python 3.12.3 (main, Aug 14 2025, 17:47:21) [GCC 13.3.0]) ᓚᘏᗢ
+2025-10-15 02:07:33.693 | INFO     | __main__:<module>:109 - ✅ Claude AI initialized for Build with Agenty
+2025-10-15 02:07:33.882 | INFO     | __main__:<module>:2104 - Starting AI Voicei Web Server on localhost:7860
+INFO:     Started server process [17236]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://localhost:7860 (Press CTRL+C to quit)
+INFO:     127.0.0.1:52434 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52434 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52434 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52434 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52434 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52440 - "OPTIONS /api/agents/agt_1 HTTP/1.1" 200 OK
+2025-10-15 02:08:30.306 | INFO     | __main__:delete_agent:1462 - Deleted agent: agt_1 - Customer Support Assistant
+INFO:     127.0.0.1:52440 - "DELETE /api/agents/agt_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52440 - "OPTIONS /api/agents/agt_2 HTTP/1.1" 200 OK
+2025-10-15 02:08:31.872 | INFO     | __main__:delete_agent:1462 - Deleted agent: agt_2 - Hebrew Support Bot
+INFO:     127.0.0.1:52440 - "DELETE /api/agents/agt_2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37840 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37840 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+2025-10-15 02:09:59.677 | INFO     | __main__:build_agent_endpoint:1607 - Claude response: {
+  "needsClarification": true,
+  "questions": [
+    "Could you please provide a more detailed description of what purpose this AI agent should serve? (e.g., customer service, personal assistant, educ...
+INFO:     127.0.0.1:41142 - "POST /api/build-agent HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41142 - "POST /api/build-agent HTTP/1.1" 200 OK
+2025-10-15 02:10:03.330 | INFO     | __main__:build_agent_endpoint:1688 - Generate action - conv_id: conv_1760483399.678311, has claude_client: True, conv_id in storage: True
+2025-10-15 02:10:06.760 | INFO     | __main__:build_agent_endpoint:1777 - Claude generation: I apologize, but I still don't have enough information to generate a meaningful system message or make informed recommendations about providers. The previous responses ("dsadasd" and "sd") don't provi...
+2025-10-15 02:10:06.761 | INFO     | __main__:build_agent_endpoint:1842 - Created agent via Build with Agenty: agt_1 - asdasdasd
+INFO:     127.0.0.1:41142 - "POST /api/build-agent HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41148 - "GET /api/agents/agt_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41148 - "GET /api/agents/agt_1 HTTP/1.1" 200 OK
+2025-10-15 02:10:34.664 | INFO     | __main__:delete_agent:1462 - Deleted agent: agt_1 - asdasdasd
+INFO:     127.0.0.1:53970 - "DELETE /api/agents/agt_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53970 - "GET /api/agents/agt_1 HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:53970 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53970 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53970 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53970 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+2025-10-15 02:12:20.650 | INFO     | __main__:build_agent_endpoint:1607 - Claude response: {
+  "needsClarification": true,
+  "questions": "1. Could you please provide more specific details about what you mean by 'sad'? Are you looking to create an agent that helps people dealing with sadnes...
+INFO:     127.0.0.1:34578 - "POST /api/build-agent HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34578 - "POST /api/build-agent HTTP/1.1" 200 OK
+2025-10-15 02:12:24.908 | INFO     | __main__:build_agent_endpoint:1688 - Generate action - conv_id: conv_1760483540.651257, has claude_client: True, conv_id in storage: True
+2025-10-15 02:12:30.585 | INFO     | __main__:build_agent_endpoint:1777 - Claude generation: {
+  "systemMessage": "You are a melancholic AI agent who expresses sadness and speaks with a gloomy, downcast tone. Keep responses brief and dejected, frequently using words that convey hopelessness, ...
+2025-10-15 02:12:30.585 | INFO     | __main__:build_agent_endpoint:1789 - ✅ Successfully parsed Claude's system prompt: You are a melancholic AI agent who expresses sadness and speaks with a gloomy, downcast tone. Keep r...
+2025-10-15 02:12:30.586 | INFO     | __main__:build_agent_endpoint:1842 - Created agent via Build with Agenty: agt_1 - AI Generated Agent
+INFO:     127.0.0.1:34578 - "POST /api/build-agent HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43392 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43392 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43392 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43392 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43392 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43392 - "OPTIONS /api/agents/agt_1 HTTP/1.1" 200 OK
+2025-10-15 02:22:01.695 | INFO     | __main__:delete_agent:1462 - Deleted agent: agt_1 - AI Generated Agent
+INFO:     127.0.0.1:43392 - "DELETE /api/agents/agt_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43392 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43392 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+2025-10-15 02:22:22.274 | INFO     | __main__:build_agent_endpoint:1607 - Claude response: {
+  "needsClarification": true,
+  "questions": [
+    "1. Could you please provide a more detailed description of what kind of voice AI agent you'd like to create? For example, is it a customer service...
+INFO:     127.0.0.1:43398 - "POST /api/build-agent HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43398 - "POST /api/build-agent HTTP/1.1" 200 OK
+2025-10-15 02:22:29.460 | INFO     | __main__:build_agent_endpoint:1688 - Generate action - conv_id: conv_1760484142.275549, has claude_client: True, conv_id in storage: True
+2025-10-15 02:22:33.235 | INFO     | __main__:build_agent_endpoint:1777 - Claude generation: I apologize, but I still don't have enough information to generate a meaningful system message or make provider recommendations. Based on your previous responses ("kj" and "hhj"), I cannot determine:
+...
+2025-10-15 02:22:33.235 | INFO     | __main__:build_agent_endpoint:1842 - Created agent via Build with Agenty: agt_1 - AI Generated Agent
+INFO:     127.0.0.1:43398 - "POST /api/build-agent HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49856 - "GET /api/agents/agt_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49856 - "GET /api/agents/agt_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47542 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47542 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47542 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36716 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36716 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48324 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35408 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35408 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35408 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45886 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45886 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45896 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44354 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44354 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44370 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+2025-10-15 02:52:18.579 | INFO     | __main__:build_agent_endpoint:1607 - Claude response: {
+  "needsClarification": true,
+  "questions": "1. Could you please provide a more detailed description of what you want this AI agent to do? What is its main purpose or role?\n\n2. What kind of perso...
+INFO:     127.0.0.1:42388 - "POST /api/build-agent HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42388 - "POST /api/build-agent HTTP/1.1" 200 OK
+2025-10-15 02:52:25.624 | INFO     | __main__:build_agent_endpoint:1688 - Generate action - conv_id: conv_1760485938.579954, has claude_client: True, conv_id in storage: True
+2025-10-15 02:52:30.198 | INFO     | __main__:build_agent_endpoint:1777 - Claude generation: {
+    "systemMessage": "I apologize, but I cannot generate a proper system message or make informed provider recommendations because I haven't received clear specifications about the agent's purpose, ...
+2025-10-15 02:52:30.199 | INFO     | __main__:build_agent_endpoint:1789 - ✅ Successfully parsed Claude's system prompt: I apologize, but I cannot generate a proper system message or make informed provider recommendations...
+2025-10-15 02:52:30.199 | INFO     | __main__:build_agent_endpoint:1842 - Created agent via Build with Agenty: agt_2 - mnbmb
+INFO:     127.0.0.1:42388 - "POST /api/build-agent HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42398 - "GET /api/agents/agt_2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42398 - "GET /api/agents/agt_2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42528 - "OPTIONS /api/agents/agt_2 HTTP/1.1" 200 OK
+2025-10-15 02:53:18.426 | INFO     | __main__:delete_agent:1462 - Deleted agent: agt_2 - mnbmb
+INFO:     127.0.0.1:42528 - "DELETE /api/agents/agt_2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42528 - "GET /api/agents/agt_2 HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42528 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42528 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42528 - "OPTIONS /api/agents/agt_1 HTTP/1.1" 200 OK
+2025-10-15 02:53:21.617 | INFO     | __main__:delete_agent:1462 - Deleted agent: agt_1 - AI Generated Agent
+INFO:     127.0.0.1:42528 - "DELETE /api/agents/agt_1 HTTP/1.1" 200 OK
