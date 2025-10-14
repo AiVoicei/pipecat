@@ -14,7 +14,7 @@ from datetime import datetime
 
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Request
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Request, Form, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from loguru import logger
@@ -134,6 +134,7 @@ class LLMConfig(BaseModel):
     systemPrompt: str = Field(..., description="System prompt")
     temperature: float = Field(default=0.7, description="Temperature setting")
     maxTokens: int = Field(default=1000, description="Maximum tokens")
+    voice: Optional[str] = Field(default=None, description="Voice ID for realtime providers (e.g., Puck, Leda)")
 
 class TTSConfig(BaseModel):
     provider: str = Field(..., description="TTS provider name")
@@ -143,9 +144,9 @@ class TTSConfig(BaseModel):
     speed: Optional[float] = Field(default=1.0, description="Speech speed")
 
 class AgentConfiguration(BaseModel):
-    stt: STTConfig
+    stt: Optional[STTConfig] = Field(default=None, description="STT configuration (not needed for realtime)")
     llm: LLMConfig
-    tts: TTSConfig
+    tts: Optional[TTSConfig] = Field(default=None, description="TTS configuration (not needed for realtime)")
 
 class DeploymentConfig(BaseModel):
     type: str = Field(..., description="Deployment type: webrtc, phone, whatsapp, api")
@@ -164,6 +165,7 @@ class Agent(BaseModel):
     description: str = Field(..., description="Agent description")
     status: str = Field(default="draft", description="Agent status: active, inactive, draft")
     templateId: Optional[str] = Field(default=None, description="Template ID if created from template")
+    gender: str = Field(default="female", description="Agent voice gender: male, female")
     configuration: AgentConfiguration
     deploymentConfig: DeploymentConfig
     analytics: AgentAnalytics
@@ -708,17 +710,26 @@ async def agent_webrtc_offer(agent_id: str, request: dict, background_tasks: Bac
                     except Exception as e:
                         logger.error(f"Error cleaning up session {session_id}: {e}")
 
+            # Determine pipeline type based on configuration
+            is_realtime = (agent.configuration.llm.provider == "gemini-live" and
+                          agent.configuration.stt is None and
+                          agent.configuration.tts is None)
+
             # Convert agent configuration to runtime format
             agent_config = {
                 'id': agent.id,
                 'name': agent.name,
                 'userId': agent.userId,
-                'pipeline_type': 'traditional',  # Default to traditional for now
-                'stt': agent.configuration.stt.model_dump(),
+                'gender': agent.gender,
+                'pipeline_type': 'realtime' if is_realtime else 'traditional',
                 'llm': agent.configuration.llm.model_dump(),
-                'tts': agent.configuration.tts.model_dump(),
                 'system_prompt': agent.configuration.llm.systemPrompt
             }
+
+            # Add STT/TTS config only for traditional pipeline
+            if not is_realtime:
+                agent_config['stt'] = agent.configuration.stt.model_dump() if agent.configuration.stt else None
+                agent_config['tts'] = agent.configuration.tts.model_dump() if agent.configuration.tts else None
 
             # Start the dynamic agent pipeline
             background_tasks.add_task(run_dynamic_agent, agent_config, webrtc_connection, session_id)
@@ -742,6 +753,157 @@ async def agent_webrtc_offer(agent_id: str, request: dict, background_tasks: Bac
         raise HTTPException(status_code=500, detail=f"Failed to process agent WebRTC offer: {str(e)}")
 
 
+async def run_gemini_realtime_agent(agent_config: Dict[str, Any], webrtc_connection: SmallWebRTCConnection, session_id: str, system_prompt: str, agent_gender: str):
+    """
+    Run a Gemini Multimodal Live (Realtime) agent pipeline with custom system prompt and voice
+    """
+    logger.info(f"Starting Gemini Realtime agent: {agent_config.get('name')} with {agent_gender} voice")
+
+    # Determine voice based on gender
+    voice_id = "Leda" if agent_gender == "female" else "Puck"
+    logger.info(f"Using voice: {voice_id} for gender: {agent_gender}")
+
+    # Create transport with VAD
+    transport = SmallWebRTCTransport(
+        webrtc_connection=webrtc_connection,
+        params=TransportParams(
+            audio_in_enabled=True,
+            audio_out_enabled=True,
+            video_in_enabled=True,
+            vad_analyzer=SileroVADAnalyzer(params=VADParams(stop_secs=0.5)),
+        ),
+    )
+
+    # Create Gemini Multimodal Live service with custom system prompt and voice
+    llm = GeminiMultimodalLiveLLMService(
+        api_key=os.getenv("GOOGLE_API_KEY"),
+        voice_id=voice_id,
+        system_instruction=system_prompt,
+    )
+
+    # Context setup
+    context = OpenAILLMContext([
+        {
+            "role": "user",
+            "content": "Please introduce yourself briefly.",
+        },
+    ])
+    context_aggregator = llm.create_context_aggregator(context)
+
+    # Add RTVI processor
+    def create_action_llm_append_to_messages(context_aggregator):
+        async def action_llm_append_to_messages_handler(
+            rtvi: RTVIProcessor, service: str, arguments: dict[str, any]
+        ) -> ActionResult:
+            run_immediately = arguments["run_immediately"] if "run_immediately" in arguments else True
+
+            if run_immediately:
+                await rtvi.interrupt_bot()
+
+                if "messages" in arguments and arguments["messages"]:
+                    frame = LLMMessagesAppendFrame(messages=arguments["messages"])
+                    await rtvi.push_frame(frame)
+
+            if run_immediately:
+                frame = LLMRunFrame()
+                await rtvi.push_frame(frame)
+
+            return True
+
+        return RTVIAction(
+            service="llm",
+            action="append_to_messages",
+            result="bool",
+            arguments=[
+                RTVIActionArgument(name="messages", type="array"),
+                RTVIActionArgument(name="run_immediately", type="bool"),
+            ],
+            handler=action_llm_append_to_messages_handler,
+        )
+
+    action_llm_append_to_messages = create_action_llm_append_to_messages(context_aggregator)
+    rtvi = RTVIProcessor(config=RTVIConfig(config=[]))
+    rtvi.register_action(action_llm_append_to_messages)
+
+    # Create pipeline
+    pipeline = Pipeline([
+        transport.input(),
+        rtvi,
+        context_aggregator.user(),
+        llm,
+        transport.output(),
+        context_aggregator.assistant(),
+    ])
+
+    # Create task
+    task = PipelineTask(
+        pipeline,
+        params=PipelineParams(
+            enable_metrics=True,
+            enable_usage_metrics=True,
+        ),
+        observers=[RTVIObserver(rtvi)],
+    )
+
+    # Store session
+    active_sessions[session_id] = {
+        'agent_id': agent_config.get('id'),
+        'agent_name': agent_config.get('name'),
+        'task': task,
+        'transport': transport,
+        'llm': llm,
+        'rtvi': rtvi,
+        'pipeline_type': 'realtime',
+        'voice': voice_id,
+        'gender': agent_gender,
+        'providers': {
+            'realtime': 'gemini-live'
+        },
+        'created_at': time.time()
+    }
+
+    # RTVI client ready handler
+    @rtvi.event_handler("on_client_ready")
+    async def on_client_ready(rtvi):
+        logger.info("Client ready for Gemini Realtime agent")
+        await rtvi.set_bot_ready()
+
+        # Configure UI to show conversation
+        ui_config = {
+            "show_text_container": True,
+            "show_video_container": True,
+            "show_debug_container": False,
+        }
+
+        rtvi_frame = RTVIServerMessageFrame(data=ui_config)
+        await task.queue_frames([rtvi_frame])
+
+    # Client connected logic
+    @transport.event_handler("on_client_connected")
+    async def on_client_connected(transport, client):
+        logger.info(f"Client connected to Gemini Realtime agent: {client}")
+
+        await maybe_capture_participant_camera(transport, client, framerate=1)
+        await maybe_capture_participant_screen(transport, client, framerate=1)
+
+        await task.queue_frames([LLMRunFrame()])
+        await asyncio.sleep(3)
+        logger.debug("Unpausing audio and video")
+        llm.set_audio_input_paused(False)
+        llm.set_video_input_paused(False)
+
+    @transport.event_handler("on_client_disconnected")
+    async def on_client_disconnected(transport, client):
+        logger.info("Client disconnected from Gemini Realtime agent")
+        if session_id in active_sessions:
+            del active_sessions[session_id]
+        await task.cancel()
+
+    # Run pipeline
+    runner = PipelineRunner(handle_sigint=False)
+    await runner.run(task)
+
+
 async def run_dynamic_agent(agent_config: Dict[str, Any], webrtc_connection: SmallWebRTCConnection, session_id: str):
     """
     Run a dynamic agent pipeline based on saved configuration
@@ -752,10 +914,20 @@ async def run_dynamic_agent(agent_config: Dict[str, Any], webrtc_connection: Sma
     logger.info(f"Starting dynamic agent: {agent_config.get('name', 'Unknown')} (session: {session_id})")
 
     # Extract configuration
-    stt_config = agent_config.get('stt', {})
+    pipeline_type = agent_config.get('pipeline_type', 'traditional')
     llm_config = agent_config.get('llm', {})
-    tts_config = agent_config.get('tts', {})
     system_prompt = agent_config.get('system_prompt', 'You are a helpful AI assistant.')
+    agent_gender = agent_config.get('gender', 'female')
+
+    # Check if this is a Gemini Realtime pipeline
+    if pipeline_type == 'realtime':
+        logger.info(f"Using Gemini Realtime pipeline for agent {agent_config.get('name')}")
+        await run_gemini_realtime_agent(agent_config, webrtc_connection, session_id, system_prompt, agent_gender)
+        return
+
+    # Traditional pipeline setup
+    stt_config = agent_config.get('stt', {})
+    tts_config = agent_config.get('tts', {})
 
     # Create transport with VAD
     transport = SmallWebRTCTransport(
@@ -1349,7 +1521,14 @@ conversation_storage = {}
 
 # Build with Agenty - AI-powered agent creation endpoint
 @app.post("/api/build-agent")
-async def build_agent_endpoint(request: dict):
+async def build_agent_endpoint(
+    action: str = Form(...),
+    requirements: Optional[str] = Form(None),
+    message: Optional[str] = Form(None),
+    messages: Optional[str] = Form(None),
+    conversationId: Optional[str] = Form(None),
+    knowledgeBase: Optional[UploadFile] = File(None)
+):
     """
     AI-powered agent creation using Claude AI.
 
@@ -1360,14 +1539,15 @@ async def build_agent_endpoint(request: dict):
     Actions:
     - start: Initialize agent creation
     - clarify: Continue conversation with user's answer
-    - generate: Generate final agent
+    - generate: Generate final agent (with optional knowledge base file)
     """
     try:
-        action = request.get("action")
+        # Parse JSON strings if provided
+        requirements_dict = json.loads(requirements) if requirements else {}
+        messages_list = json.loads(messages) if messages else []
 
         if action == "start":
-            requirements = request.get("requirements", {})
-            description = requirements.get("description", "")
+            description = requirements_dict.get("description", "")
 
             if not claude_client:
                 # Fallback to mock response
@@ -1409,8 +1589,9 @@ Always respond with valid JSON."""
 
 {description}
 
-Agent name: {requirements.get('name', 'Not specified')}
-Language: {requirements.get('language', 'Not specified')}
+Agent name: {requirements_dict.get('name', 'Not specified')}
+Language: {requirements_dict.get('language', 'Not specified')}
+Knowledge base: {'Yes - file will be provided' if requirements_dict.get('hasKnowledgeBase') else 'No'}
 
 Please ask me clarifying questions to create the perfect agent."""
 
@@ -1436,7 +1617,7 @@ Please ask me clarifying questions to create the perfect agent."""
                 # Store conversation
                 conv_id = f"conv_{datetime.now().timestamp()}"
                 conversation_storage[conv_id] = {
-                    "requirements": requirements,
+                    "requirements": requirements_dict,
                     "messages": [
                         {"role": "user", "content": user_message},
                         {"role": "assistant", "content": content}
@@ -1459,19 +1640,16 @@ Please ask me clarifying questions to create the perfect agent."""
                 }
 
         elif action == "clarify":
-            user_message = request.get("message", "")
-            conv_id = request.get("conversationId")
-
-            if not claude_client or conv_id not in conversation_storage:
+            if not claude_client or conversationId not in conversation_storage:
                 # Simple fallback
                 return {
                     "needsMoreInfo": False,
-                    "conversationId": conv_id
+                    "conversationId": conversationId
                 }
 
             # Continue with Claude
-            conversation = conversation_storage[conv_id]
-            conversation["messages"].append({"role": "user", "content": user_message})
+            conversation = conversation_storage[conversationId]
+            conversation["messages"].append({"role": "user", "content": message})
 
             try:
                 response = claude_client.messages.create(
@@ -1495,26 +1673,56 @@ Please ask me clarifying questions to create the perfect agent."""
                 return {
                     "needsMoreInfo": result.get("needsClarification", False),
                     "questions": result.get("questions", ""),
-                    "conversationId": conv_id
+                    "conversationId": conversationId
                 }
 
             except Exception as e:
                 logger.error(f"Claude clarify error: {e}")
                 return {
                     "needsMoreInfo": False,
-                    "conversationId": conv_id
+                    "conversationId": conversationId
                 }
 
         elif action == "generate":
             # Generate agent
-            requirements = request.get("requirements", {})
-            conv_id = request.get("conversationId")
-            messages_list = request.get("messages", [])
+            logger.info(f"Generate action - conv_id: {conversationId}, has claude_client: {claude_client is not None}, conv_id in storage: {conversationId in conversation_storage if conversationId else False}")
 
-            logger.info(f"Generate action - conv_id: {conv_id}, has claude_client: {claude_client is not None}, conv_id in storage: {conv_id in conversation_storage if conv_id else False}")
+            agent_name = requirements_dict.get("name", "AI Generated Agent")
+            agent_description = requirements_dict.get("description", "Agent created with AI assistance")
+            agent_gender = requirements_dict.get("gender", "female")  # Default to female (Leda voice)
 
-            agent_name = requirements.get("name", "AI Generated Agent")
-            agent_description = requirements.get("description", "Agent created with AI assistance")
+            # Parse knowledge base if provided
+            knowledge_base_content = None
+            if knowledgeBase and knowledgeBase.filename:
+                logger.info(f"Processing knowledge base: {knowledgeBase.filename}")
+                try:
+                    # Read file content
+                    file_content = await knowledgeBase.read()
+
+                    # Parse PDF using PyPDF2
+                    if knowledgeBase.filename.lower().endswith('.pdf'):
+                        import PyPDF2
+                        from io import BytesIO
+
+                        pdf_file = BytesIO(file_content)
+                        pdf_reader = PyPDF2.PdfReader(pdf_file)
+
+                        text_parts = []
+                        for page in pdf_reader.pages:
+                            text = page.extract_text()
+                            if text:
+                                text_parts.append(text)
+
+                        knowledge_base_content = "\n\n".join(text_parts)
+                        logger.info(f"✅ Extracted {len(knowledge_base_content)} characters from PDF")
+                    else:
+                        # Plain text file
+                        knowledge_base_content = file_content.decode('utf-8')
+                        logger.info(f"✅ Read {len(knowledge_base_content)} characters from text file")
+
+                except Exception as e:
+                    logger.error(f"Error parsing knowledge base: {e}")
+                    knowledge_base_content = None
 
             # Use Claude to generate system prompt
             system_prompt = f"""You are a helpful AI assistant for {agent_name}.
@@ -1523,16 +1731,37 @@ Please ask me clarifying questions to create the perfect agent."""
 
 Always be helpful, friendly, and professional in your responses."""
 
+            # Default to Gemini Realtime for Build with Agenty agents
             recommended_providers = {
-                "stt": "deepgram",
-                "llm": "openai",
-                "tts": "elevenlabs"
+                "realtime": "gemini-live"  # Use Gemini Multimodal Live for realtime speech-to-speech
             }
 
-            if claude_client and conv_id and conv_id in conversation_storage:
+            if claude_client and conversationId and conversationId in conversation_storage:
                 try:
                     # Ask Claude to generate the final system message
-                    conversation = conversation_storage[conv_id]
+                    conversation = conversation_storage[conversationId]
+
+                    # Add knowledge base content if provided
+                    if knowledge_base_content:
+                        max_kb_chars = 20000
+                        kb_excerpt = knowledge_base_content[:max_kb_chars]
+                        truncated_note = f"\n\n[Note: Content truncated from {len(knowledge_base_content)} to {max_kb_chars} characters]" if len(knowledge_base_content) > max_kb_chars else ""
+
+                        conversation["messages"].append({
+                            "role": "user",
+                            "content": f"""Here is the knowledge base document that the agent should use to answer questions:
+
+--- KNOWLEDGE BASE START ---
+{kb_excerpt}
+--- KNOWLEDGE BASE END ---
+{truncated_note}
+
+Please incorporate this knowledge base into the agent's system message. The agent should:
+1. Use this information to answer user questions accurately
+2. Refer to specific details from the knowledge base when relevant
+3. Admit when a question is outside the scope of the provided knowledge base"""
+                        })
+
                     conversation["messages"].append({
                         "role": "user",
                         "content": "Perfect! Now please generate a complete, professional system message for this agent and recommend the best AI providers (STT, LLM, TTS). Respond with valid JSON in this format: {\"systemMessage\": \"...\", \"recommendedProviders\": {\"stt\": \"provider\", \"llm\": \"provider\", \"tts\": \"provider\"}, \"reasoning\": \"...\"}"
@@ -1569,38 +1798,32 @@ Always be helpful, friendly, and professional in your responses."""
                                 logger.info(f"✅ Extracted system prompt via regex: {system_prompt[:100]}...")
 
                     # Clean up conversation
-                    del conversation_storage[conv_id]
+                    del conversation_storage[conversationId]
 
                 except Exception as e:
                     logger.error(f"Claude generate error: {e}")
                     import traceback
                     logger.error(f"Traceback: {traceback.format_exc()}")
             else:
-                logger.warning(f"Skipping Claude generation - claude_client: {claude_client is not None}, conv_id: {conv_id}, in_storage: {conv_id in conversation_storage if conv_id else False}")
+                logger.warning(f"Skipping Claude generation - claude_client: {claude_client is not None}, conv_id: {conversationId}, in_storage: {conversationId in conversation_storage if conversationId else False}")
 
-            # Create new agent using Claude's recommendations
+            # Determine voice based on gender
+            voice_id = "Leda" if agent_gender == "female" else "Puck"
+
+            # Create new agent using Gemini Realtime (speech-to-speech)
             new_agent = Agent(
                 id=f"agt_{len(agents_storage) + 1}",
                 userId="user_1",
                 name=agent_name,
                 description=agent_description,
                 status="inactive",
+                gender=agent_gender,
                 configuration={
-                    "stt": {
-                        "provider": recommended_providers.get("stt", "deepgram"),
-                        "model": "nova-2",
-                        "language": requirements.get("language", "en").lower()[:2]
-                    },
                     "llm": {
-                        "provider": recommended_providers.get("llm", "openai"),
-                        "model": "gpt-4",
-                        "temperature": 0.7,
-                        "maxTokens": 2000,
-                        "systemPrompt": system_prompt
-                    },
-                    "tts": {
-                        "provider": recommended_providers.get("tts", "elevenlabs"),
-                        "voice": "alloy"
+                        "provider": "gemini-live",
+                        "model": "gemini-2.0-flash-exp",
+                        "systemPrompt": system_prompt,
+                        "voice": voice_id  # Puck for male, Leda for female
                     }
                 },
                 deploymentConfig={"type": "webrtc", "settings": {}},
@@ -1626,7 +1849,7 @@ Always be helpful, friendly, and professional in your responses."""
                     "name": new_agent.name,
                     "description": new_agent.description,
                     "systemPrompt": system_prompt,
-                    "language": requirements.get("language", "English"),
+                    "language": requirements_dict.get("language", "English"),
                     "configuration": new_agent.configuration,
                     "providers": recommended_providers
                 }

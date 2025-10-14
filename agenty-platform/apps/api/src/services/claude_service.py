@@ -89,6 +89,7 @@ Important guidelines:
 - Keep questions clear and concise
 - After clarification, generate a complete, production-ready system message
 - Recommend providers based on requirements (language support, features, cost-effectiveness)
+- If a knowledge base is provided, incorporate it into the system message with clear instructions for the agent to use that information
 
 Available providers:
 - STT: deepgram, assemblyai, azure, google, whisper, speechmatics
@@ -198,9 +199,24 @@ Always respond with valid JSON. Be friendly and helpful."""
 
         # Add knowledge base context if provided
         if knowledge_base_content:
+            # Use up to 20,000 characters for better context (Claude can handle it)
+            max_kb_chars = 20000
+            kb_excerpt = knowledge_base_content[:max_kb_chars]
+            truncated_note = f"\n\n[Note: Content truncated from {len(knowledge_base_content)} to {max_kb_chars} characters]" if len(knowledge_base_content) > max_kb_chars else ""
+
             messages.append({
                 "role": "user",
-                "content": f"Here is the knowledge base content:\n\n{knowledge_base_content[:5000]}\n\n{'[Content truncated]' if len(knowledge_base_content) > 5000 else ''}Please incorporate this into the agent's system message."
+                "content": f"""Here is the knowledge base document that the agent should use to answer questions:
+
+--- KNOWLEDGE BASE START ---
+{kb_excerpt}
+--- KNOWLEDGE BASE END ---
+{truncated_note}
+
+Please incorporate this knowledge base into the agent's system message. The agent should:
+1. Use this information to answer user questions accurately
+2. Refer to specific details from the knowledge base when relevant
+3. Admit when a question is outside the scope of the provided knowledge base"""
             })
 
         # Request final generation

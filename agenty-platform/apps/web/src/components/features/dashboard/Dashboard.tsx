@@ -178,7 +178,7 @@ export function Dashboard() {
                         <Settings2 className="w-4 h-4" />
                       </Link>
                     </Button>
-                    <Button variant="ghost" size="sm" asChild>
+                    <Button variant="ghost" size="sm" asChild className="test-button-glow">
                       <Link href={`/agents/${agent.id}/test`}>
                         <Play className="w-4 h-4" />
                       </Link>

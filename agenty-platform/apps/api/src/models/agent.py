@@ -32,6 +32,7 @@ class Agent(BaseModel):
     tags = Column(JSON, default=[], nullable=False)  # List of tags for categorization
     version = Column(String(20), default="1.0.0", nullable=False)
     is_public = Column(Boolean, default=False, nullable=False)  # For sharing agents
+    gender = Column(String(20), default="female", nullable=False)  # Agent voice gender: male, female
 
     # Usage statistics
     total_conversations = Column(Integer, default=0, nullable=False)

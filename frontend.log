@@ -1,0 +1,41 @@
+
+> web@0.1.0 dev
+> next dev --turbopack
+
+ ⚠ Port 3000 is in use by an unknown process, using available port 3005 instead.
+   ▲ Next.js 15.5.3 (Turbopack)
+   - Local:        http://localhost:3005
+   - Network:      http://10.255.255.254:3005
+
+ ✓ Starting...
+ ✓ Ready in 12.4s
+ ○ Compiling / ...
+ ✓ Compiled / in 8.4s
+ GET / 200 in 9900ms
+ GET / 200 in 477ms
+ ○ Compiling /_not-found/page ...
+ ✓ Compiled /_not-found/page in 1100ms
+ GET /avatars/user.png 404 in 1542ms
+ ○ Compiling /favicon.ico ...
+ GET /icons/icon-144x144.png 404 in 583ms
+ ✓ Compiled /favicon.ico in 663ms
+ GET /favicon.ico?favicon.0b3bf435.ico 200 in 1281ms
+ GET / 200 in 454ms
+ GET /avatars/user.png 404 in 436ms
+ GET /favicon.ico?favicon.0b3bf435.ico 200 in 592ms
+ ○ Compiling /build ...
+ ✓ Compiled /build in 1161ms
+ GET /build 200 in 1511ms
+ GET /icons/icon-144x144.png 404 in 391ms
+ ○ Compiling /agents/[id] ...
+ ✓ Compiled /agents/[id] in 1128ms
+ GET /agents/agt_3 200 in 5906ms
+ GET /agents/agt_3 200 in 372ms
+ GET /avatars/user.png 404 in 466ms
+ GET /icons/icon-144x144.png 404 in 460ms
+ ○ Compiling /agents/[id]/test ...
+ ✓ Compiled /agents/[id]/test in 1130ms
+ GET /agents/agt_3/test 200 in 7841ms
+ GET /icons/icon-144x144.png 404 in 874ms
+ GET /agents/agt_3 200 in 576ms
+ GET /avatars/user.png 404 in 357ms

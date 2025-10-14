@@ -268,12 +268,15 @@ export default function AgentsPage() {
 
                 {/* Provider Info */}
                 <div className="text-xs text-muted-foreground">
-                  {agent.configuration.llm.provider} + {agent.configuration.tts.provider} + {agent.configuration.stt.provider}
+                  {agent.configuration.llm.provider === 'gemini-live' || agent.configuration.llm.provider === 'openai-realtime'
+                    ? `${agent.configuration.llm.provider} (Realtime)`
+                    : `${agent.configuration.llm.provider}${agent.configuration.tts?.provider ? ` + ${agent.configuration.tts.provider}` : ''}${agent.configuration.stt?.provider ? ` + ${agent.configuration.stt.provider}` : ''}`
+                  }
                 </div>
 
                 {/* Action Buttons */}
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" asChild className="flex-1">
+                  <Button variant="outline" size="sm" asChild className="flex-1 test-button-glow">
                     <Link href={`/agents/${agent.id}/test`}>
                       <Play className="w-3 h-3 mr-1" />
                       {t('test', 'agents')}

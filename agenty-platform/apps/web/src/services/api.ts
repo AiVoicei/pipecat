@@ -24,6 +24,7 @@ export interface LLMConfig {
   systemPrompt?: string
   temperature?: number
   maxTokens?: number
+  voice?: string  // Voice ID for realtime providers (e.g., Puck, Leda)
 }
 
 export interface TTSConfig {
@@ -65,6 +66,7 @@ export interface Agent {
   description: string
   status: 'active' | 'inactive' | 'draft'
   templateId?: string
+  gender?: 'male' | 'female'  // Agent voice gender
   configuration: AgentConfiguration
   deploymentConfig: DeploymentConfig
   analytics: AgentAnalytics

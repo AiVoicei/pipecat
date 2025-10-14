@@ -16,7 +16,7 @@ import { Bot } from 'lucide-react'
 import Link from 'next/link'
 
 export default function AgentDetailPage() {
-  const { t } = useLanguage()
+  const { t, isHebrew } = useLanguage()
   const params = useParams()
   const router = useRouter()
   const agentId = params.id as string
@@ -33,39 +33,49 @@ export default function AgentDetailPage() {
   } = useAgentStore()
 
   const [agent, setAgent] = useState<Agent | null>(null)
-  const [isFetchingAgent, setIsFetchingAgent] = useState(false)
+  const [agentNotFound, setAgentNotFound] = useState(false)
 
   useEffect(() => {
+    let isMounted = true
+
     const loadAgent = async () => {
       // First try to find in store
       const foundAgent = agents.find(a => a.id === agentId)
 
       if (foundAgent) {
-        setAgent(foundAgent)
-      } else if (!isFetchingAgent) {
+        if (isMounted) {
+          setAgent(foundAgent)
+          setAgentNotFound(false)
+        }
+      } else {
         // If not in store, fetch from API directly
-        setIsFetchingAgent(true)
         try {
           const response = await fetch(`http://localhost:7860/api/agents/${agentId}`)
           if (response.ok) {
             const agentData = await response.json()
-            setAgent(agentData)
-          } else {
-            // If agent not found in API, refresh store
-            await fetchAgents()
+            if (isMounted) {
+              setAgent(agentData)
+              setAgentNotFound(false)
+            }
+          } else if (response.status === 404) {
+            // Agent not found - stop trying
+            if (isMounted) {
+              setAgentNotFound(true)
+            }
           }
         } catch (error) {
           console.error('Failed to fetch agent:', error)
-          // Try refreshing store as fallback
-          await fetchAgents()
-        } finally {
-          setIsFetchingAgent(false)
         }
       }
     }
 
     loadAgent()
-  }, [agentId, agents, fetchAgents, isFetchingAgent])
+
+    return () => {
+      isMounted = false
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [agentId, agents])
 
   useEffect(() => {
     // When agents list updates, check if our agent is now available
@@ -126,7 +136,7 @@ export default function AgentDetailPage() {
     }
   }
 
-  if (isLoading || isFetchingAgent) {
+  if (isLoading) {
     return (
       <AppLayout>
         <div className="space-y-6">
@@ -214,7 +224,7 @@ export default function AgentDetailPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" asChild>
+          <Button variant="outline" asChild className="test-button-glow">
             <Link href={`/agents/${agent.id}/test`}>
               <Play className="w-4 h-4 mr-2" />
               {t('test', 'agents')}
@@ -342,36 +352,62 @@ export default function AgentDetailPage() {
             <CardTitle>{t('configuration', 'agents')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <h4 className="font-medium text-sm text-muted-foreground mb-2">{t('speechToText', 'agents')}</h4>
-              <div className="text-sm space-y-1">
-                <div><strong>{t('provider', 'agents')}:</strong> {agent.configuration.stt.provider}</div>
-                <div><strong>{t('model', 'agents')}:</strong> {agent.configuration.stt.model}</div>
-                <div><strong>{t('language', 'agents')}:</strong> {agent.configuration.stt.language}</div>
+            {/* Check if this is a realtime pipeline (Gemini Live, OpenAI Realtime, etc.) */}
+            {agent.configuration.llm.provider === 'gemini-live' || agent.configuration.llm.provider === 'openai-realtime' ? (
+              // Realtime Pipeline Display
+              <div>
+                <h4 className="font-medium text-sm text-muted-foreground mb-2">
+                  {isHebrew ? 'צינור זמן-אמת (Realtime)' : 'Realtime Pipeline'}
+                </h4>
+                <div className="text-sm space-y-1">
+                  <div><strong>{t('provider', 'agents')}:</strong> {agent.configuration.llm.provider === 'gemini-live' ? 'Gemini 2.0 Flash Live' : 'OpenAI Realtime'}</div>
+                  <div><strong>{t('model', 'agents')}:</strong> {agent.configuration.llm.model || 'gemini-2.0-flash-exp'}</div>
+                  {agent.configuration.llm.voice && (
+                    <div><strong>{t('voice', 'agents')}:</strong> {agent.configuration.llm.voice}</div>
+                  )}
+                  {agent.gender && (
+                    <div><strong>{isHebrew ? 'מגדר' : 'Gender'}:</strong> {agent.gender === 'male' ? (isHebrew ? 'זכר (Puck)' : 'Male (Puck)') : (isHebrew ? 'נקבה (Leda)' : 'Female (Leda)')}</div>
+                  )}
+                </div>
+                <div className="mt-2 p-2 bg-purple-500/10 border border-purple-500/30 rounded text-xs text-purple-600 dark:text-purple-400">
+                  {isHebrew ? '⚡ צינור דיבור-לדיבור בזמן אמת (ללא STT/TTS נפרד)' : '⚡ Real-time speech-to-speech pipeline (no separate STT/TTS)'}
+                </div>
               </div>
-            </div>
+            ) : (
+              // Traditional Pipeline Display
+              <>
+                <div>
+                  <h4 className="font-medium text-sm text-muted-foreground mb-2">{t('speechToText', 'agents')}</h4>
+                  <div className="text-sm space-y-1">
+                    <div><strong>{t('provider', 'agents')}:</strong> {agent.configuration.stt?.provider || 'N/A'}</div>
+                    <div><strong>{t('model', 'agents')}:</strong> {agent.configuration.stt?.model || 'N/A'}</div>
+                    <div><strong>{t('language', 'agents')}:</strong> {agent.configuration.stt?.language || 'N/A'}</div>
+                  </div>
+                </div>
 
-            <Separator />
+                <Separator />
 
-            <div>
-              <h4 className="font-medium text-sm text-muted-foreground mb-2">{t('languageModel', 'agents')}</h4>
-              <div className="text-sm space-y-1">
-                <div><strong>{t('provider', 'agents')}:</strong> {agent.configuration.llm.provider}</div>
-                <div><strong>{t('model', 'agents')}:</strong> {agent.configuration.llm.model}</div>
-                <div><strong>{t('temperature', 'agents')}:</strong> {agent.configuration.llm.temperature}</div>
-                <div><strong>{t('maxTokens', 'agents')}:</strong> {agent.configuration.llm.maxTokens}</div>
-              </div>
-            </div>
+                <div>
+                  <h4 className="font-medium text-sm text-muted-foreground mb-2">{t('languageModel', 'agents')}</h4>
+                  <div className="text-sm space-y-1">
+                    <div><strong>{t('provider', 'agents')}:</strong> {agent.configuration.llm.provider}</div>
+                    <div><strong>{t('model', 'agents')}:</strong> {agent.configuration.llm.model}</div>
+                    <div><strong>{t('temperature', 'agents')}:</strong> {agent.configuration.llm.temperature}</div>
+                    <div><strong>{t('maxTokens', 'agents')}:</strong> {agent.configuration.llm.maxTokens}</div>
+                  </div>
+                </div>
 
-            <Separator />
+                <Separator />
 
-            <div>
-              <h4 className="font-medium text-sm text-muted-foreground mb-2">{t('textToSpeech', 'agents')}</h4>
-              <div className="text-sm space-y-1">
-                <div><strong>{t('provider', 'agents')}:</strong> {agent.configuration.tts.provider}</div>
-                <div><strong>{t('voice', 'agents')}:</strong> {agent.configuration.tts.voice}</div>
-              </div>
-            </div>
+                <div>
+                  <h4 className="font-medium text-sm text-muted-foreground mb-2">{t('textToSpeech', 'agents')}</h4>
+                  <div className="text-sm space-y-1">
+                    <div><strong>{t('provider', 'agents')}:</strong> {agent.configuration.tts?.provider || 'N/A'}</div>
+                    <div><strong>{t('voice', 'agents')}:</strong> {agent.configuration.tts?.voice || 'N/A'}</div>
+                  </div>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>

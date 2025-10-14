@@ -1,28 +1,129 @@
-2025-10-13 17:42:54.943 | INFO     | pipecat:<module>:14 - ᓚᘏᗢ Pipecat 0.0.84 (Python 3.12.3 (main, Aug 14 2025, 17:47:21) [GCC 13.3.0]) ᓚᘏᗢ
-2025-10-13 17:43:10.876 | INFO     | __main__:<module>:109 - ✅ Claude AI initialized for Build with Agenty
-2025-10-13 17:43:11.019 | INFO     | __main__:<module>:1881 - Starting AI Voicei Web Server on localhost:7860
-INFO:     Started server process [21215]
+2025-10-15 01:21:22.353 | INFO     | pipecat:<module>:14 - ᓚᘏᗢ Pipecat 0.0.84 (Python 3.12.3 (main, Aug 14 2025, 17:47:21) [GCC 13.3.0]) ᓚᘏᗢ
+2025-10-15 01:21:38.688 | INFO     | __main__:<module>:109 - ✅ Claude AI initialized for Build with Agenty
+2025-10-15 01:21:38.829 | INFO     | __main__:<module>:2104 - Starting AI Voicei Web Server on localhost:7860
+INFO:     Started server process [12502]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://localhost:7860 (Press CTRL+C to quit)
-INFO:     127.0.0.1:57292 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57292 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57294 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
-2025-10-13 17:46:11.307 | INFO     | __main__:build_agent_endpoint:1426 - Claude response: {
+INFO:     127.0.0.1:57872 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49954 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49954 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49954 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+2025-10-15 01:23:02.865 | INFO     | __main__:build_agent_endpoint:1607 - Claude response: {
   "needsClarification": true,
   "questions": [
-    "1. What specific aspects of the resume would you like the agent to focus on? (e.g., professional experience, skills, education, or providing feedb...
-INFO:     127.0.0.1:44582 - "POST /api/build-agent HTTP/1.1" 200 OK
-INFO:     127.0.0.1:44590 - "POST /api/build-agent HTTP/1.1" 200 OK
-2025-10-13 17:46:54.601 | INFO     | __main__:build_agent_endpoint:1514 - Generate action - conv_id: conv_1760366771.308161, has claude_client: True, conv_id in storage: True
-2025-10-13 17:47:01.018 | INFO     | __main__:build_agent_endpoint:1548 - Claude generation: {
-    "systemMessage": "You are a professional resume advocate specializing in development roles. Your purpose is to analyze and articulate why the candidate in the provided resume is qualified for de...
-2025-10-13 17:47:01.019 | INFO     | __main__:build_agent_endpoint:1560 - ✅ Successfully parsed Claude's system prompt: You are a professional resume advocate specializing in development roles. Your purpose is to analyze...
-2025-10-13 17:47:01.020 | INFO     | __main__:build_agent_endpoint:1619 - Created agent via Build with Agenty: agt_3 - dadad
-INFO:     127.0.0.1:44590 - "POST /api/build-agent HTTP/1.1" 200 OK
-INFO:     127.0.0.1:41914 - "GET /api/agents/agt_3 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:41914 - "GET /api/agents/agt_3 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:41914 - "GET /api/agents/agt_3 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:41914 - "GET /api/agents/agt_3 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:41926 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:41926 - "GET /api/agents?user_id=user_1 HTTP/1.1" 200 OK
+    "1. What personality traits and communication style should Dan exhibit when answering questions about the resume? (e.g., professional and formal, f...
+INFO:     127.0.0.1:49970 - "POST /api/build-agent HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36072 - "POST /api/build-agent HTTP/1.1" 200 OK
+2025-10-15 01:23:30.133 | INFO     | __main__:build_agent_endpoint:1688 - Generate action - conv_id: conv_1760480582.866185, has claude_client: True, conv_id in storage: True
+2025-10-15 01:23:30.133 | INFO     | __main__:build_agent_endpoint:1697 - Processing knowledge base: HarelHanumResume (1).pdf
+2025-10-15 01:23:30.444 | INFO     | __main__:build_agent_endpoint:1717 - ✅ Extracted 3334 characters from PDF
+2025-10-15 01:23:36.929 | INFO     | __main__:build_agent_endpoint:1777 - Claude generation: {
+    "systemMessage": "You are Dan, an AI assistant knowledgeable about Harel Hanum's professional background. Your purpose is to accurately answer questions about Harel's experience, education, skil...
+2025-10-15 01:23:36.931 | INFO     | __main__:build_agent_endpoint:1789 - ✅ Successfully parsed Claude's system prompt: You are Dan, an AI assistant knowledgeable about Harel Hanum's professional background. Your purpose...
+2025-10-15 01:23:36.931 | INFO     | __main__:build_agent_endpoint:1842 - Created agent via Build with Agenty: agt_3 - dan
+INFO:     127.0.0.1:36072 - "POST /api/build-agent HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36084 - "GET /api/agents/agt_3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36084 - "GET /api/agents/agt_3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33736 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33736 - "OPTIONS /sessions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33736 - "POST /sessions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36192 - "WebSocket /websocket" [accepted]
+2025-10-15 01:24:22.398 | INFO     | __main__:websocket_signaling_endpoint:1091 - WebSocket connection established
+2025-10-15 01:24:22.399 | INFO     | __main__:websocket_signaling_endpoint:1098 - WebSocket client 6da0da11-4224-445b-b00d-1840653d2406 registered for transcript broadcasting
+INFO:     connection open
+2025-10-15 01:24:22.402 | INFO     | __main__:websocket_signaling_endpoint:1114 - Client 6da0da11-4224-445b-b00d-1840653d2406 joining session: f555b238-c56b-4e95-be9c-25fadc8788c9
+INFO:     127.0.0.1:36186 - "OPTIONS /api/agents/agt_3/offer HTTP/1.1" 200 OK
+2025-10-15 01:24:27.936 | INFO     | __main__:agent_webrtc_offer:661 - Received WebRTC offer for agent testing: agt_3
+2025-10-15 01:24:27.937 | DEBUG    | pipecat.transports.smallwebrtc.connection:_initialize:234 - Initializing new peer connection
+2025-10-15 01:24:27.992 | DEBUG    | pipecat.transports.smallwebrtc.connection:_create_answer:320 - Creating answer
+2025-10-15 01:24:27.995 | DEBUG    | pipecat.transports.smallwebrtc.connection:on_track:302 - Track audio received
+2025-10-15 01:24:27.997 | DEBUG    | pipecat.transports.smallwebrtc.connection:on_icegatheringstatechange:298 - ICE gathering state is gathering
+INFO:     127.0.0.1:36186 - "GET /api/agents/agt_3 HTTP/1.1" 200 OK
+2025-10-15 01:24:33.005 | DEBUG    | pipecat.transports.smallwebrtc.connection:on_icegatheringstatechange:298 - ICE gathering state is complete
+2025-10-15 01:24:33.005 | DEBUG    | pipecat.transports.smallwebrtc.connection:_create_answer:323 - Setting the answer after the local description is created
+2025-10-15 01:24:33.006 | INFO     | __main__:agent_webrtc_offer:746 - WebRTC offer processed successfully for agent agt_3, session: f555b238-c56b-4e95-be9c-25fadc8788c9
+INFO:     127.0.0.1:36198 - "POST /api/agents/agt_3/offer HTTP/1.1" 200 OK
+2025-10-15 01:24:33.006 | INFO     | __main__:run_dynamic_agent:914 - Starting dynamic agent: dan (session: f555b238-c56b-4e95-be9c-25fadc8788c9)
+2025-10-15 01:24:33.006 | INFO     | __main__:run_dynamic_agent:924 - Using Gemini Realtime pipeline for agent dan
+2025-10-15 01:24:33.006 | INFO     | __main__:run_gemini_realtime_agent:760 - Starting Gemini Realtime agent: dan with male voice
+2025-10-15 01:24:33.007 | INFO     | __main__:run_gemini_realtime_agent:764 - Using voice: Puck for gender: male
+2025-10-15 01:24:33.007 | DEBUG    | pipecat.audio.vad.silero:__init__:147 - Loading Silero VAD model...
+2025-10-15 01:24:33.145 | DEBUG    | pipecat.audio.vad.silero:__init__:169 - Loaded Silero VAD
+2025-10-15 01:24:33.146 | DEBUG    | pipecat.services.gemini_multimodal_live.gemini:upgrade:200 - Upgrading to Gemini Multimodal Live Context: <pipecat.processors.aggregators.openai_llm_context.OpenAILLMContext object at 0x7f2df6189220>
+/mnt/c/Users/harel/Desktop/Projects/aivoice-pipecat/.venv/lib/python3.12/site-packages/pipecat/processors/frameworks/rtvi.py:1163: DeprecationWarning: The actions API is deprecated, use server and client messages instead.
+  warnings.warn(
+2025-10-15 01:24:33.154 | DEBUG    | pipecat.processors.frame_processor:link:505 - Linking Pipeline#0::Source -> SmallWebRTCInputTransport#0
+2025-10-15 01:24:33.154 | DEBUG    | pipecat.processors.frame_processor:link:505 - Linking SmallWebRTCInputTransport#0 -> RTVIProcessor#0
+2025-10-15 01:24:33.154 | DEBUG    | pipecat.processors.frame_processor:link:505 - Linking RTVIProcessor#0 -> GeminiMultimodalLiveUserContextAggregator#0
+2025-10-15 01:24:33.154 | DEBUG    | pipecat.processors.frame_processor:link:505 - Linking GeminiMultimodalLiveUserContextAggregator#0 -> GeminiMultimodalLiveLLMService#0
+2025-10-15 01:24:33.154 | DEBUG    | pipecat.processors.frame_processor:link:505 - Linking GeminiMultimodalLiveLLMService#0 -> SmallWebRTCOutputTransport#0
+2025-10-15 01:24:33.154 | DEBUG    | pipecat.processors.frame_processor:link:505 - Linking SmallWebRTCOutputTransport#0 -> GeminiMultimodalLiveAssistantContextAggregator#0
+2025-10-15 01:24:33.154 | DEBUG    | pipecat.processors.frame_processor:link:505 - Linking GeminiMultimodalLiveAssistantContextAggregator#0 -> Pipeline#0::Sink
+2025-10-15 01:24:33.155 | DEBUG    | pipecat.processors.frame_processor:link:505 - Linking PipelineTask#0::Source -> Pipeline#0
+2025-10-15 01:24:33.155 | DEBUG    | pipecat.processors.frame_processor:link:505 - Linking Pipeline#0 -> PipelineTask#0::Sink
+2025-10-15 01:24:33.155 | DEBUG    | pipecat.pipeline.runner:run:71 - Runner PipelineRunner#0 started running PipelineTask#0
+2025-10-15 01:24:33.157 | DEBUG    | pipecat.pipeline.task:_wait_for_pipeline_start:515 - PipelineTask#0: Starting. Waiting for StartFrame#0 to reach the end of the pipeline...
+2025-10-15 01:24:33.158 | DEBUG    | pipecat.transports.smallwebrtc.connection:on_iceconnectionstatechange:292 - ICE connection state is checking, connection is connecting
+2025-10-15 01:24:33.158 | DEBUG    | pipecat.transports.smallwebrtc.connection:_handle_new_connection_state:485 - Connection state changed to: connecting
+2025-10-15 01:24:33.159 | DEBUG    | pipecat.audio.vad.vad_analyzer:set_params:150 - Setting VAD params to: confidence=0.7 start_secs=0.2 stop_secs=0.5 min_volume=0.6
+2025-10-15 01:24:33.160 | INFO     | pipecat.transports.smallwebrtc.transport:connect:421 - Connecting to Small WebRTC
+2025-10-15 01:24:33.160 | INFO     | pipecat.services.gemini_multimodal_live.gemini:_connect:798 - Connecting to Gemini service
+2025-10-15 01:24:33.160 | INFO     | pipecat.services.gemini_multimodal_live.gemini:_connect:800 - Connecting to wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent
+2025-10-15 01:24:33.459 | DEBUG    | pipecat.services.gemini_multimodal_live.gemini:_connect:879 - Setting system instruction: You are Dan, an AI assistant knowledgeable about Harel Hanum's professional background. Your purpose is to accurately answer questions about Harel's experience, education, skills, and projects based on his resume. Always ground your responses in the provided resume information. When asked about topics not covered in the resume, politely acknowledge the limitations of your knowledge. Be professional yet approachable, and focus on highlighting Harel's expertise in AI, mobile development, and team leadership. Reference specific details from his work history when relevant, particularly his roles at Isracard, Crowded, and other companies mentioned in the resume.
+2025-10-15 01:24:33.460 | INFO     | pipecat.transports.smallwebrtc.transport:connect:421 - Connecting to Small WebRTC
+2025-10-15 01:24:33.461 | DEBUG    | pipecat.pipeline.task:_wait_for_pipeline_start:518 - PipelineTask#0: StartFrame#0 reached the end of the pipeline, pipeline is now ready.
+2025-10-15 01:24:33.704 | DEBUG    | pipecat.transports.smallwebrtc.connection:on_iceconnectionstatechange:292 - ICE connection state is completed, connection is connecting
+2025-10-15 01:24:33.709 | DEBUG    | pipecat.transports.smallwebrtc.connection:_handle_new_connection_state:485 - Connection state changed to: connected
+2025-10-15 01:24:33.710 | DEBUG    | pipecat.transports.smallwebrtc.transport:on_connected:242 - Peer connection established.
+2025-10-15 01:24:33.710 | WARNING  | pipecat.transports.smallwebrtc.connection:video_input_track:548 - No video transceiver is available
+2025-10-15 01:24:33.710 | WARNING  | pipecat.transports.smallwebrtc.connection:screen_video_input_track:570 - No screen video transceiver is available
+2025-10-15 01:24:33.710 | DEBUG    | pipecat.transports.smallwebrtc.connection:replace_audio_track:408 - Replacing audio track audio
+2025-10-15 01:24:33.710 | INFO     | __main__:on_client_connected:884 - Client connected to Gemini Realtime agent: SmallWebRTCConnection#0
+2025-10-15 01:24:33.790 | DEBUG    | pipecat.services.gemini_multimodal_live.gemini:_create_initial_response:1023 - Creating initial response: [{'role': 'user', 'parts': [{'text': 'Please introduce yourself briefly.'}]}]
+2025-10-15 01:24:34.343 | DEBUG    | pipecat.processors.metrics.frame_processor_metrics:stop_ttfb_metrics:131 - GeminiMultimodalLiveLLMService#0 TTFB: 0.5523028373718262
+2025-10-15 01:24:34.365 | DEBUG    | pipecat.transports.base_output:_bot_started_speaking:601 - Bot started speaking
+2025-10-15 01:24:36.781 | DEBUG    | __main__:on_client_connected:891 - Unpausing audio and video
+2025-10-15 01:24:47.455 | DEBUG    | pipecat.processors.metrics.frame_processor_metrics:start_llm_usage_metrics:173 - GeminiMultimodalLiveLLMService#0 prompt tokens: 642, completion tokens: 53
+2025-10-15 01:24:49.341 | DEBUG    | pipecat.transports.base_output:_bot_stopped_speaking:617 - Bot stopped speaking
+2025-10-15 01:24:51.655 | DEBUG    | pipecat.transports.base_input:_handle_user_interruption:348 - User started speaking
+2025-10-15 01:24:55.653 | DEBUG    | pipecat.services.gemini_multimodal_live.gemini:_handle_evt_input_transcription:1276 - [Transcription:user] [Which company is the last company for?]
+2025-10-15 01:24:55.789 | DEBUG    | pipecat.transports.base_input:_handle_user_interruption:376 - User stopped speaking
+2025-10-15 01:24:56.036 | DEBUG    | pipecat.processors.metrics.frame_processor_metrics:stop_ttfb_metrics:131 - GeminiMultimodalLiveLLMService#0 TTFB: 0.2450852394104004
+2025-10-15 01:24:56.037 | DEBUG    | pipecat.transports.base_output:_bot_started_speaking:601 - Bot started speaking
+2025-10-15 01:24:59.671 | DEBUG    | pipecat.processors.metrics.frame_processor_metrics:start_llm_usage_metrics:173 - GeminiMultimodalLiveLLMService#0 prompt tokens: 807, completion tokens: 18
+2025-10-15 01:25:00.022 | DEBUG    | pipecat.transports.base_output:_bot_stopped_speaking:617 - Bot stopped speaking
+2025-10-15 01:25:02.443 | DEBUG    | pipecat.transports.base_input:_handle_user_interruption:348 - User started speaking
+2025-10-15 01:25:05.508 | DEBUG    | pipecat.transports.base_input:_handle_user_interruption:376 - User stopped speaking
+2025-10-15 01:25:06.139 | DEBUG    | pipecat.transports.base_input:_handle_user_interruption:348 - User started speaking
+2025-10-15 01:25:06.141 | DEBUG    | pipecat.processors.metrics.frame_processor_metrics:stop_ttfb_metrics:131 - GeminiMultimodalLiveLLMService#0 TTFB: 0.6324622631072998
+2025-10-15 01:25:07.687 | DEBUG    | pipecat.services.gemini_multimodal_live.gemini:_handle_evt_input_transcription:1276 - [Transcription:user] [Okay, convince me why our L is the best employee I can I can recruit.]
+2025-10-15 01:25:07.820 | DEBUG    | pipecat.transports.base_input:_handle_user_interruption:376 - User stopped speaking
+2025-10-15 01:25:08.350 | DEBUG    | pipecat.processors.metrics.frame_processor_metrics:stop_ttfb_metrics:131 - GeminiMultimodalLiveLLMService#0 TTFB: 0.5294020175933838
+2025-10-15 01:25:08.352 | DEBUG    | pipecat.transports.base_output:_bot_started_speaking:601 - Bot started speaking
+2025-10-15 01:25:38.602 | DEBUG    | pipecat.processors.metrics.frame_processor_metrics:start_llm_usage_metrics:173 - GeminiMultimodalLiveLLMService#0 prompt tokens: 1034, completion tokens: 100
+2025-10-15 01:25:38.982 | DEBUG    | pipecat.transports.base_output:_bot_stopped_speaking:617 - Bot stopped speaking
+2025-10-15 01:25:42.644 | DEBUG    | pipecat.transports.base_input:_handle_user_interruption:348 - User started speaking
+2025-10-15 01:25:47.928 | DEBUG    | pipecat.services.gemini_multimodal_live.gemini:_handle_evt_input_transcription:1276 - [Transcription:user] [Can you schedule department with this guy?]
+2025-10-15 01:25:48.126 | DEBUG    | pipecat.transports.base_input:_handle_user_interruption:376 - User stopped speaking
+2025-10-15 01:25:48.499 | DEBUG    | pipecat.processors.metrics.frame_processor_metrics:stop_ttfb_metrics:131 - GeminiMultimodalLiveLLMService#0 TTFB: 0.3727717399597168
+2025-10-15 01:25:48.500 | DEBUG    | pipecat.transports.base_output:_bot_started_speaking:601 - Bot started speaking
+2025-10-15 01:25:56.800 | DEBUG    | pipecat.transports.base_output:_bot_stopped_speaking:617 - Bot stopped speaking
+2025-10-15 01:25:57.207 | DEBUG    | pipecat.processors.metrics.frame_processor_metrics:start_llm_usage_metrics:173 - GeminiMultimodalLiveLLMService#0 prompt tokens: 1275, completion tokens: 29
+2025-10-15 01:26:02.087 | INFO     | __main__:websocket_signaling_endpoint:1195 - WebSocket disconnected - client: 6da0da11-4224-445b-b00d-1840653d2406, session: f555b238-c56b-4e95-be9c-25fadc8788c9
+2025-10-15 01:26:02.089 | DEBUG    | pipecat.pipeline.task:_cancel:431 - Cancelling pipeline task PipelineTask#0
+2025-10-15 01:26:02.090 | DEBUG    | pipecat.pipeline.task:_wait_for_pipeline_end:536 - PipelineTask#0: Closing. Waiting for CancelFrame#0 to reach the end of the pipeline...
+INFO:     connection closed
+2025-10-15 01:26:02.093 | INFO     | pipecat.services.gemini_multimodal_live.gemini:_disconnect:898 - Disconnecting from Gemini service
+2025-10-15 01:26:02.107 | DEBUG    | pipecat.transports.smallwebrtc.connection:on_iceconnectionstatechange:292 - ICE connection state is closed, connection is closed
+2025-10-15 01:26:02.108 | DEBUG    | pipecat.transports.smallwebrtc.connection:_handle_new_connection_state:485 - Connection state changed to: closed
+2025-10-15 01:26:02.108 | INFO     | __main__:handle_disconnected:703 - WebRTC connection closed for agent agt_3, pc_id: SmallWebRTCConnection#0
+2025-10-15 01:26:02.109 | DEBUG    | pipecat.transports.smallwebrtc.transport:on_closed:252 - Client connection closed.
+2025-10-15 01:26:02.109 | INFO     | __main__:on_client_disconnected:897 - Client disconnected from Gemini Realtime agent
+2025-10-15 01:26:02.159 | DEBUG    | pipecat.pipeline.task:wait_for_cancel:528 - PipelineTask#0: CancelFrame#0 reached the end of the pipeline.
+2025-10-15 01:26:02.159 | DEBUG    | pipecat.pipeline.task:run:399 - Pipeline task PipelineTask#0 is finishing cleanup...
+2025-10-15 01:26:02.160 | ERROR    | __main__:websocket_signaling_endpoint:1205 - Error cleaning up session f555b238-c56b-4e95-be9c-25fadc8788c9: 'f555b238-c56b-4e95-be9c-25fadc8788c9'
+2025-10-15 01:26:02.160 | DEBUG    | pipecat.pipeline.task:run:405 - Pipeline task PipelineTask#0 has finished
+2025-10-15 01:26:02.161 | DEBUG    | pipecat.pipeline.runner:run:91 - Runner PipelineRunner#0 finished running PipelineTask#0
+INFO:     127.0.0.1:38726 - "OPTIONS /sessions/81fde195-f4ef-466c-9ed4-514add9c1f98 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38726 - "DELETE /sessions/81fde195-f4ef-466c-9ed4-514add9c1f98 HTTP/1.1" 404 Not Found

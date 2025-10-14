@@ -484,7 +484,7 @@ class GeminiMultimodalLiveLLMService(LLMService):
         api_key: str,
         base_url: str = "generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent",
         model="models/gemini-2.0-flash-live-001",
-        voice_id: str = "Charon",
+        voice_id: str = "Leda",
         start_audio_paused: bool = False,
         start_video_paused: bool = False,
         system_instruction: Optional[str] = None,
