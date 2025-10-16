@@ -20,6 +20,9 @@
 # production
 /build
 
+# Allow source code build folders (not production builds)
+!/src/**/build
+
 # misc
 .DS_Store
 *.pem
