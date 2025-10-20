@@ -43,8 +43,8 @@ export class DirectWebRTCService implements WebRTCService {
   // Event callbacks
   private events: Partial<WebRTCEvents> = {}
 
-  // Configuration
-  private readonly BACKEND_URL = 'http://localhost:7860'
+  // Configuration - Use environment variable for production deployment
+  private readonly BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7860'
 
   // STUN servers for NAT traversal
   private readonly ICE_SERVERS = [
@@ -106,7 +106,9 @@ export class DirectWebRTCService implements WebRTCService {
   private async connectWebSocket(): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
-        const wsUrl = this.BACKEND_URL.replace('http', 'ws') + '/websocket'
+        // Automatically use wss:// for https:// and ws:// for http://
+        const wsProtocol = this.BACKEND_URL.startsWith('https') ? 'wss' : 'ws'
+        const wsUrl = this.BACKEND_URL.replace(/^https?/, wsProtocol) + '/websocket'
         console.log('[WebRTC] Connecting to WebSocket:', wsUrl)
 
         const ws = new WebSocket(wsUrl)

@@ -29,7 +29,12 @@ MANIFEST
 .env
 .env.production
 .env.development
+.env.local
 fly.toml
+
+# Next.js environment files
+agenty-platform/apps/web/.env.local
+agenty-platform/apps/web/.env*.local
 
 # Examples
 examples/**/node_modules/

@@ -1,4 +1,6 @@
-const API_BASE_URL = 'http://localhost:7860'
+// Use environment variable for API URL to support different environments
+// For local development, WSL2, Docker, etc.
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7860'
 
 interface SessionResponse {
   session_id: string
